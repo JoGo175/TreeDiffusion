@@ -1,6 +1,0 @@
-Epochs= 5, batch_size= 256, digits= [0 1 2 3 4 5 6 7 8 9], latent_dim= [8, 8, 8, 8, 8, 8], K= 10, learning_rate= 0.001000, decay= 0.100000, encoder= cnn1, name= 20230926-131500_1c0c3, seed= 42, config= mnist.
-Train |   Accuracy: 0.796, NMI: 0.768, ARI: 0.685. 
-Test  |   Accuracy: 0.803, NMI: 0.778, ARI: 0.694. 
-Epochs= 1, batch_size= 256, digits= [0 1 2 3 4 5 6 7 8 9], latent_dim= [8, 8, 8], K= 10, learning_rate= 0.001000, decay= 0.100000, encoder= cnn1, name= 20231004-004720_cbb31, seed= 42, config= mnist.
-Train |   Accuracy: 0.336, NMI: 0.416, ARI: 0.265. 
-Test  |   Accuracy: 0.325, NMI: 0.418, ARI: 0.263. 
