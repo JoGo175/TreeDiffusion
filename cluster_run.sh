@@ -1,0 +1,84 @@
+#!/bin/bash
+#SBATCH --time=36:00:00
+eval "$(conda shell.bash hook)"
+# Needed for deterministic computations
+export CUBLAS_WORKSPACE_CONFIG=":4096:8"
+source ~/.bashrc
+conda activate treevae
+dataset="mnist"
+O_DIR="/cluster/work/vogtlab/Group/jogoncalves/logs/output.%x.%J_${dataset}.out"
+
+
+# for kl_start in 0.0 0.5 1; do
+#     # loop over seeds 
+#     for seed in 1 2 3 4 5 6 7 8 9 10; do
+#         # run the job
+#         sbatch --time=36:00:00 --mem-per-cpu=10G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python main.py --save_model True --config_name $dataset --kl_start $kl_start --seed $seed"
+#         # wait for 5 seconds
+#         sleep 3
+#     done
+# done
+
+
+# # loop over seeds
+# for seed in 1 2 3 4 5 6 7 8 9 10; do
+#   # run the job
+#   sbatch --time=36:00:00 --mem-per-cpu=10G -p gpu --gres=gpu:1 -A vogtlab --tmp=10G --cpus-per-task=2 -o $O_DIR --wrap="python main.py --save_model False --config_name $dataset --seed $seed"
+#   # wait for 5 seconds
+#   sleep 3
+# done
+
+
+# # loop over size of latent space [1, 2, 3, 4, 5, 6, 7 ,8]
+# for depth in 1 2 3 4 5 6 7 8; do
+#   # create the latent_channels and bottom_up_channels string with depth
+#   latent_channels="10"
+#   bottom_up_channels="16"
+#   for ((i=1; i<$depth; i++)); do
+#     latent_channels="${latent_channels},10"
+#     bottom_up_channels="${bottom_up_channels},16"
+#   done
+#   # loop over seeds
+#   for seed in 1 2 3 4 5 6 7 8 9 10; do
+#     # run the job
+#     sbatch --time=36:00:00 --mem-per-cpu=10G -p gpu --gres=gpu:1 -A vogtlab --tmp=10G --cpus-per-task=2 -o $O_DIR --wrap="python main.py --save_model False --config_name $dataset --latent_channels $latent_channels --bottom_up_channels $bottom_up_channels --seed $seed"
+#     # wait for 5 seconds
+#     sleep 3
+#   done
+# done
+
+
+## loop over latent_channels in [1, 1, 1, 1, 1, 1], [4, 4, 4, 4, 4, 4], [8, 8, 8, 8, 8, 8], [10, 10, 10, 10, 10, 10]
+for latent_c in 32 64 128; do
+ # create the latent_channels string [latent_c, latent_c, latent_c, latent_c, latent_c, latent_c]
+ latent_channels="${latent_c},${latent_c},${latent_c},${latent_c},${latent_c},${latent_c}"
+ for bottom_up_c in 16 32; do
+   bottom_up_channels="${bottom_up_c},${bottom_up_c},${bottom_up_c},${bottom_up_c},${bottom_up_c},${bottom_up_c}"
+   # loop over seeds
+   for seed in 1 2 3 4 5 6 7 8 9 10; do
+     # run the job
+     sbatch --time=36:00:00 --mem-per-cpu=10G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python main.py --save_model False --config_name $dataset --latent_channels $latent_channels --bottom_up_channels $bottom_up_channels --seed $seed"
+     # wait for 5 seconds
+     sleep 3
+   done
+ done
+ # wait for 60min to avoid overloading the cluster
+ sleep 3
+done
+
+
+
+#
+## loop over kl_start
+#for representation_dim in 1 2 4 8 16; do
+#  # loop over seeds
+#  for seed in 1 2 3 4 5 6 7 8 9 10; do
+#    # run the job
+#    sbatch --time=36:00:00 --mem-per-cpu=10G -p gpu --gres=gpu:1 -A vogtlab --tmp=10G --cpus-per-task=2 -o $O_DIR --wrap="python main.py --save_model True --config_name $dataset --representation_dim $representation_dim --seed $seed"
+#    # wait for 5 seconds
+#    sleep 3
+#  done
+#done
+
+
+

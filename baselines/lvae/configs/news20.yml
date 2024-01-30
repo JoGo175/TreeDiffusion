@@ -1,0 +1,34 @@
+run_name: 'news20'
+
+data:
+  data_name: 'news20'
+  num_clusters_data: 20
+
+training:
+  num_epochs: 700
+  num_epochs_finetuning: 300
+  batch_size: 256
+  lr: 0.001
+  weight_decay: 0.00001
+  decay_lr: 0.1
+  decay_stepsize: 100
+  decay_kl: 0.005
+  kl_start: 0.01
+
+  inp_shape: 2000
+  latent_dim: [4, 4, 4, 4, 4] 
+  mlp_layers: [128, 128, 128, 128, 128] 
+  initial_depth: 4
+  activation: "sigmoid"
+  encoder: 'mlp'
+  compute_ll: False
+  augment: False
+  augmentation_method: 'simple' 
+  aug_decisions_weight: 1
+
+globals:
+  wandb_logging: 'disabled' 
+  eager_mode: True
+  seed: 42
+  save_model: False
+  config_name: 'news20'

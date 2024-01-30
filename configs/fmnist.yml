@@ -1,0 +1,46 @@
+run_name: 'fmnist_cnn'
+
+data:
+  data_name: 'fmnist'
+  num_clusters_data: 10
+
+training:
+  num_epochs: 150 #150
+  num_epochs_smalltree: 150 # 150
+  num_epochs_intermediate_fulltrain: 80 #80
+  num_epochs_finetuning: 200 # 200
+  batch_size: 256
+  lr: 0.001
+  weight_decay: 0.00001
+  decay_lr: 0.1
+  decay_stepsize: 100
+  decay_kl: 0.001
+  kl_start: 0.5
+  dropout_router: 0.0
+  skip_con_transformation: True
+  compute_fid: True
+  save_images: True
+
+  inp_shape: 784
+  inp_channels: 1 # 3 for RGB, 1 for grayscale
+  representation_dim: 4 # size of the 2-dim latent representation -> (channel, representation_dim, representation_dim)
+  latent_channels: [16, 16, 16, 16, 16, 16] # channels of the latent representation
+  bottom_up_channels: [32, 32, 32, 32, 32, 32] # channels of the bottom-up representation, only works for equal channels at the moment
+  initial_depth: 1
+  activation: "sigmoid"
+  encoder: 'cnn1'
+  grow: True
+  prune: True
+  num_clusters_tree: 10
+  intermediate_fulltrain: True
+  compute_ll: False
+  augment: False
+  augmentation_method: 'simple'
+  aug_decisions_weight: 1
+
+globals:
+  wandb_logging: 'offline'
+  eager_mode: True
+  seed: 42
+  save_model: True
+  config_name: 'fmnist'
