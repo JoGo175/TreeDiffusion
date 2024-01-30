@@ -245,9 +245,16 @@ class DDPMWrapper(pl.LightningModule):
             # same noise for same sample
             noise = torch.randn_like(img)
 
+
+
             # now for each leaf node, we use the recons to condition the ddpm
             for l in range(len(recons[0])):
                 recons_leaf_l = recons[0][l]
+
+                # all leaves have the same noise --> reset seeds
+                torch.manual_seed(0)
+                torch.cuda.manual_seed(0)
+                np.random.seed(0)
 
                 # DDPM encoder
                 x_t_l = self.online_network.compute_noisy_input(
