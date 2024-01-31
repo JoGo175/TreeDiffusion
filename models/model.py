@@ -571,24 +571,31 @@ class TreeVAE(nn.Module):
 
         return max_z_samples
     
-    def forward_recons(self, x):
+    def forward_recons(self, x, max_leaf):
         res = self.compute_reconstruction(x)
 
         max_z_sample = []
         max_recon = []
+        leaf_ind = []
 
         nodes = res[1]
         for i in range(len(nodes[0]['prob'])):
             probs = [node['prob'][i] for node in nodes]
             z_sample = [node['z_sample'][i] for node in nodes]
-            ind = probs.index(max(probs))
+            if max_leaf:
+                ind = probs.index(max(probs))
+            else:
+                ind = torch.multinomial(torch.stack(probs), 1).item()
+
             max_z_sample.append(z_sample[ind])
             max_recon.append(res[0][ind][i])
+            leaf_ind.append(ind)
 
-        z = torch.stack(max_z_sample)
+        # z = torch.stack(max_z_sample)
+        z = torch.tensor(leaf_ind, dtype=torch.float).unsqueeze(1).to(x.device)
         cond = torch.stack(max_recon)
 
-        return cond
+        return cond, z
 
 
 

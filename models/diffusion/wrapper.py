@@ -245,8 +245,6 @@ class DDPMWrapper(pl.LightningModule):
             # same noise for same sample
             noise = torch.randn_like(img)
 
-
-
             # now for each leaf node, we use the recons to condition the ddpm
             for l in range(len(recons[0])):
                 recons_leaf_l = recons[0][l]
@@ -255,6 +253,9 @@ class DDPMWrapper(pl.LightningModule):
                 torch.manual_seed(0)
                 torch.cuda.manual_seed(0)
                 np.random.seed(0)
+
+                # z is the leaf index
+                z = torch.tensor([l]*img.size(0), dtype=torch.float).unsqueeze(1).to(img.device)
 
                 # DDPM encoder
                 x_t_l = self.online_network.compute_noisy_input(
@@ -271,7 +272,7 @@ class DDPMWrapper(pl.LightningModule):
                 out = self(
                     x_t_l,
                     cond=recons_leaf_l,
-                    z=None,
+                    z=z if self.z_cond else None,
                     n_steps=self.pred_steps,
                     checkpoints=self.pred_checkpoints,
                     ddpm_latents=self.ddpm_latents,
@@ -284,7 +285,7 @@ class DDPMWrapper(pl.LightningModule):
 
         elif self.eval_mode == "recons":
             img = batch[0]
-            recons = self.vae.forward_recons(img)
+            recons, z = self.vae.forward_recons(img, self.max_leaf)
             # recons = 2 * recons - 1
 
             # DDPM encoder
@@ -303,7 +304,7 @@ class DDPMWrapper(pl.LightningModule):
             self(
                 x_t,
                 cond=recons,
-                z=z.squeeze() if self.z_cond else None,
+                z=z if self.z_cond else None,
                 n_steps=self.pred_steps,
                 checkpoints=self.pred_checkpoints,
                 ddpm_latents=self.ddpm_latents,
