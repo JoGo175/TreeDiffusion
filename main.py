@@ -39,7 +39,7 @@ def main():
 
     # Other parameters
     parser.add_argument('--save_model', type=lambda x:bool(distutils.util.strtobool(x)), help='specifies if the model should be saved')
-    parser.add_argument('--config_name', default='mnist', type=str, choices=['mnist', 'fmnist', 'news20', 'omniglot','cifar10', 'cifar100', 'celeba'], help='the override file name for config.yml')
+    parser.add_argument('--config_name', default='celeba', type=str, choices=['mnist', 'fmnist', 'news20', 'omniglot','cifar10', 'cifar100', 'celeba'], help='the override file name for config.yml')
     parser.add_argument('--seed', type=int, help='random number generator seed')
     parser.add_argument('--wandb_logging', type=str, help='online, disabled, offline enables logging in wandb')
 
