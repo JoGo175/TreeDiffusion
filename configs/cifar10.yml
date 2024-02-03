@@ -92,9 +92,9 @@ ddpm:
     cfd_rate: 0.0   # Conditioning signal dropout rate as in Classifier-free guidance
 
   evaluation:
-    chkpt_path: 'results/checkpoints/ddpmv2-vae-epoch=1490-loss=0.0078.ckpt'   # DiffuseVAE checkpoint path
+    chkpt_path: 'results/checkpoints/ddpmv2-vae-epoch=934-loss=0.0109.ckpt'   # DiffuseVAE checkpoint path
     save_path: 'results/'   # Path to write samples to (automatically creates directories if needed)
-    z_cond: True   # Whether to condition UNet on vae latent
+    z_cond: False   # Whether to condition UNet on vae latent
     z_dim: 1   # Dimensionality of the vae latent, instead we use leaf index here which is of dim 1
     guidance_weight: 0.0   # Guidance weight during sampling if using Classifier free guidance
     type: 'form1'   # DiffuseVAE type. One of ['form1', 'form2', 'uncond']. `uncond` is baseline DDPM
