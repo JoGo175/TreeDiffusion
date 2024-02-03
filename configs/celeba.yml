@@ -1,4 +1,4 @@
-run_name: 'celeba'
+run_name: 'celeba_cnn'
 
 data:
   data_name: 'celeba'
@@ -17,10 +17,16 @@ training:
   decay_stepsize: 100
   decay_kl: 0.01
   kl_start: 0.01
+  dropout_router: 0.0
+  skip_con_transformation: True
+  compute_fid: True
+  save_images: True
 
-  inp_shape: 12288
-  latent_dim:  [64,64,64,64,64,64] 
-  mlp_layers: [4096, 512, 512, 512, 512, 512] 
+  inp_shape: 4096 # 12288
+  inp_channels: 3 # 3 for RGB
+  representation_dim: 4 # size of the 2-dim latent representation -> should be a power of 2, (2, 4, 8, 16 ...)
+  latent_channels: [16, 16, 16, 16, 16, 16] # channels of the latent representation
+  bottom_up_channels: [64, 64, 64, 64, 64, 64] # channels of the bottom-up representation,
   initial_depth: 1
   activation: 'mse'
   encoder: 'cnn2'

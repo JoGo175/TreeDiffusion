@@ -243,7 +243,7 @@ def get_data(configs):
 		trainset_eval.dataset.targets = torch.tensor(trainset_eval.dataset.targets)
 		testset.dataset.targets = torch.tensor(testset.dataset.targets)
 
-	elif data_name ==  'celeba':
+	elif data_name == 'celeba':
 		reset_random_seeds(configs['globals']['seed'])
 		aug_strength = 0.25
 
@@ -280,9 +280,9 @@ def get_data(configs):
 		trainset = Subset(full_trainset, indx_train)
 		trainset_eval = Subset(full_trainset_eval, indx_train)
 		testset = Subset(full_testset, indx_test)
-		trainset.dataset.targets = torch.zeros(trainset.dataset.attr.shape[0])
-		trainset_eval.dataset.targets = torch.zeros(trainset.dataset.attr.shape[0])
-		testset.dataset.targets = torch.zeros(trainset.dataset.attr.shape[0])
+		trainset.dataset.targets = torch.zeros(trainset.dataset.attr.shape[0], dtype=torch.int8)
+		trainset_eval.dataset.targets = torch.zeros(trainset.dataset.attr.shape[0], dtype=torch.int8)
+		testset.dataset.targets = torch.zeros(trainset.dataset.attr.shape[0], dtype=torch.int8)
 
 	else:
 		raise NotImplementedError('This dataset is not supported!')
