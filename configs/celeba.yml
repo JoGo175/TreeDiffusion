@@ -40,8 +40,8 @@ training:
   compute_ll: False
 
 globals:
-  wandb_logging: 'disabled'
-  eager_mode: False
+  wandb_logging: 'offline'
+  eager_mode: True
   seed: 42
   save_model: True
   config_name: 'celeba'
