@@ -6,8 +6,8 @@ data:
   path: 'datasets/celeba'
 
 training:
-  num_epochs: 150
-  num_epochs_smalltree: 150
+  num_epochs: 1
+  num_epochs_smalltree: 1
   num_epochs_intermediate_fulltrain: 0
   num_epochs_finetuning: 0
   batch_size: 256
@@ -15,7 +15,7 @@ training:
   weight_decay: 0.00001
   decay_lr: 0.1
   decay_stepsize: 100
-  decay_kl: 0.01
+  decay_kl: 0.02
   kl_start: 0.01
   dropout_router: 0.0
   skip_con_transformation: True
@@ -24,7 +24,7 @@ training:
 
   inp_shape: 4096 # 12288
   inp_channels: 3 # 3 for RGB
-  representation_dim: 4 # size of the 2-dim latent representation -> should be a power of 2, (2, 4, 8, 16 ...)
+  representation_dim: 2 # size of the 2-dim latent representation -> should be a power of 2, (2, 4, 8, 16 ...)
   latent_channels: [16, 16, 16, 16, 16, 16] # channels of the latent representation
   bottom_up_channels: [64, 64, 64, 64, 64, 64] # channels of the bottom-up representation,
   initial_depth: 1

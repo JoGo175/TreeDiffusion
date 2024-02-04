@@ -83,7 +83,7 @@ ddpm:
     lr: 0.0002   # Learning rate
     restore_path: ""   # Checkpoint restore path
     vae_chkpt_path: 'results/checkpoints/vae-vae-epoch=01-train_loss=0.0000.ckpt'   # VAE checkpoint path. Useful when using form1 or form2
-    results_dir: 'results/'   # Directory to store the checkpoint in
+    results_dir: 'results/cifar10/'   # Directory to store the checkpoint in
     workers: 1   # Num workers
     grad_clip: 1.0   # gradient clipping threshold
     n_anneal_steps: 5000   # number of warmup steps
@@ -93,7 +93,7 @@ ddpm:
 
   evaluation:
     chkpt_path: 'results/checkpoints/ddpmv2-vae-epoch=934-loss=0.0109.ckpt'   # DiffuseVAE checkpoint path
-    save_path: 'results/'   # Path to write samples to (automatically creates directories if needed)
+    save_path: 'results/cifar10/'   # Path to write samples to (automatically creates directories if needed)
     z_cond: False   # Whether to condition UNet on vae latent
     z_dim: 1   # Dimensionality of the vae latent, instead we use leaf index here which is of dim 1
     guidance_weight: 0.0   # Guidance weight during sampling if using Classifier free guidance
