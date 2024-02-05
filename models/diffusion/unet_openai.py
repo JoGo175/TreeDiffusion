@@ -548,6 +548,17 @@ class UNetModel(nn.Module):
             self.num_classes is not None
         ), "must specify y if and only if the model is class-conditional"
 
+        # if image resolution not in 32, 64, 128 --> add padding
+        # important for the model to work for MNIST, FashionMNIST, etc
+        original_res = x.shape[-1]
+
+        if original_res not in [32, 64, 128]:
+            # pick next highest resolution
+            new_res = 2 ** int(np.ceil(np.log2(original_res)))
+            pad = (new_res - original_res) // 2
+            # add padding to all sides
+            x = F.pad(x, (pad, pad, pad, pad), mode="constant", value=0)
+
         hs = []
         emb = self.time_embed(timestep_embedding(timesteps, self.model_channels))
 
@@ -573,7 +584,16 @@ class UNetModel(nn.Module):
             cat_in = th.cat([h, hs.pop()], dim=1)
             h = module(cat_in, emb)
         h = h.type(x.dtype)
-        return self.out(h)
+
+        h = self.out(h)
+
+        # if image resolution not in 32, 64, 128 --> remove padding from all sides
+        # important for the model to work for MNIST, FashionMNIST, etc
+        if original_res not in [32, 64, 128]:
+            # remove padding from all sides
+            h = h[:, :, pad:-pad, pad:-pad]
+
+        return h
 
 
 class SuperResModel(UNetModel):

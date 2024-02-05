@@ -80,7 +80,7 @@ def train(model_path):
     decoder = decoder_cls(
         in_channels=config.data.n_channels,
         model_channels=config.model.dim,
-        out_channels=3,
+        out_channels=config.data.n_channels,
         num_res_blocks=config.model.n_residual,
         attention_resolutions=attn_resolutions,
         channel_mult=dim_mults,

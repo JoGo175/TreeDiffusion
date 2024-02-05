@@ -50,9 +50,9 @@ ddpm:
   data:
     root: "data/"   # Dataset root
     name: "cifar10"   # Dataset name (check main/util.py `get_dataset` for a registry)
-    image_size: 32   # Image resolution
+    image_size: 28   # Image resolution
     hflip: True   # Whether to use horizontal flip
-    n_channels: 3   # Num input channels
+    n_channels: 1   # Num input channels
     norm: True   # Whether to scale data between [-1, 1]
     ddpm_latent_path: ""   # If sharing DDPM latents between diffusevae samples, path to .pt tensor containing latent codes
 
