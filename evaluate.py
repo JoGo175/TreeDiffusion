@@ -36,7 +36,7 @@ def __parse_str(s):
 
 
 def train(model_path):
-    config_path = "configs/cifar10.yml"
+    config_path = "configs/mnist.yml"
     config = load_config(config_path)
     config_ddpm = config.ddpm
 
@@ -90,7 +90,7 @@ def train(model_path):
     decoder = SuperResModel(
         in_channels=config_ddpm.data.n_channels,
         model_channels=config_ddpm.model.dim,
-        out_channels=3,
+        out_channels=config_ddpm.data.n_channels,
         num_res_blocks=config_ddpm.model.n_residual,
         attention_resolutions=attn_resolutions,
         channel_mult=dim_mults,
@@ -178,7 +178,7 @@ def train(model_path):
 
 
 if __name__ == "__main__":
-    model_path = "models/experiments/cifar10/20240103-165129_bc018"
+    model_path = "models/experiments/mnist/20240204-032408_09971"
     train(model_path)
 
 

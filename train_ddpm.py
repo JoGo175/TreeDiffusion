@@ -39,7 +39,7 @@ def load_config(config_path):
 
 def train(model_path):
     # Get config and setup
-    config_path = "configs/mnist.yml"
+    config_path = "configs/celeba.yml"
     config = load_config(config_path)
     config = config.ddpm
 
@@ -211,5 +211,5 @@ def train(model_path):
     
 
 if __name__ == "__main__":
-    model_path = "models/experiments/mnist/20240204-032408_09971"
+    model_path = "models/experiments/celeba/20240205-073257_4e686"
     train(model_path)

@@ -6,16 +6,16 @@ data:
   path: 'datasets/celeba'
 
 training:
-  num_epochs: 1
-  num_epochs_smalltree: 1
+  num_epochs: 150
+  num_epochs_smalltree: 150
   num_epochs_intermediate_fulltrain: 0
   num_epochs_finetuning: 0
-  batch_size: 256
+  batch_size: 128
   lr: 0.001
   weight_decay: 0.00001
   decay_lr: 0.1
   decay_stepsize: 100
-  decay_kl: 0.02
+  decay_kl: 0.01
   kl_start: 0.01
   dropout_router: 0.0
   skip_con_transformation: True
@@ -45,3 +45,74 @@ globals:
   seed: 42
   save_model: True
   config_name: 'celeba'
+
+
+ddpm:
+  data:
+    root: "data/"   # Dataset root
+    name: "celeba"   # Dataset name (check main/util.py `get_dataset` for a registry)
+    image_size: 64   # Image resolution
+    hflip: True   # Whether to use horizontal flip
+    n_channels: 3   # Num input channels
+    norm: True   # Whether to scale data between [-1, 1]
+    ddpm_latent_path: ""   # If sharing DDPM latents between diffusevae samples, path to .pt tensor containing latent codes
+
+  model:   # UNet specific params. Check the DDPM implementation for details on these
+    dim : 64
+    attn_resolutions: "16,"
+    n_residual: 2
+    dim_mults: "1,2,2,2"
+    dropout: 0.3
+    n_heads: 8
+    beta1: 0.0001
+    beta2: 0.02
+    n_timesteps: 1000
+
+  training:
+    seed: 0   # Random seed
+    fp16: False   # Whether to use fp16
+    use_ema: True   # Whether to use EMA (Improves sample quality)
+    z_cond: True   # Whether to condition UNet on vae latent
+    z_dim: 1   # Dimensionality of the vae latent
+    type: 'form1'   # DiffuseVAE type. One of ['form1', 'form2', 'uncond']. `uncond` is baseline DDPM
+    ema_decay: 0.9999   # EMA decay rate
+    batch_size: 32   # Training batch size (per GPU, per TPU core if using distributed training)
+    epochs: 5000   # Max number of epochs
+    log_step: 1   # log interval
+    device: "cpu"   # Device. Uses TPU/CPU if set to `tpu` or `cpu`. For GPU, use gpu:<comma separated id list>. Ex: gpu:0,1 would run only on gpus 0 and 1
+    chkpt_interval: 1   # Number of epochs between two checkpoints
+    optimizer: "Adam"   # Optimizer
+    lr: 0.0002   # Learning rate
+    restore_path: ""   # Checkpoint restore path
+    vae_chkpt_path: 'models/experiments/celeba/20240205-073257_4e686'   # VAE checkpoint path. Useful when using form1 or form2
+    results_dir: 'results/celeba/'   # Directory to store the checkpoint in
+    workers: 1   # Num workers
+    grad_clip: 1.0   # gradient clipping threshold
+    n_anneal_steps: 5000   # number of warmup steps
+    loss: "l2"   # Diffusion loss type. Among ['l2', 'l1']
+    chkpt_prefix: "vae"   # prefix appended to the checkpoint name
+    cfd_rate: 0.0   # Conditioning signal dropout rate as in Classifier-free guidance
+
+  evaluation:
+    chkpt_path: 'results/checkpoints/ddpmv2-vae-epoch=934-loss=0.0109.ckpt'   # DiffuseVAE checkpoint path
+    save_path: 'results/celeba/'   # Path to write samples to (automatically creates directories if needed)
+    z_cond: False   # Whether to condition UNet on vae latent
+    z_dim: 1   # Dimensionality of the vae latent, instead we use leaf index here which is of dim 1
+    guidance_weight: 0.0   # Guidance weight during sampling if using Classifier free guidance
+    type: 'form1'   # DiffuseVAE type. One of ['form1', 'form2', 'uncond']. `uncond` is baseline DDPM
+    resample_strategy: "truncated"   # Whether to use spaced or truncated sampling. Use 'truncated' if sampling for the entire 1000 steps
+    skip_strategy: "quad"   # Skipping strategy to use if `resample_strategy=spaced`. Can be ['uniform', 'quad'] as in DDIM
+    sample_method: "ddpm"   # Sampling backend. Can be ['ddim', 'ddpm']
+    sample_from: "target"   # Whether to sampling from the (non)-EMA model. Can be ['source', 'target']
+    seed: 0   # Random seed during sampling
+    device: "cpu"   # Device. Uses TPU/CPU if set to `tpu` or `cpu`. For GPU, use gpu:<comma separated id list>. Ex: gpu:0,1 would run only on gpus 0 and 1
+    n_samples: 250
+    n_steps: 1000   # Number of reverse process steps to use during sampling. Typically [0-100] for DDIM and T=1000 for DDPM
+    workers: 1
+    batch_size: 16   # Batch size during sampling per gpu
+    save_vae: True   # Whether to save VAE samples along with final samples. Useful to visualize the generator-refiner framework in action!
+    variance: "fixedlarge"   # DDPM variance to use when using DDPM. Can be ['fixedsmall', 'fixedlarge']
+    sample_prefix: ""   # Prefix used in naming when saving samples to disk
+    temp: 1.0   # Temperature sampling factor in DDPM latents
+    save_mode: 'image'   # Whether to save samples as .png or .npy. One of ['image', 'numpy']
+    eval_mode: 'recons_all_leaves'   # Evaluation mode. One of ['sample', 'recons', 'recons_all_leaves']

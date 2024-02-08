@@ -49,7 +49,7 @@ globals:
 ddpm:
   data:
     root: "data/"   # Dataset root
-    name: "cifar10"   # Dataset name (check main/util.py `get_dataset` for a registry)
+    name: "mnist"   # Dataset name (check main/util.py `get_dataset` for a registry)
     image_size: 28   # Image resolution
     hflip: True   # Whether to use horizontal flip
     n_channels: 1   # Num input channels
@@ -83,7 +83,7 @@ ddpm:
     optimizer: "Adam"   # Optimizer
     lr: 0.0002   # Learning rate
     restore_path: ""   # Checkpoint restore path
-    vae_chkpt_path: 'results/checkpoints/vae-vae-epoch=01-train_loss=0.0000.ckpt'   # VAE checkpoint path. Useful when using form1 or form2
+    vae_chkpt_path: 'models/experiments/mnist/20240205-061146_1696e'   # VAE checkpoint path. Useful when using form1 or form2
     results_dir: 'results/mnist/'   # Directory to store the checkpoint in
     workers: 1   # Num workers
     grad_clip: 1.0   # gradient clipping threshold
@@ -93,9 +93,9 @@ ddpm:
     cfd_rate: 0.0   # Conditioning signal dropout rate as in Classifier-free guidance
 
   evaluation:
-    chkpt_path: 'results/checkpoints/ddpmv2-vae-epoch=934-loss=0.0109.ckpt'   # DiffuseVAE checkpoint path
+    chkpt_path: 'results/mnist/checkpoints/ddpmv2-vae-epoch=1026-loss=0.0064.ckpt'   # DiffuseVAE checkpoint path
     save_path: 'results/mnist/'   # Path to write samples to (automatically creates directories if needed)
-    z_cond: False   # Whether to condition UNet on vae latent
+    z_cond: True   # Whether to condition UNet on vae latent
     z_dim: 1   # Dimensionality of the vae latent, instead we use leaf index here which is of dim 1
     guidance_weight: 0.0   # Guidance weight during sampling if using Classifier free guidance
     type: 'form1'   # DiffuseVAE type. One of ['form1', 'form2', 'uncond']. `uncond` is baseline DDPM
