@@ -28,11 +28,17 @@ def get_data(configs):
 	list
 		A list of three tensor datasets: trainset, trainset_eval, testset
 	"""
-	data_name = configs['data']['data_name']
-	augment = configs['training']['augment']
-	augmentation_method = configs['training']['augmentation_method']
-	n_classes = configs['data']['num_clusters_data']
 	data_path = './data/'
+	data_name = configs['data']['data_name']
+	n_classes = configs['data']['num_clusters_data']
+	# Augmentation only for TreeVAE training, not for DDPM training
+	if 'augment' in configs['training']:
+		augment = configs['training']['augment']
+		augmentation_method = configs['training']['augmentation_method']
+	else:
+		augment = False
+		augmentation_method = ['simple']
+
 
 	if data_name == 'mnist':
 		reset_random_seeds(configs['globals']['seed'])
@@ -319,8 +325,16 @@ def get_gen(dataset, configs, validation=False, shuffle=True, smalltree=False, s
 	if smalltree:
 		dataset = Subset(dataset, smalltree_ind)
 
+	# Augmentation only for TreeVAE training, not for DDPM training
+	if 'augment' in configs['training']:
+		augment = configs['training']['augment']
+		augmentation_method = configs['training']['augmentation_method']
+	else:
+		augment = False
+		augmentation_method = ['simple']
+
 	# Call the DataLoader when contrastive learning is used
-	if configs['training']['augment'] and configs['training']['augmentation_method'] != ['simple'] and not validation:
+	if augment and augmentation_method != ['simple'] and not validation:
 		# As one datapoint leads to two samples, we have to half the batch size to retain same number of samples per batch
 		assert batch_size % 2 == 0
 		batch_size = batch_size // 2
