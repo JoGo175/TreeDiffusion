@@ -22,7 +22,7 @@ def construct_tree(transformations, routers, routers_q, denses, decoders):
 		:param routers: list of decisions to attach to the nodes of the tree
 		:param denses: list of dense network that from d of the bottom up compute node-specific q
 		:param decoders: list of decoders to attach to the nodes, they should be set to None except the leaves
-		:return:the root of the tree
+		:return: the root of the tree
 		"""
 	if len(transformations) != len(routers) and len(transformations) != len(denses) \
 			and len(transformations) != len(decoders):
@@ -164,10 +164,7 @@ def construct_tree_fromnpy(model, data_tree, configs):
 				n.append(Node(transformation, None, None, dense, decoder))
 
 			node.left = n[0]
-
 			nodes[id_node_left] = {'node': node.left, 'depth': new_depth}
-			
-			
 
 	transformations, routers, denses, decoders, routers_q = return_list_tree(model.tree)
 	model.decisions_q = routers_q
@@ -177,7 +174,6 @@ def construct_tree_fromnpy(model, data_tree, configs):
 	model.decoders = decoders
 	model.depth = model.compute_depth()
 	return model
-
 
 
 def construct_data_tree(model, y_predicted, y_true, n_leaves, data_name):

@@ -6,7 +6,6 @@ from models.diffusion.ddpm_form2 import DDPMv2
 from utils.diffusion_utils import space_timesteps
 import pytorch_lightning as pl
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 class DDPMWrapper(pl.LightningModule):

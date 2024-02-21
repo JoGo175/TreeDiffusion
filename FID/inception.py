@@ -17,11 +17,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision
 
-# try:
-#     from torchvision.models.utils import load_state_dict_from_url
-# except ImportError:
-#     from torch.utils.model_zoo import load_url as load_state_dict_from_url
-
 # Inception weights ported to Pytorch from
 # http://download.tensorflow.org/models/image/imagenet/inception-2015-12-05.tgz
 FID_WEIGHTS_URL = 'https://github.com/mseitzer/pytorch-fid/releases/download/fid_weights/pt_inception-2015-12-05-6726825d.pth'  # noqa: E501

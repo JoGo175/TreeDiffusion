@@ -1,19 +1,70 @@
 """
-Small TreeVAE model.
+SmallTreeVAE model (used for the growing procedure of TreeVAE).
 """
 import torch
 import torch.nn as nn
 import torch.distributions as td
-from models.networks import get_decoder, MLP, Router, Dense, Conv
+from models.networks import get_decoder, Router, Dense, Conv
 from utils.model_utils import compute_posterior
 from models.losses import loss_reconstruction_binary, loss_reconstruction_mse
 from utils.training_utils import calc_aug_loss
 
 class SmallTreeVAE(nn.Module):
+    """
+        A class used to represent a sub-tree VAE with one root and two children.
+
+        SmallTreeVAE specifies a sub-tree of TreeVAE with one root and two children. It is used in the
+        growing procedure of TreeVAE. At each growing step a new SmallTreeVAE is attached to a leaf of TreeVAE and
+        trained separately to reduce computational time.
+
+        Attributes
+        ----------
+        activation : str
+            The name of the activation function for the reconstruction loss [sigmoid, mse]
+        loss : models.losses
+            The loss function used by the decoder to reconstruct the input
+        alpha : float
+            KL-annealing weight initialization
+        depth : int
+            The depth at which the sub-tree will be attached (root has depth 0 and a root with two leaves has depth 1)
+        inp_shape : int
+            The total dimensions of the input data (if images of 32x32 then 32x32x3)
+        augment : bool
+             Whether to use contrastive learning through augmentation, if False no augmentation is used
+        augmentation_method : str
+            The type of augmentation method used
+        aug_decisions_weight : str
+            The weight of the contrastive loss used in the decisions
+        denses : nn.ModuleList
+            List of dense layers for the sharing of top-down and bottom-up (MLPs) associated with each of the two leaf
+             node of the tree from left to right.
+        transformations : nn.ModuleList
+            List of transformations (MLPs) associated with each of the two leaf node of the sub-tree from left to right
+        decision : Router
+            The decision associated with the root of the sub-tree.
+        decoders : nn.ModuleList
+            List of two decoders one for each leaf of the sub-tree
+        decision_q : str
+            The decision of the bottom-up associated with the root of the sub-tree
+
+        Methods
+        -------
+        forward(x)
+            Compute the forward pass of the SmallTreeVAE model and return a dictionary of losses.
+    """
     def __init__(self, depth, **kwargs):
+        """
+        Parameters
+        ----------
+        depth: int
+            The depth at which the sub-tree will be attached to TreeVAE
+        kwargs : dict
+            A dictionary of attributes (see config file).
+        """
         super(SmallTreeVAE, self).__init__()
         self.kwargs = kwargs
-        
+
+        # Activation function for final layer of the decoder, needed for the reconstruction loss
         self.activation = self.kwargs['activation']
         if self.activation == "sigmoid":
             self.loss = loss_reconstruction_binary
@@ -21,35 +72,83 @@ class SmallTreeVAE(nn.Module):
             self.loss = loss_reconstruction_mse
         else:
             raise NotImplementedError
+
+        # Activation function used between layers of the networks
+        self.act_function = self.kwargs['act_function']
         # KL-annealing weight initialization
-        self.alpha=self.kwargs['kl_start'] 
-
-        # dropout in router
+        self.alpha=self.kwargs['kl_start']
+        # dropout rate in router network
         self.dropout_router = self.kwargs['dropout_router']
-        # skip connection in the MLPs of the transformations
-        self.skip_con_transformation = self.kwargs['skip_con_transformation']
-
-        latent_channels = self.kwargs['latent_channels']
-        bottom_up_channels = self.kwargs['bottom_up_channels']
-        representation_dim = self.kwargs['representation_dim']
+        # Whether to use residual connection in the transformation and bottom-up layers
+        self.res_connections = self.kwargs['res_connections']
+        # Depth of the sub-tree
         self.depth = depth
+        # Parameters for latent representation size and channels
+        latent_channels = self.kwargs['latent_channels']
+        representation_dim = self.kwargs['representation_dim']
+        bottom_up_channels = self.kwargs['bottom_up_channels']
         self.latent_channel = latent_channels[-self.depth-1]
         self.bottom_up_channel = bottom_up_channels[-self.depth]
+        # Input shape and channels
         self.inp_shape = self.kwargs['inp_shape']
         self.inp_channel = self.kwargs['inp_channels']
+        # Augmentation parameters for contrastive learning
         self.augment = self.kwargs['augment']
         self.augmentation_method = self.kwargs['augmentation_method']
         self.aug_decisions_weight = self.kwargs['aug_decisions_weight']
 
+        # Define the networks for the sub-tree
+        # -> 2 children and 1 root nodes -> 2 decoders, 2 transformations, 2 denses, 1 decision, 1 decision_q
         self.denses = nn.ModuleList([Dense(self.bottom_up_channel, self.latent_channel) for _ in range(2)])
-        self.transformations = nn.ModuleList([Conv(self.latent_channel, self.latent_channel, skip_connection=self.skip_con_transformation) for _ in range(2)])
-        self.decision = Router(self.latent_channel, rep_dim=representation_dim, hidden_units=self.bottom_up_channel, dropout=self.dropout_router)
-        self.decision_q = Router(self.bottom_up_channel, rep_dim=representation_dim, hidden_units=self.bottom_up_channel, dropout=self.dropout_router)
-        self.decoders = nn.ModuleList([get_decoder(architecture=self.kwargs['encoder'], input_shape=representation_dim,
-                                                   input_channels=self.latent_channel, output_shape=int((self.inp_shape)**0.5),
-                                                   output_channels=self.inp_channel, activation=self.activation) for _ in range(2)])
+        self.transformations = nn.ModuleList([Conv(self.latent_channel,
+                                                   self.latent_channel,
+                                                   res_connections=self.res_connections,
+                                                   act_function=self.act_function) for _ in range(2)])
+        self.decision = Router(self.latent_channel,
+                               rep_dim=representation_dim,
+                               hidden_units=self.bottom_up_channel,
+                               dropout=self.dropout_router,
+                               act_function=self.act_function)
+        self.decision_q = Router(self.bottom_up_channel,
+                                 rep_dim=representation_dim,
+                                 hidden_units=self.bottom_up_channel,
+                                 dropout=self.dropout_router,
+                                 act_function=self.act_function)
+        self.decoders = nn.ModuleList([get_decoder(architecture=self.kwargs['encoder'],
+                                                   input_shape=representation_dim,
+                                                   input_channels=self.latent_channel,
+                                                   output_shape=int((self.inp_shape)**0.5),
+                                                   output_channels=self.inp_channel,
+                                                   activation=self.activation,
+                                                   act_function=self.act_function) for _ in range(2)])
 
     def forward(self, x, z_parent, p, bottom_up):
+        """
+        Forward pass of the SmallTreeVAE model.
+
+        Parameters
+        ----------
+        x : tensor
+            Input data (batch-size, input-size)
+        z_parent: tensor
+            The embeddings of the parent of the two children of SmallTreeVAE (which are the embeddings of the TreeVAE
+            leaf where the SmallTreeVAE will be attached)
+        p: list
+            Probabilities of falling into the selected TreeVAE leaf where the SmallTreeVAE will be attached
+        bottom_up: list
+            The list of bottom-up transformations [encoder, MLP, MLP, ...] up to the root
+
+        Returns
+        -------
+        dict
+            a dictionary
+            {'rec_loss': reconstruction loss,
+            'kl_decisions': the KL loss of the decisions,
+            'kl_nodes': the KL loss of the nodes,
+            'aug_decisions': the weighted contrastive loss,
+            'p_c_z': the probability of each sample to be assigned to each leaf with size: #samples x #leaves,
+            }
+        """
         epsilon = 1e-7  # Small constant to prevent numerical instability
         device = x.device
         
@@ -92,14 +191,6 @@ class SmallTreeVAE(nn.Module):
 
             reconstructions.append(self.decoders[i](z_sample))
 
-            # get decoder weights
-            params = []
-            for param in self.decoders[i].parameters():
-                if param.requires_grad:
-                    params.append(param)
-            params = torch.cat([param.view(-1) for param in params])
-            decoder_magnitudes.append(torch.norm(params, p=2))
-
         kl_nodes_loss = torch.clamp(kl_nodes, min=-10, max=1e10)
 
         # Probability of falling in each leaf
@@ -115,5 +206,4 @@ class SmallTreeVAE(nn.Module):
             'kl_nodes': kl_nodes_loss,
             'aug_decisions': self.aug_decisions_weight * aug_decisions_loss,
             'p_c_z': p_c_z,
-            'decoder_magnitudes': decoder_magnitudes
         }

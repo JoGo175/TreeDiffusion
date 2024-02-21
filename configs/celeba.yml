@@ -1,52 +1,63 @@
 run_name: 'celeba_cnn'
 
 data:
-  data_name: 'celeba'
-  num_clusters_data: 1
-  path: 'datasets/celeba'
+  data_name: 'celeba'       # Dataset name
+  num_clusters_data: 1      # Number of clusters/classes in the dataset
+  path: 'datasets/celeba'   # Path to the dataset
 
+# TreeVAE specific parameters --------------------------------------------------------------------------------
 training:
-  num_epochs: 150
-  num_epochs_smalltree: 150
-  num_epochs_intermediate_fulltrain: 0
-  num_epochs_finetuning: 0
-  batch_size: 128
-  lr: 0.001
-  weight_decay: 0.00001
-  decay_lr: 0.1
-  decay_stepsize: 100
-  decay_kl: 0.01
-  kl_start: 0.01
-  dropout_router: 0.0
-  skip_con_transformation: True
-  compute_fid: True
-  save_images: True
+  # Training parameters
+  num_epochs: 150                           # Nb. epochs for training the first small tree, root and 2 leaves
+  num_epochs_smalltree: 150                 # Nb. epochs for training the remaining small trees in each grow step
+  num_epochs_intermediate_fulltrain: 0      # Nb. epochs for the intermediate full tree training, in between the grow steps -> 0 to avoid node collapse
+  num_epochs_finetuning: 0                  # Nb. epochs for the final full tree training after the grow steps -> 0 to avoid node collapse
+  intermediate_fulltrain: False             # Whether to train the intermediate full tree
+  batch_size: 128                           # Effective batch size
+  lr: 0.001                                 # Learning rate
+  decay_lr: 0.1                             # Learning rate decay factor
+  decay_stepsize: 100                       # Learning rate decay step size for StepLR scheduler
+  weight_decay: 0.00001                     # Weight decay factor
 
-  inp_shape: 4096 # 12288
-  inp_channels: 3 # 3 for RGB
-  representation_dim: 2 # size of the 2-dim latent representation -> should be a power of 2, (2, 4, 8, 16 ...)
-  latent_channels: [16, 16, 16, 16, 16, 16] # channels of the latent representation
-  bottom_up_channels: [64, 64, 64, 64, 64, 64] # channels of the bottom-up representation,
-  initial_depth: 1
-  activation: 'mse'
-  encoder: 'cnn2'
-  grow: True
-  prune: True
-  num_clusters_tree: 10
-  intermediate_fulltrain: False
-  augment: True
-  augmentation_method: 'InfoNCE,instancewise_full' 
-  aug_decisions_weight: 100
-  compute_ll: False
+  # KL annealing
+  decay_kl: 0.01          # KL annealing weight increase after each epoch until reaching 1
+  kl_start: 0.01          # Initial KL annealing weight
+
+  # Model parameters
+  inp_shape: 4096                                   # Input shape, 64*64 for CelebA
+  inp_channels: 3                                   # Input channels, 3 for RGB
+  representation_dim: 2                             # size of the 2-dim latent representation -> should be a power of 2, (2, 4, 8, 16 ...)
+  latent_channels: [16, 16, 16, 16, 16, 16, 16]     # channels of the latent representation -> (latent_channels, representation_dim, representation_dim)
+  bottom_up_channels: [64, 64, 64, 64, 64, 64, 64]  # channels of the bottom-up representation, only works for equal channels at the moment
+  initial_depth: 1                                  # Initial depth of the tree (1 for the root + 2 leaves)
+  act_function: "swish"                             # Activation function used between layers in TreeVAE (swish, relu, leaky_relu)
+  activation: 'mse'                                 # Activation function for final layer of the decoder (mse does not scale the pixel values between 0 and 1, as in the case of sigmoid activation)
+  encoder: 'cnn2'                                   # Encoder architecture (smaller cnn1 or larger cnn2)
+  grow: True                                        # Whether to grow the tree
+  prune: True                                       # Whether to prune the tree after each grow steps
+  num_clusters_tree: 10                             # Maximum number of effective clusters to grow the tree to
+  dropout_router: 0.0                               # Dropout rate for the router networks
+  res_connections: True                             # Whether to use residual connections in the bottom-up and transformation networks
+
+  # Augmentation parameters for contrastive learning
+  augment: True                                         # Whether to use augmentation for contrastive learning
+  augmentation_method: 'InfoNCE,instancewise_full'      # Augmentation method. One of ['simple', 'InfoNCE,instancewise_full']
+  aug_decisions_weight: 100                             # Weight for the contrastive loss
+
+  # Evaluation parameters
+  compute_ll: False           # Whether to compute test log-likelihood
+  compute_fid: True           # Whether to compute test FID scores for the generated and reconstructed images
+  save_images: True           # Whether to save images during training for wandb logging
 
 globals:
-  wandb_logging: 'offline'
-  eager_mode: True
-  seed: 42
-  save_model: True
-  config_name: 'celeba'
+  wandb_logging: 'offline'    # Whether to log to wandb. One of ['offline', 'online', 'disabled']
+  eager_mode: True            # Whether to use eager mode
+  seed: 42                    # Random seed for reproducibility
+  save_model: True            # Whether to save the trained model to disk
+  config_name: 'celeba'       # Name of the config file
 
 
+## DiffuseVAE specific parameters --------------------------------------------------------------------------------
 ddpm:
   data:
     root: "data/"   # Dataset root

@@ -4,6 +4,7 @@ Utility functions for training.
 import torch
 import math
 import numpy as np
+import gc
 import wandb
 from tqdm import tqdm
 import torch.optim as optim
@@ -12,21 +13,48 @@ from sklearn.metrics.cluster import normalized_mutual_info_score
 from utils.utils import cluster_acc
 from torch.utils.data import TensorDataset
 
-def train_one_epoch(train_loader, model, optimizer, metrics_calc, epoch_idx, device, train_small_tree=False, small_model=None, ind_leaf=None):
+
+def train_one_epoch(train_loader, model, optimizer, metrics_calc, epoch_idx, device, train_small_tree=False,
+                    small_model=None, ind_leaf=None):
+	"""
+	Train TreeVAE or SmallTreeVAE model for one epoch.
+
+	Parameters
+	----------
+	train_loader: DataLoader
+		The train data loader
+	model: models.model.TreeVAE
+		The TreeVAE model
+	optimizer: optim
+		The optimizer for training the model
+	metrics_calc: Metric
+		The metrics to keep track while training
+	epoch_idx: int
+		The current epoch
+	device: torch.device
+		The device in which to validate the model
+	train_small_tree: bool
+		If set to True, then the subtree (small_model) will be trained (and afterwords attached to model)
+	small_model: models.model.SmallTreeVAE
+		The SmallTreeVAE model (which is then attached to a selected leaf of TreeVAE)
+	ind_leaf: int
+		The index of the TreeVAE leaf where the small_model will be attached
+	"""
 	if train_small_tree:
+		# if we train the small tree, then the full tree is frozen
 		model.eval()
 		small_model.train()
 		model.return_bottomup[0] = True
 		model.return_x[0] = True
-		model.return_elbo[0] = True
 		alpha = small_model.alpha
 	else:
+		# otherwise we are training the full tree
 		model.train()
 		alpha = model.alpha
 		
 	metrics_calc.reset()
 
-	for batch_idx, batch in enumerate(tqdm(train_loader, leave=False)):
+	for batch_idx, batch in enumerate(tqdm(train_loader)):
 		inputs, labels = batch
 		inputs, labels = inputs.to(device), labels.to(device)
 		# Zero your gradients for every batch
@@ -43,28 +71,28 @@ def train_one_epoch(train_loader, model, optimizer, metrics_calc, epoch_idx, dev
 			outputs['kl_root'] = torch.tensor(0., device=device)
 		else:
 			outputs = model(inputs)
+
 		# Compute the loss and its gradients
 		rec_loss = outputs['rec_loss']
 		kl_losses = outputs['kl_root'] + outputs['kl_decisions'] + outputs['kl_nodes']
-		# penalize if decoder weights are too large and too different from each other
-		decoder_magnitudes = torch.tensor(outputs['decoder_magnitudes'])
-		decoder_loss = (torch.max(decoder_magnitudes) - torch.min(decoder_magnitudes)) + torch.mean(decoder_magnitudes)
-		
-		loss_value = rec_loss + alpha * kl_losses + outputs['aug_decisions'] # + decoder_loss * 1000
+		loss_value = rec_loss + alpha * kl_losses + outputs['aug_decisions']
 		loss_value.backward()
 
 		# Adjust learning weights
 		optimizer.step()
 
 		# Store metrics
-		y_pred = outputs['p_c_z'].argmax(dim=-1) # Note that this is used for nmi, which means during subtreetraining, the nmi is calculate relative to only the subtree
-		metrics_calc.update(loss_value, outputs['rec_loss'], outputs['kl_decisions'], outputs['kl_nodes'], outputs['kl_root'],
-		   outputs['aug_decisions'], (1 - torch.mean(y_pred.float()) if outputs['p_c_z'].shape[1]<=2 else torch.tensor(0., device=device)), labels, y_pred)
+		# Note that y_pred is used for computing nmi.
+		# During subtree training, the metrics is calculated relative to only the subtree.
+		y_pred = outputs['p_c_z'].argmax(dim=-1)
+		metrics_calc.update(loss_value, outputs['rec_loss'], outputs['kl_decisions'], outputs['kl_nodes'],
+							outputs['kl_root'],outputs['aug_decisions'],
+							(1 - torch.mean(y_pred.float()) if outputs['p_c_z'].shape[1]<=2 else torch.tensor(0., device=device)),
+							labels, y_pred)
 	
 	if train_small_tree:
 		model.return_bottomup[0] = False
 		model.return_x[0] = False
-		model.return_elbo[0] = False
 
 	# Calculate and log metrics
 	metrics = metrics_calc.compute()
@@ -74,10 +102,13 @@ def train_one_epoch(train_loader, model, optimizer, metrics_calc, epoch_idx, dev
 	for key, value in metrics.items():
 		prints += f"{key}: {value:.3f} "
 	print(prints)
+	metrics_calc.reset()
+	_ = gc.collect()
 	return
 
 
-def validate_one_epoch(test_loader, model, metrics_calc, epoch_idx, device, test=False, train_small_tree=False, small_model=None, ind_leaf=None):
+def validate_one_epoch(test_loader, model, metrics_calc, epoch_idx, device, test=False, train_small_tree=False,
+					   small_model=None, ind_leaf=None):
 	model.eval()
 
 	if train_small_tree:
@@ -92,7 +123,7 @@ def validate_one_epoch(test_loader, model, metrics_calc, epoch_idx, device, test
 	metrics_calc.reset()
 
 	with torch.no_grad():
-		for batch_idx, batch in enumerate(tqdm(test_loader, leave=False)):
+		for batch_idx, batch in enumerate(tqdm(test_loader)):
 			inputs, labels = batch
 			inputs, labels = inputs.to(device), labels.to(device)
 			# Make predictions for this batch
@@ -115,13 +146,14 @@ def validate_one_epoch(test_loader, model, metrics_calc, epoch_idx, device, test
 
 			# Store metrics
 			y_pred = outputs['p_c_z'].argmax(dim=-1)
-			metrics_calc.update(loss_value, outputs['rec_loss'], outputs['kl_decisions'], outputs['kl_nodes'], outputs['kl_root'],
-				outputs['aug_decisions'], (1 - torch.mean(outputs['p_c_z'].argmax(dim=-1).float()) if outputs['p_c_z'].shape[1]<=2 else torch.tensor(0., device=device)), labels, y_pred)
+			metrics_calc.update(loss_value, outputs['rec_loss'], outputs['kl_decisions'], outputs['kl_nodes'],
+								outputs['kl_root'],outputs['aug_decisions'],
+								(1 - torch.mean(outputs['p_c_z'].argmax(dim=-1).float()) if outputs['p_c_z'].shape[1]<=2 else torch.tensor(0., device=device)),
+								labels, y_pred)
 			
 	if train_small_tree:
 		model.return_bottomup[0] = False
 		model.return_x[0] = False
-		model.return_elbo[0] = False
 
 	# Calculate and log metrics
 	metrics = metrics_calc.compute()
@@ -134,6 +166,8 @@ def validate_one_epoch(test_loader, model, metrics_calc, epoch_idx, device, test
 	for key, value in metrics.items():
 		prints += f"{key}: {value:.3f} "
 	print(prints)
+	metrics_calc.reset()
+	_ = gc.collect()
 	return
 
 
@@ -183,9 +217,9 @@ def predict(loader, model, device, *return_flags):
 					node_leaves_combined[i][key] = torch.cat([sublist[i][key] for sublist in node_leaves], dim=0)
 			results[return_flag] = node_leaves_combined
 		elif return_flag == 'rec_loss':
-			results[return_flag] = torch.stack(results[return_flag],dim=0)
+			results[return_flag] = torch.stack(results[return_flag], dim=0)
 		else:
-			results[return_flag] = torch.cat(results[return_flag],dim=0)
+			results[return_flag] = torch.cat(results[return_flag], dim=0)
 
 	if 'bottom_up' in return_flags:
 		model.return_bottomup[0] = False
@@ -194,7 +228,7 @@ def predict(loader, model, device, *return_flags):
 	if 'elbo' in return_flags:
 		model.return_elbo[0] = False
 
-	if len(return_flags)==1:
+	if len(return_flags) == 1:
 		return list(results.values())[0]
 	else:
 		return tuple(results.values())
@@ -227,7 +261,7 @@ class AnnealKLCallback:
 		self.model.alpha = torch.tensor(min(1, start))
 
 	def on_epoch_end(self, epoch, logs=None):
-		value = self.start + (epoch+1) * self.decay
+		value = self.start + (epoch + 1) * self.decay
 		self.model.alpha = torch.tensor(min(1, value))
 
 class Decay():
@@ -248,19 +282,11 @@ def calc_aug_loss(prob_parent, prob_router, augmentation_methods, emb_contr=[]):
 	aug_decisions_loss = torch.zeros(1, device=prob_parent.device)
 	prob_parent = prob_parent.detach()
 
-	num_losses = len(augmentation_methods)
-	if emb_contr == [] and 'instancewise_first' in augmentation_methods:
-		num_losses = num_losses - 1
-	if emb_contr == [] and 'instancewise_full' in augmentation_methods:
-		num_losses = num_losses - 1
-	if num_losses <= 0:
-		# If only instancewise losses and we're in smalltree
-		return aug_decisions_loss
-
 	# Get router probabilities of X' and X''
-	p1, p2 = prob_router[:len(prob_router)//2], prob_router[len(prob_router)//2:]
+	p1, p2 = prob_router[:len(prob_router) // 2], prob_router[len(prob_router) // 2:]
 	# Perform invariance regularization
 	for aug_method in augmentation_methods:
+		# Perform invariance regularization in the decisions
 		if aug_method == 'InfoNCE':
 			p1_normed = torch.nn.functional.normalize(torch.stack([p1, 1 - p1], 1), dim=1)
 			p2_normed = torch.nn.functional.normalize(torch.stack([p2, 1 - p2], 1), dim=1)
@@ -273,8 +299,9 @@ def calc_aug_loss(prob_parent, prob_router, augmentation_methods, emb_contr=[]):
 			info_nce = torch.sum(prob_parent * info_nce_sample) / torch.sum(prob_parent)
 			aug_decisions_loss += info_nce
 
-		elif aug_method in ['instancewise_first', 'instancewise_full']:
-			looplen = len(emb_contr) if aug_method == 'instancewise_full' else min(len(emb_contr), 1)
+		# Perform invariance regularization in the bottom-up embeddings
+		elif aug_method == 'instancewise_full':
+			looplen = len(emb_contr)
 			for i in range(looplen):
 				temp_instance = 0.5
 				emb = emb_contr[i]
@@ -294,16 +321,13 @@ def calc_aug_loss(prob_parent, prob_router, augmentation_methods, emb_contr=[]):
 		else:
 			raise NotImplementedError
 
-	# Also take into account that for smalltree, instancewise losses are 0
-	aug_decisions_loss = aug_decisions_loss / num_losses
-
 	return aug_decisions_loss
 
 
 
 def get_ind_small_tree(node_leaves, n_effective_leaves):
 	prob = node_leaves['prob']
-	ind = np.where(prob >= min(1/n_effective_leaves,0.5))[0] # To circumvent problems with n_effective_leaves==1
+	ind = np.where(prob >= min(1 / n_effective_leaves, 0.5))[0] # To circumvent problems with n_effective_leaves==1
 	return ind 
 
 
@@ -329,11 +353,39 @@ def compute_leaves(tree):
 	return nodes_leaves
 
 
-def compute_growing_leaf(loader, model, node_leaves, max_depth, batch_size, max_leaves, check_max = False):
-	# count effective number of leaves 
+def compute_growing_leaf(loader, model, node_leaves, max_depth, batch_size, max_leaves, check_max=False):
+	"""
+	Compute the leaf of the TreeVAE model that should be further split.
+
+	Parameters
+	----------
+	loader: DataLoader
+	    The data loader used to compute the leaf
+	model: models.model.TreeVAE
+	    The TreeVAE model
+	node_leaves: list
+	    A list of leaf nodes, each one described by a dictionary
+	    {'prob': sample-wise probability of reaching the node, 'z_sample': sampled leaf embedding}
+	max_depth: int
+	    The maximum depth of the tree
+	batch_size: int
+	    The batch size
+	max_leaves: int
+	    The maximum number of leaves of the tree
+	check_max: bool
+	    Whether to check that we reached the maximum number of leaves
+	Returns
+	------
+	list: List containing:
+	      ind_leaf: index of the selected leaf
+	      leaf: the selected leaf
+	      n_effective_leaves: number of leaves that are not empty
+	"""
+
+	# count effective number of leaves (non empty leaves)
 	weights = [node_leaves[i]['prob'] for i in range(len(node_leaves))]
 	weights_summed = [weights[i].sum() for i in range(len(weights))]
-	n_effective_leaves = len(np.where(weights_summed/np.sum(weights_summed) >= 0.01)[0])
+	n_effective_leaves = len(np.where(weights_summed / np.sum(weights_summed) >= 0.01)[0])
 	print("\nNumber of effective leaves: ", n_effective_leaves)
 	
 	# grow until reaching required n_effective_leaves 
@@ -352,6 +404,7 @@ def compute_growing_leaf(loader, model, node_leaves, max_depth, batch_size, max_
 		else:
 			y_train = loader.dataset.dataset.targets[loader.dataset.indices]
 		# Calculating ground-truth nodes-to-split for logging and model development
+		# NOTE: labels are used to evaluate leaf metrics, they are not used to select the leaf
 		for i in range(len(node_leaves)):
 			depth, node = leaves[i]['depth'], leaves[i]['node']
 			if not node.expand:
@@ -399,8 +452,8 @@ def compute_pruning_leaf(model, node_leaves_train):
 	
 	n_samples = []
 	for i in range(n_leaves):
-		print(f"Leaf {i}: ", sum(max_indeces==i), "samples")
-		n_samples.append(sum(max_indeces==i))
+		print(f"Leaf {i}: ", sum(max_indeces == i), "samples")
+		n_samples.append(sum(max_indeces == i))
 
 	# Prune leaves with less than 1% of all samples
 	ind_leaf = np.argmin(n_samples)
@@ -421,40 +474,45 @@ def get_optimizer(model, configs):
 class Custom_Metrics(Metric):
 	def __init__(self, device):
 		super().__init__()
-		self.add_state("loss_value", default=torch.tensor(0., device=device), dist_reduce_fx="sum")
-		self.add_state("rec_loss", default=torch.tensor(0., device=device), dist_reduce_fx="sum")
-		self.add_state("kl_root", default=torch.tensor(0., device=device), dist_reduce_fx="sum")
-		self.add_state("kl_decisions", default=torch.tensor(0., device=device), dist_reduce_fx="sum")
-		self.add_state("kl_nodes", default=torch.tensor(0., device=device), dist_reduce_fx="sum")
-		self.add_state("aug_decisions", default=torch.tensor(0., device=device), dist_reduce_fx="sum")
-		self.add_state("perc_samples", default=torch.tensor(0., device=device), dist_reduce_fx="sum")
-		self.add_state("y_true", default=torch.tensor([], dtype=torch.int8, device=device), dist_reduce_fx="sum")
-		self.add_state("y_pred", default=torch.tensor([], dtype=torch.int8, device=device), dist_reduce_fx="sum")
-		self.add_state("n_samples", default=torch.tensor(0, dtype=torch.int, device=device), dist_reduce_fx="sum")
+		self.add_state("loss_value", default=torch.tensor(0., device=device))
+		self.add_state("rec_loss", default=torch.tensor(0., device=device))
+		self.add_state("kl_root", default=torch.tensor(0., device=device))
+		self.add_state("kl_decisions", default=torch.tensor(0., device=device))
+		self.add_state("kl_nodes", default=torch.tensor(0., device=device))
+		self.add_state("aug_decisions", default=torch.tensor(0., device=device))
+		self.add_state("perc_samples", default=torch.tensor(0., device=device))
+		self.add_state("y_true", default=[])
+		self.add_state("y_pred", default=[])
+		self.add_state("n_samples", default=torch.tensor(0, dtype=torch.int, device=device))
 
 
-	def update(self, loss_value: torch.Tensor, rec_loss: torch.Tensor, kl_decisions: torch.Tensor, kl_nodes: torch.Tensor,  kl_root: torch.Tensor, 
+	def update(self, loss_value: torch.Tensor, rec_loss: torch.Tensor, kl_decisions: torch.Tensor, kl_nodes: torch.Tensor,  kl_root: torch.Tensor,
 		   aug_decisions: torch.Tensor, perc_samples: torch.Tensor, y_true: torch.Tensor, y_pred: torch.Tensor):
 		
 		assert y_true.shape == y_pred.shape
 
 		n_samples = y_true.numel()
 		self.n_samples += n_samples
-		self.loss_value += loss_value.item()*n_samples
-		self.rec_loss += rec_loss.item()*n_samples
-		self.kl_root += kl_root.item()*n_samples
-		self.kl_decisions += kl_decisions.item()*n_samples
-		self.kl_nodes += kl_nodes.item()*n_samples
-		self.aug_decisions += aug_decisions.item()*n_samples
-		self.perc_samples += perc_samples.item()*n_samples
-		self.y_true = torch.cat((self.y_true,y_true))
-		self.y_pred = torch.cat((self.y_pred,y_pred))		
+		self.loss_value += loss_value.item() * n_samples
+		self.rec_loss += rec_loss.item() * n_samples
+		self.kl_root += kl_root.item() * n_samples
+		self.kl_decisions += kl_decisions.item() * n_samples
+		self.kl_nodes += kl_nodes.item() * n_samples
+		self.aug_decisions += aug_decisions.item() * n_samples
+		self.perc_samples += perc_samples.item() * n_samples
+		self.y_true.append(y_true)
+		self.y_pred.append(y_pred)
 
 	def compute(self):
+		self.y_true = torch.cat(self.y_true, dim=0)
+		self.y_pred = torch.cat(self.y_pred, dim=0)
 		nmi = normalized_mutual_info_score(self.y_true.cpu().numpy(), self.y_pred.cpu().numpy())
 		acc = cluster_acc(self.y_true.cpu().numpy(), self.y_pred.cpu().numpy(), return_index=False)
 
-		metrics = dict({'loss_value': self.loss_value/self.n_samples, 'rec_loss': self.rec_loss/self.n_samples, 'kl_decisions': self.kl_decisions/self.n_samples, 'kl_root': self.kl_root/self.n_samples,
-		  				'kl_nodes': self.kl_nodes/self.n_samples, 'aug_decisions': self.aug_decisions/self.n_samples, 'perc_samples': self.perc_samples/self.n_samples, 'nmi': nmi, 'accuracy': acc})
+		metrics = dict({'loss_value': self.loss_value / self.n_samples, 'rec_loss': self.rec_loss / self.n_samples,
+						'kl_decisions': self.kl_decisions / self.n_samples, 'kl_root': self.kl_root / self.n_samples,
+		  				'kl_nodes': self.kl_nodes / self.n_samples,
+						'aug_decisions': self.aug_decisions / self.n_samples,
+						'perc_samples': self.perc_samples / self.n_samples, 'nmi': nmi, 'accuracy': acc})
 
 		return metrics

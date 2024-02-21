@@ -7,7 +7,6 @@ from pytorch_lightning.callbacks import BasePredictionWriter
 from torch import Tensor
 from torch.nn import Module
 from utils.diffusion_utils import save_as_images, save_as_np
-import numpy as np
 import matplotlib.pyplot as plt
 from utils.training_utils import move_to
 from utils.utils import display_image

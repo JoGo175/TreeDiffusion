@@ -1,60 +1,71 @@
 run_name: 'mnist_cnn'
 
 data:
-  data_name: 'mnist'
-  num_clusters_data: 10
+  data_name: 'mnist'      # Dataset name
+  num_clusters_data: 10   # Number of clusters/classes in the dataset
 
+# TreeVAE specific parameters --------------------------------------------------------------------------------
 training:
-  num_epochs: 150 #150
-  num_epochs_smalltree: 150 # 150
-  num_epochs_intermediate_fulltrain: 80 #80
-  num_epochs_finetuning: 200 # 200
-  batch_size: 256
-  lr: 0.001
-  weight_decay: 0.00001
-  decay_lr: 0.1
-  decay_stepsize: 100
-  decay_kl: 0.001
-  kl_start: 0.5
-  dropout_router: 0.0
-  skip_con_transformation: True
-  compute_fid: True
-  save_images: True
+  # Training parameters
+  num_epochs: 1                           # Nb. epochs for training the first small tree, root and 2 leaves
+  num_epochs_smalltree: 1                 # Nb. epochs for training the remaining small trees in each grow step
+  num_epochs_intermediate_fulltrain: 0     # Nb. epochs for the intermediate full tree training, in between the grow steps
+  num_epochs_finetuning: 0                # Nb. epochs for the final full tree training after the grow steps
+  intermediate_fulltrain: True              # Whether to train the intermediate full tree
+  batch_size: 256                           # Effective batch size
+  lr: 0.001                                 # Learning rate
+  decay_lr: 0.1                             # Learning rate decay factor
+  decay_stepsize: 100                       # Learning rate decay step size for StepLR scheduler
+  weight_decay: 0.00001                     # Weight decay factor
 
-  inp_shape: 784
-  inp_channels: 1 # 3 for RGB, 1 for grayscale
-  representation_dim: 2 # size of the 2-dim latent representation -> (channel, representation_dim, representation_dim)
-  latent_channels: [16, 16, 16, 16, 16, 16] # channels of the latent representation
-  bottom_up_channels: [32, 32, 32, 32, 32, 32] # channels of the bottom-up representation, only works for equal channels at the moment
-  initial_depth: 1
-  activation: "sigmoid"
-  encoder: 'cnn1'
-  grow: True 
-  prune: True
-  num_clusters_tree: 10
-  intermediate_fulltrain: True
-  compute_ll: False
-  augment: False
-  augmentation_method: 'simple'
-  aug_decisions_weight: 1
+  # KL annealing
+  decay_kl: 0.001         # KL annealing weight increase after each epoch until reaching 1
+  kl_start: 0.5           # Initial KL annealing weight
+
+  # Model parameters
+  inp_shape: 784                                    # Input shape, 28*28 for MNIST
+  inp_channels: 1                                   # Input channels, 1 for grayscale
+  representation_dim: 2                             # size of the 2-dim latent representation -> should be a power of 2, (2, 4, 8, 16 ...)
+  latent_channels: [16, 16]     # channels of the latent representation -> (latent_channels, representation_dim, representation_dim)
+  bottom_up_channels: [32, 32]  # channels of the bottom-up representation, only works for equal channels at the moment
+  initial_depth: 1                                  # Initial depth of the tree (1 for the root + 2 leaves)
+  act_function: "swish"                             # Activation function used between layers in TreeVAE (swish, relu, leaky_relu)
+  activation: "sigmoid"                             # Activation function for final layer of the decoder (sigmoid to get pixel values between 0 and 1)
+  encoder: 'cnn1'                                   # Encoder architecture (smaller cnn1 or larger cnn2)
+  grow: True                                        # Whether to grow the tree
+  prune: True                                       # Whether to prune the tree after each grow steps
+  num_clusters_tree: 10                             # Maximum number of effective clusters to grow the tree to
+  dropout_router: 0.0                               # Dropout rate for the router networks
+  res_connections: True                             # Whether to use residual connections in the bottom-up and transformation networks
+
+  # Augmentation parameters for contrastive learning
+  augment: False                      # Whether to use augmentation for contrastive learning
+  augmentation_method: 'simple'       # Augmentation method. One of ['simple', 'InfoNCE,instancewise_full']
+  aug_decisions_weight: 1             # Weight for the contrastive loss
+
+  # Evaluation parameters
+  compute_ll: False           # Whether to compute test log-likelihood
+  compute_fid: True           # Whether to compute test FID scores for the generated and reconstructed images
+  save_images: True           # Whether to save images during training for wandb logging
 
 globals:
-  wandb_logging: 'offline'
-  eager_mode: True
-  seed: 42
-  save_model: True
-  config_name: 'mnist'
+  wandb_logging: 'offline'    # Whether to log to wandb. One of ['offline', 'online', 'disabled']
+  eager_mode: True            # Whether to use eager mode
+  seed: 42                    # Random seed for reproducibility
+  save_model: True            # Whether to save the trained model to disk
+  config_name: 'mnist'        # Name of the config file
 
 
+## DiffuseVAE specific parameters --------------------------------------------------------------------------------
 ddpm:
   data:
-    root: "data/"   # Dataset root
-    name: "mnist"   # Dataset name (check main/util.py `get_dataset` for a registry)
-    image_size: 28   # Image resolution
-    hflip: True   # Whether to use horizontal flip
-    n_channels: 1   # Num input channels
-    norm: True   # Whether to scale data between [-1, 1]
-    ddpm_latent_path: ""   # If sharing DDPM latents between diffusevae samples, path to .pt tensor containing latent codes
+    root: "data/"           # Dataset root
+    name: "mnist"           # Dataset name (check main/util.py `get_dataset` for a registry)
+    image_size: 28          # Image resolution (28 for MNIST)
+    hflip: True             # Whether to use horizontal flip during training
+    n_channels: 1           # Num input channels
+    norm: True              # Whether to scale data between [-1, 1]
+    ddpm_latent_path: ""    # If sharing DDPM latents between diffusevae samples, path to .pt tensor containing latent codes
 
   model:   # UNet specific params. Check the DDPM implementation for details on these
     dim : 64
@@ -83,7 +94,7 @@ ddpm:
     optimizer: "Adam"   # Optimizer
     lr: 0.0002   # Learning rate
     restore_path: ""   # Checkpoint restore path
-    vae_chkpt_path: 'models/experiments/mnist/20240205-061146_1696e'   # VAE checkpoint path. Useful when using form1 or form2
+    vae_chkpt_path: 'models/experiments/mnist/20240220-195810_50bf1'   # VAE checkpoint path. Useful when using form1 or form2
     results_dir: 'results/mnist/'   # Directory to store the checkpoint in
     workers: 1   # Num workers
     grad_clip: 1.0   # gradient clipping threshold

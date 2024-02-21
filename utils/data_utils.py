@@ -12,36 +12,27 @@ from sklearn.datasets import fetch_20newsgroups
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 from utils.utils import reset_random_seeds
-from utils.training_utils import predict
 
-
-
-def get_selected_omniglot_alphabets():
-	return ['Braille','Glagolitic','Old_Church_Slavonic_(Cyrillic)','Oriya', 'Bengali']
-
-def select_subset(y_train, y_test, num_classes):
-		digits = np.random.choice([i for i in range(len(np.unique(y_train)))], size=num_classes, replace=False)
-		indx_train = np.array([], dtype=int)
-		indx_test = np.array([], dtype=int)
-		for i in range(num_classes):
-			indx_train = np.append(indx_train, np.where(y_train == digits[i])[0])
-			indx_test = np.append(indx_test, np.where(y_test == digits[i])[0])
-
-
-		return np.sort(indx_train), np.sort(indx_test)
 
 def get_data(configs):
+	"""Compute and process the data specified in the configs file.
+
+	Parameters
+	----------
+	configs : dict
+		A dictionary of config settings, where the data_name, the number of clusters in the data and augmentation
+		details are specified.
+
+	Returns
+	------
+	list
+		A list of three tensor datasets: trainset, trainset_eval, testset
+	"""
 	data_name = configs['data']['data_name']
 	augment = configs['training']['augment']
 	augmentation_method = configs['training']['augmentation_method']
 	n_classes = configs['data']['num_clusters_data']
-	hostname = os.uname()[1]
-	if 'biomed' in hostname:
-		# Remote Datafolder
-		data_path = '/cluster/dataset/vogtlab/Projects/Treevae/data/'
-	else:
-		# Local Datafolder
-		data_path = './data/'
+	data_path = './data/'
 
 	if data_name == 'mnist':
 		reset_random_seeds(configs['globals']['seed'])
@@ -291,6 +282,79 @@ def get_data(configs):
 	return trainset, trainset_eval, testset
 
 
+
+def get_gen(dataset, configs, validation=False, shuffle=True, smalltree=False, smalltree_ind=None):
+	"""Given the dataset and a config file, it will output the DataLoader for training.
+
+	Parameters
+	----------
+	dataset : torch.dataset
+		A tensor dataset.
+	configs : dict
+		A dictionary of config settings.
+	validation : bool, optional
+		If set to True it will not drop the last batch, during training it is preferrable to drop the last batch if it
+		has a different shape to avoid changing the batch normalization statistics.
+	shuffle : bool, optional
+		Whether to shuffle the dataset at every epoch.
+	smalltree : bool, optional
+		Whether the method should output the DataLoader for the small tree training, where a subset of training inputs
+		are used.
+	smalltree_ind : list
+		For training the small tree during the growing strategy of TreeVAE, only a subset of training inputs will be
+		used for efficiency.
+
+	Returns
+	------
+	DataLoader
+		The dataloader of the provided dataset.
+	"""
+	batch_size = configs['training']['batch_size']
+	drop_last = not validation
+	try:
+		num_workers = configs['parser']['num_workers']
+	except:
+		num_workers = 6
+
+	if smalltree:
+		dataset = Subset(dataset, smalltree_ind)
+
+	# Call the DataLoader when contrastive learning is used
+	if configs['training']['augment'] and configs['training']['augmentation_method'] != ['simple'] and not validation:
+		# As one datapoint leads to two samples, we have to half the batch size to retain same number of samples per batch
+		assert batch_size % 2 == 0
+		batch_size = batch_size // 2
+		if 'celeba' in configs['data']['data_name']:
+			# CelebA only works like
+			data_gen = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=0, pin_memory=True, collate_fn=custom_collate_fn, drop_last=drop_last, persistent_workers=False)
+		else:
+			data_gen = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=1, pin_memory=True, collate_fn=custom_collate_fn, drop_last=drop_last, persistent_workers=True)
+	else:
+		if 'celeba' in configs['data']['data_name']:
+			data_gen = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=0, pin_memory=True, drop_last=drop_last, persistent_workers=False)
+		else:
+			data_gen = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=1, pin_memory=True, drop_last=drop_last, persistent_workers=True)
+
+	return data_gen
+
+def select_subset(y_train, y_test, num_classes):
+	digits = np.random.choice([i for i in range(len(np.unique(y_train)))], size=num_classes, replace=False)
+	indx_train = np.array([], dtype=int)
+	indx_test = np.array([], dtype=int)
+	for i in range(num_classes):
+		indx_train = np.append(indx_train, np.where(y_train == digits[i])[0])
+		indx_test = np.append(indx_test, np.where(y_test == digits[i])[0])
+	return np.sort(indx_train), np.sort(indx_test)
+
+
+def custom_collate_fn(batch):
+	# Concatenate the augmented versions
+	batch = torch.utils.data.default_collate(batch)
+	batch[0] = batch[0].transpose(1, 0).reshape(-1,*batch[0].shape[2:])
+	batch[1] = batch[1].repeat(2)
+	return batch
+
+
 class ContrastiveTransformations(object):
 
 	def __init__(self, base_transforms, n_views=2):
@@ -301,36 +365,8 @@ class ContrastiveTransformations(object):
 		return torch.stack([self.base_transforms(x) for i in range(self.n_views)],dim=0)
 
 
-def custom_collate_fn(batch):  
-	# Concatenate the augmented versions
-	batch = torch.utils.data.default_collate(batch)
-	batch[0] = batch[0].transpose(1, 0).reshape(-1,*batch[0].shape[2:])
-	batch[1] = batch[1].repeat(2)
-	return batch
-
-
-def get_gen(dataset, configs, validation=False, shuffle=True, smalltree=False, smalltree_ind=None):
-	batch_size = configs['training']['batch_size']
-	drop_last = not validation
-	if smalltree:
-		dataset = Subset(dataset, smalltree_ind)
-
-	if configs['training']['augment'] and configs['training']['augmentation_method'] != ['simple'] and not validation:
-		# As one datapoint leads to two samples, we have to half the batch size to retain same number of samples per batch
-		assert batch_size % 2 == 0
-		batch_size = batch_size // 2
-		if 'celeba' in configs['data']['data_name']:
-			# CelebA only works like
-			data_gen = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=5, pin_memory=True, collate_fn=custom_collate_fn, drop_last=drop_last, persistent_workers=True)
-		else:
-			data_gen = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=1, pin_memory=True, collate_fn=custom_collate_fn, drop_last=drop_last, persistent_workers=True)
-	else:
-		if 'celeba' in configs['data']['data_name']:
-			data_gen = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=5, pin_memory=True, drop_last=drop_last, persistent_workers=True)
-		else:
-			data_gen = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=1, pin_memory=True, drop_last=drop_last, persistent_workers=True)
-
-	return data_gen
+def get_selected_omniglot_alphabets():
+	return ['Braille', 'Glagolitic', 'Old_Church_Slavonic_(Cyrillic)', 'Oriya', 'Bengali']
 
 
 class CIFAR100Coarse(torchvision.datasets.CIFAR100):
