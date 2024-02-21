@@ -98,10 +98,8 @@ def train():
     vae = TreeVAE(**configs['training'])
     data_tree = np.load(model_path+'/data_tree.npy', allow_pickle=True)
     vae = construct_tree_fromnpy(vae, data_tree, configs)
-    if not (configs['globals']['eager_mode'] and configs['globals']['wandb_logging']!='offline'):
-        vae = torch.compile(vae)
-    vae.load_state_dict(torch.load(model_path+'/model_weights.pt', map_location=device), strict=True)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    vae.load_state_dict(torch.load(model_path+'/model_weights.pt', map_location=device), strict=True)
     vae.to(device)
     vae.eval()
 

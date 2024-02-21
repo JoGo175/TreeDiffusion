@@ -26,8 +26,8 @@ training:
   inp_shape: 784                                    # Input shape, 28*28 for MNIST
   inp_channels: 1                                   # Input channels, 1 for grayscale
   representation_dim: 2                             # size of the 2-dim latent representation -> should be a power of 2, (2, 4, 8, 16 ...)
-  latent_channels: [16, 16]     # channels of the latent representation -> (latent_channels, representation_dim, representation_dim)
-  bottom_up_channels: [32, 32]  # channels of the bottom-up representation, only works for equal channels at the moment
+  latent_channels: [16, 16, 16, 16, 16, 16, 16]     # channels of the latent representation -> (latent_channels, representation_dim, representation_dim)
+  bottom_up_channels: [32, 32, 32, 32, 32, 32, 32]  # channels of the bottom-up representation, only works for equal channels at the moment
   initial_depth: 1                                  # Initial depth of the tree (1 for the root + 2 leaves)
   act_function: "swish"                             # Activation function used between layers in TreeVAE (swish, relu, leaky_relu)
   activation: "sigmoid"                             # Activation function for final layer of the decoder (sigmoid to get pixel values between 0 and 1)
@@ -85,7 +85,7 @@ ddpm:
   # Training parameters for the DDPM part given TreeVAE model
   training:
     # paths
-    vae_chkpt_path: 'models/experiments/mnist/20240220-195810_50bf1'   # TreeVAE checkpoint path
+    vae_chkpt_path: 'models/experiments/mnist/20240221-154050_7106e'   # TreeVAE checkpoint path
     results_dir: 'results/mnist/'                                      # Directory to store the DDPM checkpoint in
     chkpt_prefix: "vae"                                                # prefix appended to the checkpoint name
     restore_path: ""                                                   # Checkpoint restore path

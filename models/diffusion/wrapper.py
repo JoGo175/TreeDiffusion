@@ -223,16 +223,54 @@ class DDPMWrapper(pl.LightningModule):
             )
 
         if self.eval_mode == "sample":
-            x_t, z = batch
-            recons = self.vae(z)
+            # x_t, z = batch
+            # recons = self.vae(z)
             # recons = 2 * recons - 1
-
             # Initial temperature scaling
-            x_t = x_t * self.temp
-
+            # x_t = x_t * self.temp
             # Formulation-2 initial latent
+            # if isinstance(self.online_network, DDPMv2):
+            #     x_t = recons + self.temp * torch.randn_like(recons)
+
+            # sample from the TreeVAE
+            # instead of using batch, resample as many times as the batch size to create new samples
+            n_samples = batch.size(0)
+            reconstructions, p_c_z = self.vae.generate_samples(n_samples, batch.device)
+
+            max_z_sample = []
+            max_recon = []
+            leaf_ind = []
+
+            nodes = p_c_z
+            for i in range(len(nodes[0]['prob'])):
+                probs = [node['prob'][i] for node in nodes]
+                z_sample = [node['z_sample'][i] for node in nodes]
+                if self.max_leaf:
+                    ind = probs.index(max(probs))
+                else:
+                    ind = torch.multinomial(torch.stack(probs), 1).item()
+
+                max_z_sample.append(z_sample[ind])
+                max_recon.append(reconstructions[ind][i])
+                leaf_ind.append(ind)
+
+            # z = torch.stack(max_z_sample)
+            z = torch.tensor(leaf_ind, dtype=torch.float).unsqueeze(1).to(x.device)
+            recons = torch.stack(max_recon)
+
+            # DDPM encoder
+            x_t = self.online_network.compute_noisy_input(
+                recons,
+                torch.randn_like(recons),
+                torch.tensor(
+                    [self.online_network.T - 1] * recons.size(0), device=recons.device
+                ),
+            )
+
             if isinstance(self.online_network, DDPMv2):
-                x_t = recons + self.temp * torch.randn_like(recons)
+                x_t += recons
+
+
 
         elif self.eval_mode == "recons_all_leaves":
             img = batch[0]
@@ -280,7 +318,6 @@ class DDPMWrapper(pl.LightningModule):
                 out_all_leaves.append(out[str(self.online_network.T)])
 
             return out_all_leaves, recons
-
 
         elif self.eval_mode == "recons":
             img = batch[0]
