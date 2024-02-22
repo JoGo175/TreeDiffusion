@@ -234,28 +234,23 @@ class DDPMWrapper(pl.LightningModule):
 
             # sample from the TreeVAE
             # instead of using batch, resample as many times as the batch size to create new samples
-            n_samples = batch.size(0)
-            reconstructions, p_c_z = self.vae.generate_samples(n_samples, batch.device)
+            n_samples = batch[0].size(0)
+            reconstructions, p_c_z = self.vae.generate_images(n_samples, batch[0].device)
 
-            max_z_sample = []
             max_recon = []
             leaf_ind = []
 
-            nodes = p_c_z
-            for i in range(len(nodes[0]['prob'])):
-                probs = [node['prob'][i] for node in nodes]
-                z_sample = [node['z_sample'][i] for node in nodes]
+            for i in range(len(p_c_z)):
+                probs = p_c_z[i]
                 if self.max_leaf:
-                    ind = probs.index(max(probs))
+                    ind = torch.argmax(probs)
                 else:
-                    ind = torch.multinomial(torch.stack(probs), 1).item()
+                    ind = torch.multinomial(probs, 1).item()
 
-                max_z_sample.append(z_sample[ind])
                 max_recon.append(reconstructions[ind][i])
                 leaf_ind.append(ind)
 
-            # z = torch.stack(max_z_sample)
-            z = torch.tensor(leaf_ind, dtype=torch.float).unsqueeze(1).to(x.device)
+            z = torch.tensor(leaf_ind, dtype=torch.float).unsqueeze(1).to(batch[0].device)
             recons = torch.stack(max_recon)
 
             # DDPM encoder
