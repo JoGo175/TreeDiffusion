@@ -34,7 +34,7 @@ class DDPMWrapper(pl.LightningModule):
     ):
         super().__init__()
         assert loss in ["l1", "l2"]
-        assert eval_mode in ["sample", "recons", "recons_all_leaves"]
+        assert eval_mode in ["sample", "sample_all_leaves", "recons", "recons_all_leaves"]
         assert resample_strategy in ["truncated", "spaced"]
         assert sample_method in ["ddpm", "ddim"]
         assert skip_strategy in ["uniform", "quad"]
@@ -266,6 +266,74 @@ class DDPMWrapper(pl.LightningModule):
                 x_t += recons
 
 
+        elif self.eval_mode == "sample_all_leaves":
+            n_samples = batch[0].size(0)
+            reconstructions, p_c_z = self.vae.generate_images(n_samples, batch[0].device)
+
+            # store all refined reconstructions
+            out_all_leaves = []
+
+            # same noise for same sample
+            noise = torch.randn_like(batch[0])
+
+            # sample overall seed
+            seed_val = np.random.randint(0, 1000)
+
+            # now for each leaf node, we use the recons to condition the ddpm
+            for l in range(len(reconstructions)):
+                recons_leaf_l = reconstructions[l]
+
+                # all leaves have the same noise --> reset seeds
+                torch.manual_seed(seed_val)
+                torch.cuda.manual_seed(seed_val)
+                np.random.seed(seed_val)
+
+                # z is the leaf index
+                z = torch.tensor([l]*n_samples, dtype=torch.float).unsqueeze(1).to(batch[0].device)
+
+                # DDPM encoder
+                x_t_l = self.online_network.compute_noisy_input(
+                    recons_leaf_l,
+                    noise,
+                    torch.tensor(
+                        [self.online_network.T - 1] * recons_leaf_l.size(0), device=recons_leaf_l.device
+                    ),
+                )
+
+                if isinstance(self.online_network, DDPMv2):
+                    x_t_l += recons_leaf_l
+
+                out = self(
+                    x_t_l,
+                    cond=recons_leaf_l,
+                    z=z if self.z_cond else None,
+                    n_steps=self.pred_steps,
+                    checkpoints=self.pred_checkpoints,
+                    ddpm_latents=self.ddpm_latents,
+                )
+
+                out_all_leaves.append(out[str(self.online_network.T)])
+
+            return out_all_leaves, (reconstructions, p_c_z)
+
+
+
+        elif self.eval_mode == "recons":
+            img = batch[0]
+            recons, z = self.vae.forward_recons(img, self.max_leaf)
+            # recons = 2 * recons - 1
+
+            # DDPM encoder
+            x_t = self.online_network.compute_noisy_input(
+                img,
+                torch.randn_like(img),
+                torch.tensor(
+                    [self.online_network.T - 1] * img.size(0), device=img.device
+                ),
+            )
+
+            if isinstance(self.online_network, DDPMv2):
+                x_t += recons
 
         elif self.eval_mode == "recons_all_leaves":
             img = batch[0]
@@ -277,14 +345,17 @@ class DDPMWrapper(pl.LightningModule):
             # same noise for same sample
             noise = torch.randn_like(img)
 
+            # sample overall seed
+            seed_val = np.random.randint(0, 1000)
+
             # now for each leaf node, we use the recons to condition the ddpm
             for l in range(len(recons[0])):
                 recons_leaf_l = recons[0][l]
 
                 # all leaves have the same noise --> reset seeds
-                torch.manual_seed(0)
-                torch.cuda.manual_seed(0)
-                np.random.seed(0)
+                torch.manual_seed(seed_val)
+                torch.cuda.manual_seed(seed_val)
+                np.random.seed(seed_val)
 
                 # z is the leaf index
                 z = torch.tensor([l]*img.size(0), dtype=torch.float).unsqueeze(1).to(img.device)
@@ -314,22 +385,7 @@ class DDPMWrapper(pl.LightningModule):
 
             return out_all_leaves, recons
 
-        elif self.eval_mode == "recons":
-            img = batch[0]
-            recons, z = self.vae.forward_recons(img, self.max_leaf)
-            # recons = 2 * recons - 1
 
-            # DDPM encoder
-            x_t = self.online_network.compute_noisy_input(
-                img,
-                torch.randn_like(img),
-                torch.tensor(
-                    [self.online_network.T - 1] * img.size(0), device=img.device
-                ),
-            )
-
-            if isinstance(self.online_network, DDPMv2):
-                x_t += recons
 
         out = (
             self(

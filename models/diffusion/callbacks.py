@@ -76,7 +76,7 @@ class ImageWriter(BasePredictionWriter):
         is_norm=False,
     ):
         super().__init__(write_interval)
-        assert eval_mode in ["sample", "recons", "recons_all_leaves"]
+        assert eval_mode in ["sample", "sample_all_leaves", "recons", "recons_all_leaves"]
         self.output_dir = output_dir
         self.compare = compare
         self.n_steps = 1000 if n_steps is None else n_steps
@@ -104,7 +104,7 @@ class ImageWriter(BasePredictionWriter):
                 ddpm_samples, vae_samples = prediction
 
                 if self.save_vae:
-                    vae_save_path = os.path.join(self.output_dir, "vae_all_l")
+                    vae_save_path = os.path.join(self.output_dir, f"vae/{self.eval_mode}}")
                     os.makedirs(vae_save_path, exist_ok=True)
 
                     recons = move_to(vae_samples[0], 'cpu')
@@ -131,14 +131,13 @@ class ImageWriter(BasePredictionWriter):
             else:
                 ddpm_samples = prediction
 
-
             # send all samples to cpu, ddpm_samples is a list
             for i in range(len(ddpm_samples)):
                 ddpm_samples[i] = move_to(ddpm_samples[i], 'cpu')
 
             # setup dirs
             base_save_path = os.path.join(self.output_dir, "ddpm")
-            img_save_path = os.path.join(base_save_path, "images")
+            img_save_path = os.path.join(base_save_path, "recons_all_l")
             os.makedirs(img_save_path, exist_ok=True)
 
             # save
@@ -181,13 +180,93 @@ class ImageWriter(BasePredictionWriter):
                     plt.savefig(os.path.join(class_save_pass, f"output_{self.sample_prefix}_{rank}_{i}_{prob}.png"))
                     plt.close()
 
-        else:
+
+        elif self.eval_mode == "sample_all_l":
+            if self.conditional:
+                ddpm_samples, vae_samples = prediction
+
+                if self.save_vae:
+                    vae_save_path = os.path.join(self.output_dir, f"vae/{self.eval_mode}}")
+                    os.makedirs(vae_save_path, exist_ok=True)
+
+                    recons = move_to(vae_samples[0], 'cpu')
+                    p_c_z = move_to(vae_samples[1], 'cpu')
+                    num_leaves = len(recons)
+                    for i in range(len(batch_indices)):
+                        if num_leaves == 1:  # needed to avoid an error when plotting only one image
+                            fig, axs = plt.subplots(1, 1, figsize=(15, 2))
+                            axs.imshow(display_image(recons[0][i]), cmap=plt.get_cmap('gray'))
+                            axs.set_title(f"L0: " + f"p=%.2f" % torch.round(p_c_z[i][0], decimals=2))
+                            axs.axis('off')
+                        else:
+                            fig, axs = plt.subplots(1, num_leaves, figsize=(15, 2))
+                            for c in range(num_leaves):
+                                axs[c].imshow(display_image(recons[c][i]), cmap=plt.get_cmap('gray'))
+                                axs[c].set_title(f"L{c}: " + f"p=%.2f" % torch.round(p_c_z[i][c], decimals=2))
+                                axs[c].axis('off')
+                        # save image
+                        plt.savefig(os.path.join(vae_save_path, f"output_vae_{self.sample_prefix}_{rank}_{i}.png"))
+                        plt.close()
+
+            else:
+                ddpm_samples = prediction
+
+            # send all samples to cpu, ddpm_samples is a list
+            for i in range(len(ddpm_samples)):
+                ddpm_samples[i] = move_to(ddpm_samples[i], 'cpu')
+
+            # setup dirs
+            base_save_path = os.path.join(self.output_dir, "ddpm")
+            img_save_path = os.path.join(base_save_path, "sample_all_l")
+            os.makedirs(img_save_path, exist_ok=True)
+
+            # save
+            num_leaves = len(ddpm_samples)
+            recons = ddpm_samples
+            if not self.save_vae:
+                node_leaves = None
+
+            for i in range(len(batch_indices)):
+                if num_leaves == 1:  # needed to avoid an error when plotting only one image
+                    fig, axs = plt.subplots(1, 1, figsize=(15, 2))
+                    axs.imshow(display_image(recons[0][i]), cmap=plt.get_cmap('gray'))
+                    axs.set_title(f"L0: " + f"p=%.2f" % torch.round(p_c_z[i][0], decimals=2))
+                    axs.axis('off')
+                else:
+                    fig, axs = plt.subplots(1, num_leaves, figsize=(15, 2))
+                    for c in range(num_leaves):
+                        axs[c].imshow(display_image(recons[c][i]), cmap=plt.get_cmap('gray'))
+                        axs[c].set_title(f"L{c}: " + f"p=%.2f" % torch.round(p_c_z[i][c], decimals=2))
+                        axs[c].axis('off')
+                # save image
+                plt.savefig(os.path.join(img_save_path, f"output_{self.sample_prefix}_{rank}_{i}.png"))
+                plt.close()
+
+
+            # loop over each class
+            for c in range(num_leaves):
+                # setup a dir for each class
+                class_save_pass = os.path.join(img_save_path, f"img_cluster_{c}")
+                os.makedirs(class_save_pass, exist_ok=True)
+                # save every image of this class separately
+                for i in range(len(batch_indices)):
+                    prob = p_c_z[c]['prob'][i]
+                    fig, axs = plt.subplots(1, 1, figsize=(2, 2))
+                    axs.imshow(display_image(recons[c][i]), cmap=plt.get_cmap('gray'))
+                    axs.set_title(f"L{c}: " + f"p=%.2f" % torch.round(prob, decimals=2))
+                    axs.axis('off')
+                    # save image
+                    plt.savefig(os.path.join(class_save_pass, f"output_{self.sample_prefix}_{rank}_{i}_{prob}.png"))
+                    plt.close()
+
+
+        else: # self.eval_mode in ["sample", "recons"]
             if self.conditional:
                 ddpm_samples_dict, vae_samples = prediction
 
                 if self.save_vae:
                     vae_samples = vae_samples.cpu()
-                    vae_save_path = os.path.join(self.output_dir, "vae")
+                    vae_save_path = os.path.join(self.output_dir, f"vae/{self.eval_mode}}")
                     os.makedirs(vae_save_path, exist_ok=True)
                     self.save_fn(
                         vae_samples,
@@ -206,7 +285,7 @@ class ImageWriter(BasePredictionWriter):
 
                 # Setup dirs
                 base_save_path = os.path.join(self.output_dir, k)
-                img_save_path = os.path.join(base_save_path, "images")
+                img_save_path = os.path.join(base_save_path, f"ddpm/{self.eval_mode}")
                 os.makedirs(img_save_path, exist_ok=True)
 
                 # Save
@@ -217,23 +296,3 @@ class ImageWriter(BasePredictionWriter):
                     ),
                     denorm=self.is_norm,
                 )
-
-
-        # FIXME: This is currently broken. Separate this from the core logic
-        # into a new function. Uncomment when ready!
-        # if self.compare:
-        #     # Save comparisons
-        #     (_, img_samples), _ = batch
-        #     img_samples = normalize(img_samples).cpu()
-        #     iter_ = vae_samples if self.eval_mode == "sample" else img_samples
-        #     for idx, (ddpm_pred, pred) in enumerate(zip(ddpm_samples, iter_)):
-        #         samples = {
-        #             "VAE" if self.eval_mode == "sample" else "Original": pred,
-        #             "DDPM": ddpm_pred,
-        #         }
-        #         compare_samples(
-        #             samples,
-        #             save_path=os.path.join(
-        #                 self.comp_save_path, f"compare_form1_{rank}_{idx}.png"
-        #             ),
-        #         )
