@@ -104,7 +104,7 @@ class ImageWriter(BasePredictionWriter):
                 ddpm_samples, vae_samples = prediction
 
                 if self.save_vae:
-                    vae_save_path = os.path.join(self.output_dir, f"vae/{self.eval_mode}}")
+                    vae_save_path = os.path.join(self.output_dir, f"vae/{self.eval_mode}")
                     os.makedirs(vae_save_path, exist_ok=True)
 
                     recons = move_to(vae_samples[0], 'cpu')
@@ -181,12 +181,12 @@ class ImageWriter(BasePredictionWriter):
                     plt.close()
 
 
-        elif self.eval_mode == "sample_all_l":
+        elif self.eval_mode == "sample_all_leaves":
             if self.conditional:
                 ddpm_samples, vae_samples = prediction
 
                 if self.save_vae:
-                    vae_save_path = os.path.join(self.output_dir, f"vae/{self.eval_mode}}")
+                    vae_save_path = os.path.join(self.output_dir, f"vae/{self.eval_mode}")
                     os.makedirs(vae_save_path, exist_ok=True)
 
                     recons = move_to(vae_samples[0], 'cpu')
@@ -223,8 +223,6 @@ class ImageWriter(BasePredictionWriter):
             # save
             num_leaves = len(ddpm_samples)
             recons = ddpm_samples
-            if not self.save_vae:
-                node_leaves = None
 
             for i in range(len(batch_indices)):
                 if num_leaves == 1:  # needed to avoid an error when plotting only one image
@@ -250,7 +248,7 @@ class ImageWriter(BasePredictionWriter):
                 os.makedirs(class_save_pass, exist_ok=True)
                 # save every image of this class separately
                 for i in range(len(batch_indices)):
-                    prob = p_c_z[c]['prob'][i]
+                    prob = p_c_z[i][c]
                     fig, axs = plt.subplots(1, 1, figsize=(2, 2))
                     axs.imshow(display_image(recons[c][i]), cmap=plt.get_cmap('gray'))
                     axs.set_title(f"L{c}: " + f"p=%.2f" % torch.round(prob, decimals=2))
@@ -266,7 +264,7 @@ class ImageWriter(BasePredictionWriter):
 
                 if self.save_vae:
                     vae_samples = vae_samples.cpu()
-                    vae_save_path = os.path.join(self.output_dir, f"vae/{self.eval_mode}}")
+                    vae_save_path = os.path.join(self.output_dir, f"vae/{self.eval_mode}")
                     os.makedirs(vae_save_path, exist_ok=True)
                     self.save_fn(
                         vae_samples,
@@ -284,8 +282,7 @@ class ImageWriter(BasePredictionWriter):
                 ddpm_samples = ddpm_samples.cpu()
 
                 # Setup dirs
-                base_save_path = os.path.join(self.output_dir, k)
-                img_save_path = os.path.join(base_save_path, f"ddpm/{self.eval_mode}")
+                img_save_path = os.path.join(self.output_dir, f"ddpm/{self.eval_mode}")
                 os.makedirs(img_save_path, exist_ok=True)
 
                 # Save
