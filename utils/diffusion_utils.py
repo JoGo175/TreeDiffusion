@@ -121,8 +121,13 @@ def save_as_images(obj, file_name="output", denorm=False):
     obj_list = convert_to_np(obj)
 
     for i, out in enumerate(obj_list):
-        out = (out * 255).clip(0, 255).astype(np.uint8)
-        img_out = Image.fromarray(out)
+        # if colored image
+        if out.shape[2] == 3:
+            out = (out * 255).clip(0, 255).astype(np.uint8)
+            img_out = Image.fromarray(out)
+        else:
+            out = (out * 255).clip(0, 255).astype(np.uint8)
+            img_out = Image.fromarray(out.squeeze(), mode="L")
         current_file_name = file_name + "_%d.png" % i
         img_out.save(current_file_name, "png")
 

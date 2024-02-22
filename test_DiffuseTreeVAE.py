@@ -45,8 +45,8 @@ def train():
     reset_random_seeds(configs['globals']['seed'])
 
     # Dataset
-    trainset, trainset_eval, testset = get_data(configs)
-    gen_test = get_gen(testset, configs, validation=True, shuffle=False)
+    trainset, trainset_eval, testset = get_data(configs_ddpm)
+    gen_test = get_gen(testset, configs_ddpm, validation=True, shuffle=False)
 
     # Pre-sampled latents for DDPM if available
     ddpm_latent_path = configs_ddpm["data"]["ddpm_latent_path"]
