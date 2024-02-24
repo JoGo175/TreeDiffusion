@@ -36,6 +36,7 @@ def main():
     parser.add_argument('--dropout_router', type=float, help='dropout rate for the router')
     parser.add_argument('--res_connections', type=lambda x: bool(distutils.util.strtobool(x)), help='whether to use residual connections in transformations and bottom-up model layers')
     parser.add_argument('--grow', type=lambda x: bool(distutils.util.strtobool(x)), help='whether to grow the tree')
+    parser.add_argument('--act_function', type=str, help='activation function')
 
     # Contrastive learning parameters
     parser.add_argument('--augment', type=lambda x:bool(distutils.util.strtobool(x)), help='augment images or not')
