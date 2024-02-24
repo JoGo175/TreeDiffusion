@@ -267,7 +267,7 @@ class Resnet_Decoder(nn.Module):
 
 
 # Transformation, router, bottom-up, and dense layer architectures --------------------------------------------------
-class Conv1(nn.Module):
+class Conv(nn.Module):
     def __init__(self, input_channels, output_channels, res_connections=False,
                  act_function='swish', spectral_normalization=False):
         super(Conv, self).__init__()
@@ -295,7 +295,7 @@ class Conv1(nn.Module):
                 ValueError('The residual connection is not possible.')
         return x, mu, sigma
 
-class Conv(nn.Module):
+class Conv1(nn.Module):
     def __init__(self, input_channels, output_channels, res_connections=False,
                  act_function='swish', spectral_normalization=False):
         super(Conv, self).__init__()

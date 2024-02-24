@@ -5,7 +5,7 @@ eval "$(conda shell.bash hook)"
 export CUBLAS_WORKSPACE_CONFIG=":4096:8"
 source ~/.bashrc
 conda activate treevae
-dataset="fmnist"
+dataset="mnist"
 O_DIR="/cluster/work/vogtlab/Group/jogoncalves/logs/output.%x.%J_${dataset}.out"
 
 
