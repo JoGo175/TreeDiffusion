@@ -5,7 +5,7 @@ eval "$(conda shell.bash hook)"
 export CUBLAS_WORKSPACE_CONFIG=":4096:8"
 source ~/.bashrc
 conda activate treevae
-dataset="mnist"
+dataset="fmnist"
 O_DIR="/cluster/work/vogtlab/Group/jogoncalves/logs/output.%x.%J_${dataset}.out"
 
 
@@ -21,8 +21,6 @@ for kl_start in 0.0 0.5; do
         for seed in 1 2 3 4 5 6 7 8 9 10; do
           # run the job
           sbatch --time=36:00:00 --mem-per-cpu=10G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python main.py --save_model True --config_name $dataset --kl_start $kl_start --spectral_norm $spectral_norm --act_function $act_function --res_connections $res_connections --seed $seed"
-          # wait for 5 seconds
-          sleep 3
         done
       done
     done
