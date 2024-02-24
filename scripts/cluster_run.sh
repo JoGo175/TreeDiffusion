@@ -9,6 +9,24 @@ dataset="mnist"
 O_DIR="/cluster/work/vogtlab/Group/jogoncalves/logs/output.%x.%J_${dataset}.out"
 
 
+# loop over kl_start
+for kl_start in 0.0 0.5; do
+  # loop over spectral_norm in [True, False]
+  for spectral_norm in True False; do
+    # loop over act_function in ["swish", "leaky_relu"]
+    for act_function in "swish" "leaky_relu"; do
+      # loop over res_connections in [True, False]
+      for res_connections in True False; do
+        # loop over seeds
+        for seed in 1 2 3 4 5 6 7 8 9 10; do
+          # run the job
+          sbatch --time=36:00:00 --mem-per-cpu=10G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python main.py --save_model True --config_name $dataset --kl_start $kl_start --spectral_norm $spectral_norm --act_function $act_function --res_connections $res_connections --seed $seed"
+          # wait for 5 seconds
+          sleep 3
+        done
+      done
+
+
 # for kl_start in 0.0 0.5 1; do
 #     # loop over seeds 
 #     for seed in 1 2 3 4 5 6 7 8 9 10; do
@@ -48,23 +66,23 @@ O_DIR="/cluster/work/vogtlab/Group/jogoncalves/logs/output.%x.%J_${dataset}.out"
 # done
 
 
-## loop over latent_channels in [1, 1, 1, 1, 1, 1], [4, 4, 4, 4, 4, 4], [8, 8, 8, 8, 8, 8], [10, 10, 10, 10, 10, 10]
-for latent_c in 32 64 128; do
- # create the latent_channels string [latent_c, latent_c, latent_c, latent_c, latent_c, latent_c]
- latent_channels="${latent_c},${latent_c},${latent_c},${latent_c},${latent_c},${latent_c}"
- for bottom_up_c in 16 32; do
-   bottom_up_channels="${bottom_up_c},${bottom_up_c},${bottom_up_c},${bottom_up_c},${bottom_up_c},${bottom_up_c}"
-   # loop over seeds
-   for seed in 1 2 3 4 5 6 7 8 9 10; do
-     # run the job
-     sbatch --time=36:00:00 --mem-per-cpu=10G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python main.py --save_model False --config_name $dataset --latent_channels $latent_channels --bottom_up_channels $bottom_up_channels --seed $seed"
-     # wait for 5 seconds
-     sleep 3
-   done
- done
- # wait for 60min to avoid overloading the cluster
- sleep 3
-done
+### loop over latent_channels in [1, 1, 1, 1, 1, 1], [4, 4, 4, 4, 4, 4], [8, 8, 8, 8, 8, 8], [10, 10, 10, 10, 10, 10]
+#for latent_c in 32 64 128; do
+# # create the latent_channels string [latent_c, latent_c, latent_c, latent_c, latent_c, latent_c]
+# latent_channels="${latent_c},${latent_c},${latent_c},${latent_c},${latent_c},${latent_c}"
+# for bottom_up_c in 16 32; do
+#   bottom_up_channels="${bottom_up_c},${bottom_up_c},${bottom_up_c},${bottom_up_c},${bottom_up_c},${bottom_up_c}"
+#   # loop over seeds
+#   for seed in 1 2 3 4 5 6 7 8 9 10; do
+#     # run the job
+#     sbatch --time=36:00:00 --mem-per-cpu=10G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python main.py --save_model False --config_name $dataset --latent_channels $latent_channels --bottom_up_channels $bottom_up_channels --seed $seed"
+#     # wait for 5 seconds
+#     sleep 3
+#   done
+# done
+# # wait for 60min to avoid overloading the cluster
+# sleep 3
+#done
 
 
 

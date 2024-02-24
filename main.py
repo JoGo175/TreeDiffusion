@@ -23,6 +23,7 @@ def main():
     parser.add_argument('--num_epochs_smalltree', type=int, help='the number of sub-tree training epochs')
     parser.add_argument('--num_clusters_data', type=int, help='the number of clusters in the data')
     parser.add_argument('--num_clusters_tree', type=int, help='the max number of leaves of the tree')
+    parser.add_argument('--spectral_norm', type=lambda x: bool(distutils.util.strtobool(x)), help='whether to use spectral normalization')
 
     # KL annealing parameters
     parser.add_argument('--kl_start', type=float, nargs='?', const=0., help='initial KL divergence from where annealing starts')

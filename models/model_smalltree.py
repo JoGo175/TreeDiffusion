@@ -23,12 +23,28 @@ class SmallTreeVAE(nn.Module):
             The name of the activation function for the reconstruction loss [sigmoid, mse]
         loss : models.losses
             The loss function used by the decoder to reconstruct the input
+        act_function : str
+            The name of the activation function used between layers of the networks
+        spectral_norm : bool
+            Whether to use spectral normalization
         alpha : float
             KL-annealing weight initialization
+        dropout_router : float
+            Dropout rate in router network
+        res_connections : bool
+            Whether to use residual connection in the transformation and bottom-up layers
         depth : int
             The depth at which the sub-tree will be attached (root has depth 0 and a root with two leaves has depth 1)
         inp_shape : int
             The total dimensions of the input data (if images of 32x32 then 32x32x3)
+        inp_channel : int
+            The number of input channels
+        latent_channel : int
+            The number of latent channels used in the sub-tree
+        bottom_up_channel : int
+            The number of channels used in the bottom-up layers
+        representation_dim : int
+            The dimension of the latent representation in the bottom-up layers and the sub-tree
         augment : bool
              Whether to use contrastive learning through augmentation, if False no augmentation is used
         augmentation_method : str
@@ -75,9 +91,11 @@ class SmallTreeVAE(nn.Module):
 
         # Activation function used between layers of the networks
         self.act_function = self.kwargs['act_function']
+        # Spectral normalization
+        self.spectral_norm = self.kwargs['spectral_norm']
         # KL-annealing weight initialization
         self.alpha=self.kwargs['kl_start']
-        # dropout rate in router network
+        # dropout rate in router networks
         self.dropout_router = self.kwargs['dropout_router']
         # Whether to use residual connection in the transformation and bottom-up layers
         self.res_connections = self.kwargs['res_connections']
@@ -98,29 +116,35 @@ class SmallTreeVAE(nn.Module):
         self.aug_decisions_weight = self.kwargs['aug_decisions_weight']
 
         # Define the networks for the sub-tree
-        # -> 2 children and 1 root nodes -> 2 decoders, 2 transformations, 2 denses, 1 decision, 1 decision_q
-        self.denses = nn.ModuleList([Dense(self.bottom_up_channel, self.latent_channel) for _ in range(2)])
-        self.transformations = nn.ModuleList([Conv(self.latent_channel,
-                                                   self.latent_channel,
+        # -> 2 children and 1 root nodes
+        # -> 2 decoders, 2 transformations, 2 denses, 1 decision, 1 decision_q
+        self.denses = nn.ModuleList([Dense(self.bottom_up_channel, self.latent_channel,
+                                           self.spectral_norm) for _ in range(2)])
+        self.transformations = nn.ModuleList([Conv(input_channels=self.latent_channel,
+                                                   output_channels=self.latent_channel,
                                                    res_connections=self.res_connections,
-                                                   act_function=self.act_function) for _ in range(2)])
-        self.decision = Router(self.latent_channel,
+                                                   act_function=self.act_function,
+                                                   spectral_normalization=self.spectral_norm) for _ in range(2)])
+        self.decision = Router(input_channels=self.latent_channel,
                                rep_dim=representation_dim,
                                hidden_units=self.bottom_up_channel,
                                dropout=self.dropout_router,
-                               act_function=self.act_function)
-        self.decision_q = Router(self.bottom_up_channel,
+                               act_function=self.act_function,
+                               spectral_normalization=self.spectral_norm)
+        self.decision_q = Router(input_channels=self.bottom_up_channel,
                                  rep_dim=representation_dim,
                                  hidden_units=self.bottom_up_channel,
                                  dropout=self.dropout_router,
-                                 act_function=self.act_function)
+                                 act_function=self.act_function,
+                                 spectral_normalization=self.spectral_norm)
         self.decoders = nn.ModuleList([get_decoder(architecture=self.kwargs['encoder'],
                                                    input_shape=representation_dim,
                                                    input_channels=self.latent_channel,
                                                    output_shape=int((self.inp_shape)**0.5),
                                                    output_channels=self.inp_channel,
                                                    activation=self.activation,
-                                                   act_function=self.act_function) for _ in range(2)])
+                                                   act_function=self.act_function,
+                                                   spectral_normalization=self.spectral_norm) for _ in range(2)])
 
     def forward(self, x, z_parent, p, bottom_up):
         """
@@ -173,7 +197,6 @@ class SmallTreeVAE(nn.Module):
 
         reconstructions = []
         kl_nodes = torch.zeros(1, device=device)
-        decoder_magnitudes = []
         for i in range(2):
             # Compute posterior parameters
             z_mu_q_hat, z_sigma_q_hat = self.denses[i](d)
@@ -201,7 +224,6 @@ class SmallTreeVAE(nn.Module):
 
         return {
             'rec_loss': rec_loss,
-            'weights': leaves_prob,
             'kl_decisions': kl_decisions,
             'kl_nodes': kl_nodes_loss,
             'aug_decisions': self.aug_decisions_weight * aug_decisions_loss,

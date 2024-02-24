@@ -84,6 +84,7 @@ class TreeVAE(nn.Module):
         generate_images(n_samples, device)
             Generate n_samples new images by sampling from the root and propagating through the entire tree.
         """
+
     def __init__(self, **kwargs):
         """
         Parameters
@@ -93,7 +94,8 @@ class TreeVAE(nn.Module):
         """
         super(TreeVAE, self).__init__()
         self.kwargs = kwargs
-        
+
+        # Activation function for final layer of the decoder, needed for the reconstruction loss
         self.activation = self.kwargs['activation']
         if self.activation == "sigmoid":
             self.loss = loss_reconstruction_binary
@@ -101,47 +103,57 @@ class TreeVAE(nn.Module):
             self.loss = loss_reconstruction_mse
         else:
             raise NotImplementedError
-        # KL-annealing weight initialization
-        self.alpha=torch.tensor(self.kwargs['kl_start'])
 
-        # activation function used between layers of the networks
+        # Activation function used between layers of the networks
         self.act_function = self.kwargs['act_function']
-        # dropout in router
+        # Spectral normalization
+        self.spectral_norm = self.kwargs['spectral_norm']
+        # KL-annealing weight initialization
+        self.alpha = torch.tensor(self.kwargs['kl_start'])
+        # dropout in router networks
         self.dropout_router = self.kwargs['dropout_router']
-        # residual connection in the transformation and bottom-up layers
+        # Whether to use residual connection in the transformation and bottom-up layers
         self.res_connections = self.kwargs['res_connections']
-        # saving important variables to initialize the tree
+        # Parameters for latent representation size and channels
         self.latent_channels = self.kwargs['latent_channels']
         self.bottom_up_channels = self.kwargs['bottom_up_channels']
         self.representation_dim = self.kwargs['representation_dim']
-
         # check that the number of layers for bottom up is equal to top down
         if len(self.latent_channels) != len(self.bottom_up_channels):
             raise ValueError('Model is mispecified!!')
+        # initial depth of the tree
         self.depth = self.kwargs['initial_depth']
+        # Input shape and channels
         self.inp_shape = self.kwargs['inp_shape']
         self.inp_channel = self.kwargs['inp_channels']
+        # Augmentation parameters for contrastive learning
         self.augment = self.kwargs['augment']
         self.augmentation_method = self.kwargs['augmentation_method']
         self.aug_decisions_weight = self.kwargs['aug_decisions_weight']
+        # Return parameters
         self.return_x = torch.tensor([False])
         self.return_bottomup = torch.tensor([False])
         self.return_elbo = torch.tensor([False])
+
+        # Construct the model architecture and the tree structure
 
         # bottom up: the inference chain that from x computes the d units till the root
         if self.activation == "mse":
             encoder = get_encoder(architecture=self.kwargs['encoder'], input_shape=int((self.inp_shape)**0.5),
                                   input_channels=self.inp_channel, output_shape=self.representation_dim,
-                                  output_channels=self.bottom_up_channels[0], act_function=self.act_function)
+                                  output_channels=self.bottom_up_channels[0], act_function=self.act_function,
+                                  spectral_normalization=self.spectral_norm)
         else:
             encoder = get_encoder(architecture=self.kwargs['encoder'], input_shape=int((self.inp_shape)**0.5),
                                   input_channels=self.inp_channel, output_shape=self.representation_dim,
-                                  output_channels=self.bottom_up_channels[0], act_function=self.act_function)
+                                  output_channels=self.bottom_up_channels[0], act_function=self.act_function,
+                                  spectral_normalization=self.spectral_norm)
 
         self.bottom_up = nn.ModuleList([encoder])
         for i in range(1, len(self.bottom_up_channels)):
             self.bottom_up.append(Conv(self.bottom_up_channels[i-1], self.latent_channels[i],
-                                       res_connections=self.res_connections, act_function=self.act_function))
+                                       res_connections=self.res_connections, act_function=self.act_function,
+                                       spectral_normalization=self.spectral_norm))
 
         # MLP's if we use contrastive loss on d's
         if len([i for i in self.augmentation_method if i in ['instancewise_first', 'instancewise_full']]) > 0:
@@ -167,19 +179,20 @@ class TreeVAE(nn.Module):
 
         # add root transformation and dense layer, the dense layer is layer that connects the bottom-up with the nodes
         self.transformations = nn.ModuleList([None])
-        self.denses = nn.ModuleList([Dense(layers_gen[0], encoded_size_gen[0])])  
+        self.denses = nn.ModuleList([Dense(layers_gen[0], encoded_size_gen[0], self.spectral_norm)])
         for i in range(self.depth):
             for j in range(2 ** (i + 1)):
                 self.transformations.append(Conv(encoded_size_gen[i], encoded_size_gen[i+1],
-                                                 res_connections=self.res_connections, act_function=self.act_function))
-                self.denses.append(Dense(layers_gen[i+1], encoded_size_gen[i+1])) # Dense at depth i+1 from bottom-up to top-down
+                                                 res_connections=self.res_connections, act_function=self.act_function,
+                                                 spectral_normalization=self.spectral_norm))
+                self.denses.append(Dense(layers_gen[i+1], encoded_size_gen[i+1], self.spectral_norm)) # Dense at depth i+1 from bottom-up to top-down
 
         self.decisions = nn.ModuleList([])
         for i in range(self.depth):
             for j in range(2 ** i):
                 self.decisions.append(Router(encoded_size_gen[i], rep_dim=self.representation_dim,
                                              hidden_units=layers_gen[i], dropout=self.dropout_router,
-                                             act_function=self.act_function)) # Router at node of depth i
+                                             act_function=self.act_function, spectral_normalization=self.spectral_norm)) # Router at node of depth i
 
         # decoders = [None, None, None, Dec, Dec, Dec, Dec]
         self.decoders = nn.ModuleList([None for i in range(self.depth) for j in range(2 ** i)])
@@ -189,7 +202,7 @@ class TreeVAE(nn.Module):
             self.decoders.append(get_decoder(architecture=self.kwargs['encoder'], input_shape=self.representation_dim,
                                              input_channels=self.latent_channels[-1], output_shape=int((self.inp_shape)**0.5),
                                              output_channels= self.inp_channel, activation=self.activation,
-                                             act_function=self.act_function))
+                                             act_function=self.act_function, spectral_normalization=self.spectral_norm))
 
         # bottom-up decisions
         self.decisions_q = nn.ModuleList([])
@@ -197,7 +210,7 @@ class TreeVAE(nn.Module):
             for _ in range(2 ** i):
                 self.decisions_q.append(Router(layers_gen[i], rep_dim=self.representation_dim,
                                                hidden_units=layers_gen[i], dropout=self.dropout_router,
-                                               act_function=self.act_function))
+                                               act_function=self.act_function, spectral_normalization=self.spectral_norm))
         for _ in range(2 ** (self.depth)):
             self.decisions_q.append(None)
 

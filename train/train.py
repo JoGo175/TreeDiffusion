@@ -36,7 +36,9 @@ def run_experiment(configs):
 		print("Using", torch.cuda.get_device_name(0))
 	else:
 		print("No GPU available")
-	
+
+	# Start time
+	start_time = time.time()
 
 	# Set paths
 	project_dir = Path(__file__).absolute().parent
@@ -79,6 +81,14 @@ def run_experiment(configs):
 		print("\nSaving weights at ", experiment_path)
 		torch.save(model.state_dict(), experiment_path / 'model_weights.pt')
 
+	# End time
+	end_time = time.time()
+
+	# Print and save run time to wandb
+	print("\n" * 2)
+	total_training_time = end_time - start_time
+	print("Total training time: ", total_training_time)
+	wandb.log({"total_training_time": total_training_time})
 
 	# Evaluation of TreeVAE
 	print("\n" * 2)

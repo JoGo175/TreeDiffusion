@@ -63,6 +63,9 @@ except ImportError:
         return x
 
 def convert_images_to_rgb(images_tensor):
+    """
+    Converts a tensor of images to RGB format (if not already in RGB format).
+    """
     # set images to tensor if not already
     if not isinstance(images_tensor, torch.Tensor):
         images_tensor = torch.tensor(images_tensor)
@@ -72,11 +75,13 @@ def convert_images_to_rgb(images_tensor):
         if images_tensor.shape[3] == 3:
             images_tensor = images_tensor.permute(0, 3, 1, 2)
 
-    # grayscale images have no color channel --> greyscale images
+    # grayscale images have no color channel --> add it
     if len(images_tensor.shape) == 3:
         images_tensor = images_tensor.unsqueeze(1)
+
     num_images, num_channels, _, _ = images_tensor.shape
 
+    # convert to RGB
     rgb_images = []
     for i in range(num_images):
         img = TF.functional.to_pil_image(images_tensor[i])
@@ -89,6 +94,9 @@ def convert_images_to_rgb(images_tensor):
 
 
 class ImagePathDataset(torch.utils.data.Dataset):
+    """
+    Dataset class given dataset of images.
+    """
     def __init__(self, images, transforms=None):
         self.images = images
         self.transforms = transforms
@@ -107,7 +115,7 @@ def get_activations(dataset, model, batch_size=50, dims=2048, device='cpu',
     """Calculates the activations of the pool_3 layer for all images.
 
     Params:
-    -- dataset     : Tensor
+    -- dataset     : Image dataset
     -- model       : Instance of inception model
     -- batch_size  : Batch size of images for the model to process at once.
                      Make sure that the number of samples is a multiple of
@@ -125,6 +133,7 @@ def get_activations(dataset, model, batch_size=50, dims=2048, device='cpu',
     """
     model.eval()
 
+    # prepare dataloader
     dataset = convert_images_to_rgb(dataset)
     dataset = ImagePathDataset(dataset, transforms=TF.ToTensor())
 
@@ -134,6 +143,7 @@ def get_activations(dataset, model, batch_size=50, dims=2048, device='cpu',
                             drop_last=False,
                             num_workers=num_workers)
 
+    # compute and return activations
     pred_arr = np.empty((len(dataset), dims))
 
     start_idx = 0
@@ -150,19 +160,17 @@ def get_activations(dataset, model, batch_size=50, dims=2048, device='cpu',
             pred = adaptive_avg_pool2d(pred, output_size=(1, 1))
 
         pred = pred.squeeze(3).squeeze(2).cpu().numpy()
-
         pred_arr[start_idx:start_idx + pred.shape[0]] = pred
-
         start_idx = start_idx + pred.shape[0]
 
     return pred_arr
 
 
 def calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
-    """Numpy implementation of the Frechet Distance.
-    The Frechet distance between two multivariate Gaussians X_1 ~ N(mu_1, C_1)
-    and X_2 ~ N(mu_2, C_2) is
-            d^2 = ||mu_1 - mu_2||^2 + Tr(C_1 + C_2 - 2*sqrt(C_1*C_2)).
+    """
+    Numpy implementation of the Frechet Distance.
+    The Frechet distance between two multivariate Gaussians X_1 ~ N(mu_1, C_1) and X_2 ~ N(mu_2, C_2)
+    is d^2 = ||mu_1 - mu_2||^2 + Tr(C_1 + C_2 - 2*sqrt(C_1*C_2)).
 
     Stable version by Dougal J. Sutherland.
 
@@ -215,11 +223,11 @@ def calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
             + np.trace(sigma2) - 2 * tr_covmean)
 
 
-def calculate_activation_statistics(path_or_data, model, batch_size=50, dims=2048,
+def calculate_activation_statistics(data, model, batch_size=50, dims=2048,
                                     device='cpu', num_workers=1):
     """Calculation of the statistics used by the FID.
     Params:
-    -- files       : List of image files paths
+    -- data       : Dataset of images
     -- model       : Instance of inception model
     -- batch_size  : The images numpy array is split into batches with
                      batch size batch_size. A reasonable batch size
@@ -234,113 +242,156 @@ def calculate_activation_statistics(path_or_data, model, batch_size=50, dims=204
     -- sigma : The covariance matrix of the activations of the pool_3 layer of
                the inception model.
     """
-    act = get_activations(path_or_data, model, batch_size, dims, device, num_workers)
+    act = get_activations(data, model, batch_size, dims, device, num_workers)
     mu = np.mean(act, axis=0)
     sigma = np.cov(act, rowvar=False)
     return mu, sigma
 
 
 def compute_statistics_of_path(path_or_data, model, batch_size, dims, device, num_workers=1):
-    # path_or_data is a dataset of images or a path to an npz file
+    """
+    Loads or computes the FID statistics for a dataset of images
 
-    # if it is a npz file, it should contain mu and sigma
+    Params:
+    -- path_or_data : image dataset, path to npz file containing, or dictionary containing FID statistics
+    -- model        : Instance of inception model
+    -- batch_size   : Batch size
+    -- dims         : Dimensionality of activations returned by Inception
+    -- device       : Device to run calculations
+    -- num_workers  : Number of parallel dataloader workers
+    """
+
+    # if path_or_data is a npz file, it should contain mu and sigma
     if isinstance(path_or_data, str) and path_or_data.endswith('.npz'):
         with np.load(path_or_data) as f:
             m, s = f['mu'][:], f['sigma'][:]
 
-    # if it is a dict, it should contain mu and sigma
+    # if path_or_data is a dict, it should contain mu and sigma
     elif isinstance(path_or_data, dict):
         m, s = path_or_data['mu'][:], path_or_data['sigma'][:]
 
-    # if it is a dataset of images, need to compute mu and sigma
+    # if path_or_data is a dataset of images, need to compute mu and sigma
     else:
-        # input data 
-        m, s = calculate_activation_statistics(path_or_data, model, batch_size,
-                                                dims, device, num_workers)
+        m, s = calculate_activation_statistics(path_or_data, model, batch_size, dims, device, num_workers)
 
     return m, s
 
-   
-
 
 def calculate_fid(path_or_datasets, batch_size, device, dims, num_workers=1):
-    """Calculates the FID of two paths"""
-    # path_or_data is a dataset of images or a path to an npz file
+    """
+    Calculates the FID of two datasets based on their FID statistics
 
+    Params:
+    -- path_or_datasets : List of 2 image datasets or list of 2 paths to npz files containing FID statistics
+    -- batch_size       : Batch size
+    -- device           : Device to run calculations
+    -- dims             : Dimensionality of activations returned by Inception
+    -- num_workers      : Number of parallel dataloader workers
+    """
+
+    # load inception model with the correct block index for the needed activations
     block_idx = InceptionV3.BLOCK_INDEX_BY_DIM[dims]
-
     model = InceptionV3([block_idx]).to(device)
 
+    # get FID statistics for both datasets
     m1, s1 = compute_statistics_of_path(path_or_datasets[0], model, batch_size,
                                         dims, device, num_workers)
     m2, s2 = compute_statistics_of_path(path_or_datasets[1], model, batch_size,
                                         dims, device, num_workers)
-    fid_value = calculate_frechet_distance(m1, s1, m2, s2)
 
+    # calculate FID score between the two datasets
+    fid_value = calculate_frechet_distance(m1, s1, m2, s2)
     return fid_value
 
 
 def save_fid_stats(dataset, output_dir, batch_size, device, dims, num_workers=1):
-    """Calculates the FID of two paths"""
+    """
+    Computes and saves the FID statistics for a dataset to a .npz file
 
+    Params:
+    -- dataset     : Image dataset for which to compute FID scores
+    -- output_dir  : Path to save the FID statistics
+    -- batch_size  : Batch size
+    -- device      : Device to run calculations
+    -- dims        : Dimensionality of activations returned by Inception
+    -- num_workers : Number of parallel dataloader workers
+    """
+
+    # load inception model with the correct block index for the needed activations
     block_idx = InceptionV3.BLOCK_INDEX_BY_DIM[dims]
-
     model = InceptionV3([block_idx]).to(device)
 
+    # compute and save FID statistics
     print(f"Saving FID statistics")
-
-    m1, s1 = compute_statistics_of_path(dataset, model, batch_size,
-                                        dims, device, num_workers)
-
+    m1, s1 = compute_statistics_of_path(dataset, model, batch_size, dims, device, num_workers)
     np.savez_compressed(output_dir, mu=m1, sigma=s1)
 
+
 def save_fid_stats_as_dict(dataset, batch_size, device, dims, num_workers=1):
-    """Calculates the FID of two paths"""
+    """
+    Returns the FID statistics for a dataset as a dictionary with keys 'mu' and 'sigma'
 
+    Params:
+    -- dataset     : Image dataset for which to compute FID statistics
+    -- batch_size  : Batch size
+    -- device      : Device to run calculations
+    -- dims        : Dimensionality of activations returned by Inception
+    -- num_workers : Number of parallel dataloader workers
+    """
+
+    # load inception model with the correct block index for the needed activations
     block_idx = InceptionV3.BLOCK_INDEX_BY_DIM[dims]
-
     model = InceptionV3([block_idx]).to(device)
 
+    # compute and return FID statistics
     print(f"Saving FID statistics")
-
-    m1, s1 = compute_statistics_of_path(dataset, model, batch_size,
-                                        dims, device, num_workers)
-    
+    m1, s1 = compute_statistics_of_path(dataset, model, batch_size, dims, device, num_workers)
     return {'mu': m1, 'sigma': s1}
-
-
 
 
 ################################################################# 
 #################################################################
 
-# Code added for TreeVAE
+# above-mentioned code has been modified to TreeVAE
+# below code is new and has been added to the original file
 
+def get_precomputed_fid_scores_path(dataset, data_name, subset, batch_size=50, device='cpu', dims=2048):
+    """
+    If precomputed FID statistics exist, return the path to the file.
+    If not, compute the FID scores and save them to a file.
 
-def get_precomputed_fid_scores_path(dataset, data_name, subset, batch_size=256, device='cpu', dims=2048):
-    # TODO: add CIFAR10 and CelebA
-    # TODO: change code to not save images but only stats
+    Params:
+    -- dataset     : Image dataset for which to compute FID statistics
+    -- data_name   : Name of the dataset (e.g. 'mnist', 'fmnist', 'cifar10', 'celeba')
+    -- subset      : Name of the subset (e.g. 'train', 'test')
+    -- batch_size  : Batch size
+    -- device      : Device to run calculations
+    -- dims        : Dimensionality of activations returned by Inception
+    """
 
-    # MNIST and fashionMNIST
-    if data_name in ['mnist', 'fmnist', 'cifar10', 'cifar100']:
-        if data_name == 'mnist':
-            data_name = 'MNIST'
-        elif data_name == 'fmnist':
-            data_name = 'FashionMNIST'
+    assert data_name in ['mnist', 'fmnist', 'cifar10', 'celeba']
 
-        # current path 
-        project_path = os.getcwd() + '/'
+    # change data_name to match the name used in the precomputed stats for MNIST and FashionMNIST
+    if data_name == 'mnist':
+        data_name = 'MNIST'
+    elif data_name == 'fmnist':
+        data_name = 'FashionMNIST'
 
-        # check if precomputed stats exist
-        if os.path.exists(project_path + f'FID/fid_stats_precomputed/fid_stats_{data_name}_{subset}.npz'):
-            # save path
-            fid_stats_data_path = project_path + f'FID/fid_stats_precomputed/fid_stats_{data_name}_{subset}.npz'
+    # current path
+    project_path = os.getcwd() + '/'
 
-        else: #compute stats
-            fid_stats_dir = f'FID/fid_stats_precomputed/fid_stats_{data_name}_{subset}'
-            save_fid_stats(dataset, fid_stats_dir, batch_size=256, device=device, dims=2048)
-            fid_stats_data_path = fid_stats_dir + '.npz'
+    # check if precomputed stats exist
+    if os.path.exists(project_path + f'FID/fid_stats_precomputed/fid_stats_{data_name}_{subset}.npz'):
+        # save path
+        fid_stats_data_path = project_path + f'FID/fid_stats_precomputed/fid_stats_{data_name}_{subset}.npz'
 
+    # if not, compute FID stats and save them
+    else:
+        fid_stats_dir = f'FID/fid_stats_precomputed/fid_stats_{data_name}_{subset}'
+        save_fid_stats(dataset, fid_stats_dir, batch_size=batch_size, device=device, dims=2048)
+        fid_stats_data_path = fid_stats_dir + '.npz'
+
+    # return path to precomputed FID stats
     return fid_stats_data_path
 
                 

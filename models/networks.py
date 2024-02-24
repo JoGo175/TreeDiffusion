@@ -7,87 +7,36 @@ import torch.nn.functional as F
 import numpy as np
 from torch.nn.utils.parametrizations import spectral_norm
 
-
-spectral_normalization = False
-
 def actvn(x, actvn_function='swish'):
+    """
+    Activation function for the hidden layers.
+
+    Attributes
+    ----------
+    x : torch.Tensor
+        The input tensor.
+    actvn_function : str
+        The activation function type. Can be 'swish', 'relu', or 'leaky_relu'.
+    """
     if actvn_function == 'swish':
         return F.silu(x)
     elif actvn_function == 'relu':
         return F.relu(x)
-    elif actvn_function == 'leaky_relu':
+    elif actvn_function == 'leaky_relu': # the original activation function used in the TreeVAE paper
         return F.leaky_relu(x, negative_slope=0.3)
     else:
         raise NotImplementedError
 
 
-class EncoderSmall(nn.Module):
-    def __init__(self, input_shape, output_shape, act_function='swish'):
-        super(EncoderSmall, self).__init__()
-        self.act_function = act_function
-
-        self.dense1 = nn.Linear(in_features=input_shape, out_features=4*output_shape, bias=False)
-        self.bn1 = nn.BatchNorm1d(4*output_shape)
-        self.dense2 = nn.Linear(in_features=4*output_shape, out_features=4*output_shape, bias=False)
-        self.bn2 = nn.BatchNorm1d(4*output_shape)
-        self.dense3 = nn.Linear(in_features=4*output_shape, out_features=2*output_shape, bias=False)
-        self.bn3 = nn.BatchNorm1d(2*output_shape)
-        self.dense4 = nn.Linear(in_features=2*output_shape, out_features=output_shape, bias=False)
-        self.bn4 = nn.BatchNorm1d(output_shape)
-
-    def forward(self, inputs):
-        x = self.dense1(inputs)
-        x = self.bn1(x)
-        x = actvn(x, self.act_function)
-        x = self.dense2(x)
-        x = self.bn2(x)
-        x = actvn(x, self.act_function)
-        x = self.dense3(x)
-        x = self.bn3(x)
-        x = actvn(x, self.act_function)
-        x = self.dense4(x)
-        x = self.bn4(x)
-        x = actvn(x, self.act_function)
-        return x, None, None
-
-class DecoderSmall(nn.Module):
-    def __init__(self, input_shape, output_shape, activation, act_function='swish'):
-        super(DecoderSmall, self).__init__()
-        self.activation = activation
-        self.act_function = act_function
-        self.dense1 = nn.Linear(in_features=input_shape, out_features=128, bias=False)
-        self.bn1 = nn.BatchNorm1d(128)
-        self.dense2 = nn.Linear(in_features=128, out_features=256, bias=False)
-        self.bn2 = nn.BatchNorm1d(256)
-        self.dense3 = nn.Linear(in_features=256, out_features=512, bias=False)
-        self.bn3 = nn.BatchNorm1d(512)
-        self.dense4 = nn.Linear(in_features=512, out_features=512, bias=False)
-        self.bn4 = nn.BatchNorm1d(512)
-        self.dense5 = nn.Linear(in_features=512, out_features=output_shape, bias=True)
-
-    def forward(self, inputs):
-        x = self.dense1(inputs)
-        x = self.bn1(x)
-        x = actvn(x, self.act_function)
-        x = self.dense2(x)
-        x = self.bn2(x)
-        x = actvn(x, self.act_function)
-        x = self.dense3(x)
-        x = self.bn3(x)
-        x = actvn(x, self.act_function)
-        x = self.dense4(x)
-        x = self.bn4(x)
-        x = actvn(x, self.act_function)
-        x = self.dense5(x)
-        if self.activation == "sigmoid":
-            x = torch.sigmoid(x)
-        return x
-
-
+# Encoder and decoder architectures ----------------------------------------------------------------------------------
 class EncoderSmallCnn(nn.Module):
-    def __init__(self, input_shape, input_channels, output_shape, output_channels, act_function='swish'):
+    def __init__(self, input_shape, input_channels, output_shape, output_channels,
+                 act_function='swish', spectral_normalization=False):
         super(EncoderSmallCnn, self).__init__()
+
+        # activation function
         self.act_function = act_function
+
         # interpolate channels and shapes
         channels = np.linspace(input_channels, output_channels, 4, dtype=int)
         shapes = np.linspace(input_shape, output_shape, 4, dtype=int)
@@ -105,10 +54,12 @@ class EncoderSmallCnn(nn.Module):
         k3 = shapes[2] - s3 * (shapes[3] - 1) + 2 # padding = 1
         self.cnn2 = nn.Conv2d(in_channels=channels[2], out_channels=channels[3], kernel_size=k3, stride=s3, padding=1, bias=False)
 
+        # batch normalization between layers
         self.bn0 = nn.BatchNorm2d(channels[1])
         self.bn1 = nn.BatchNorm2d(channels[2])
         self.bn2 = nn.BatchNorm2d(channels[3])
 
+        # spectral normalization
         self.spectral_normalization = spectral_normalization
         if self.spectral_normalization:
             self.cnn0 = spectral_norm(self.cnn0)
@@ -128,9 +79,14 @@ class EncoderSmallCnn(nn.Module):
         return x, None, None
 
 class DecoderSmallCnn(nn.Module):
-    def __init__(self, input_shape, input_channels, output_shape, output_channels, activation, act_function='swish'):
+    def __init__(self, input_shape, input_channels, output_shape, output_channels,
+                 activation, act_function='swish', spectral_normalization=False):
         super(DecoderSmallCnn, self).__init__()
+
+        # activation function and output activation
         self.act_function = act_function
+        self.activation = activation
+
         # interpolate channels and shapes
         channels = np.linspace(input_channels, output_channels, 4, dtype=int)
         shapes = np.linspace(input_shape, output_shape, 4, dtype=int)
@@ -148,10 +104,11 @@ class DecoderSmallCnn(nn.Module):
         k3 = shapes[3] - s3 * (shapes[2] - 1) + 2  # padding = 1
         self.cnn2 = nn.ConvTranspose2d(in_channels=channels[2], out_channels=channels[3], kernel_size=k3, stride=s3, padding=1, bias=False)
 
+        # batch normalization between layers
         self.bn0 = nn.BatchNorm2d(channels[1])
         self.bn1 = nn.BatchNorm2d(channels[2])
-        self.activation = activation
 
+        # spectral normalization
         self.spectral_normalization = spectral_normalization
         if self.spectral_normalization:
             self.cnn0 = spectral_norm(self.cnn0)
@@ -172,10 +129,8 @@ class DecoderSmallCnn(nn.Module):
         return x
 
 
-
-
 class ResnetBlock(nn.Module):
-    def __init__(self, fin, fout, fhidden=None, is_bias=True, act_function='swish'):
+    def __init__(self, fin, fout, fhidden=None, is_bias=True, act_function='swish', spectral_normalization=False):
         super(ResnetBlock, self).__init__()
         self.act_function = act_function
 
@@ -194,12 +149,14 @@ class ResnetBlock(nn.Module):
 
         if self.learned_shortcut:
             self.conv_s = nn.Conv2d(in_channels=fin, out_channels=self.fout, kernel_size=1, stride=1, padding=0, bias=False)
+
+        # batch normalization between layers
         self.bn0 = nn.BatchNorm2d(self.fin)
         self.bn1 = nn.BatchNorm2d(self.fin)
         self.bn2 = nn.BatchNorm2d(self.fhidden)
 
+        # spectral normalization
         self.spectral_normalization = spectral_normalization
-
         if self.spectral_normalization:
             self.conv_0 = spectral_norm(self.conv_0)
             self.conv_1 = spectral_norm(self.conv_1)
@@ -224,7 +181,8 @@ class ResnetBlock(nn.Module):
         return x_s
 
 class Resnet_Encoder(nn.Module):
-    def __init__(self, input_shape, input_channels, output_shape, output_channels, act_function='swish'):
+    def __init__(self, input_shape, input_channels, output_shape, output_channels,
+                 act_function='swish', spectral_normalization=False):
         super(Resnet_Encoder, self).__init__()
         self.act_function = act_function
 
@@ -263,19 +221,19 @@ class Resnet_Encoder(nn.Module):
     
 class Resnet_Decoder(nn.Module):
     def __init__(self, input_shape, input_channels, output_shape, output_channels,
-                 activation='sigmoid', act_function='swish'):
+                 activation='sigmoid', act_function='swish', spectral_normalization=False):
         super(Resnet_Decoder, self).__init__()
         self.act_function = act_function
 
-        nf = 32 # 128
-        #nf_max = 256
+        nf = 32 # 128
+        # nf_max = 256
         self.activation = activation
 
         # Submodules
         nlayers = int(torch.log2(torch.tensor(output_shape / input_shape).float()))
         channels = np.linspace(input_channels, nf,  nlayers + 1, dtype=int)
 
-        #self.conv0 = nn.Conv2d(10, nf_max, kernel_size=3, padding=1)
+        # self.conv0 = nn.Conv2d(10, nf_max, kernel_size=3, padding=1)
 
         blocks = []
         for i in range(nlayers):
@@ -291,15 +249,13 @@ class Resnet_Decoder(nn.Module):
         self.resnet = nn.Sequential(*blocks)
 
         self.bn0 = nn.BatchNorm2d(nf)
-        #self.conv_img = nn.ConvTranspose2d(nf, output_channels, kernel_size=3, padding=1)
+        # self.conv_img = nn.ConvTranspose2d(nf, output_channels, kernel_size=3, padding=1)
         self.conv_img = nn.Conv2d(nf, output_channels, kernel_size=3, padding=1)
 
         self.spectral_normalization = spectral_normalization
         if self.spectral_normalization:
             self.conv_img = spectral_norm(self.conv_img)
-            #self.conv0 = spectral_norm(self.conv0)
-
-
+            # self.conv0 = spectral_norm(self.conv0)
 
     def forward(self, z):
         #out = self.conv0(z)
@@ -310,15 +266,18 @@ class Resnet_Decoder(nn.Module):
         return out
 
 
+# Transformation, router, bottom-up, and dense layer architectures --------------------------------------------------
 class Conv1(nn.Module):
-    def __init__(self, input_shape, encoded_size, res_connections=False):
+    def __init__(self, input_channels, output_channels, res_connections=False,
+                 act_function='swish', spectral_normalization=False):
         super(Conv, self).__init__()
+        self.act_function = act_function
         self.resnet = nn.Sequential(
-            ResnetBlock(input_shape, input_shape, act_function=self.act_function),
+            ResnetBlock(input_channels, input_channels, act_function=self.act_function),
         )
 
-        self.mu = nn.Conv2d(in_channels=input_shape, out_channels=encoded_size, kernel_size=3, stride=1, padding=1, bias=False)
-        self.sigma = nn.Conv2d(in_channels=input_shape, out_channels=encoded_size, kernel_size=3, stride=1, padding=1, bias=False)
+        self.mu = nn.Conv2d(in_channels=input_channels, out_channels=output_channels, kernel_size=3, stride=1, padding=1, bias=False)
+        self.sigma = nn.Conv2d(in_channels=input_channels, out_channels=output_channels, kernel_size=3, stride=1, padding=1, bias=False)
         self.res_connections = res_connections
 
         self.spectral_normalization = spectral_normalization
@@ -337,17 +296,18 @@ class Conv1(nn.Module):
         return x, mu, sigma
 
 class Conv(nn.Module):
-    def __init__(self, input_shape, encoded_size, res_connections=False, act_function='swish'):
+    def __init__(self, input_channels, output_channels, res_connections=False,
+                 act_function='swish', spectral_normalization=False):
         super(Conv, self).__init__()
         self.act_function = act_function
-        self.conv0 = nn.Conv2d(in_channels=input_shape, out_channels=input_shape, kernel_size=3, stride=1, padding=1, bias=False)
-        self.bn0 = nn.BatchNorm2d(input_shape)
-        self.conv1 = nn.Conv2d(in_channels=input_shape, out_channels=input_shape, kernel_size=3, stride=1, padding=1, bias=False)
-        self.bn1 = nn.BatchNorm2d(input_shape)
-        self.conv2 = nn.Conv2d(in_channels=input_shape, out_channels=input_shape, kernel_size=3, stride=1, padding=1, bias=False)
-        self.bn2 = nn.BatchNorm2d(input_shape)
-        self.mu = nn.Conv2d(in_channels=input_shape, out_channels=encoded_size, kernel_size=3, stride=1, padding=1, bias=False)
-        self.sigma = nn.Conv2d(in_channels=input_shape, out_channels=encoded_size, kernel_size=3, stride=1, padding=1, bias=False)
+        self.conv0 = nn.Conv2d(in_channels=input_channels, out_channels=input_channels, kernel_size=3, stride=1, padding=1, bias=False)
+        self.bn0 = nn.BatchNorm2d(input_channels)
+        self.conv1 = nn.Conv2d(in_channels=input_channels, out_channels=input_channels, kernel_size=3, stride=1, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(input_channels)
+        self.conv2 = nn.Conv2d(in_channels=input_channels, out_channels=input_channels, kernel_size=3, stride=1, padding=1, bias=False)
+        self.bn2 = nn.BatchNorm2d(input_channels)
+        self.mu = nn.Conv2d(in_channels=input_channels, out_channels=output_channels, kernel_size=3, stride=1, padding=1, bias=False)
+        self.sigma = nn.Conv2d(in_channels=input_channels, out_channels=output_channels, kernel_size=3, stride=1, padding=1, bias=False)
         self.res_connections = res_connections
 
         self.spectral_normalization = spectral_normalization
@@ -378,10 +338,12 @@ class Conv(nn.Module):
 
 
 class Dense(nn.Module):
-    def __init__(self, input_size, encoded_size):
+    def __init__(self, input_channels, output_channels, spectral_normalization=False):
         super(Dense, self).__init__()
-        self.mu = nn.Conv2d(in_channels=input_size, out_channels=encoded_size, kernel_size=3, stride=1, padding=1, bias=False)
-        self.sigma = nn.Conv2d(in_channels=input_size, out_channels=encoded_size, kernel_size=3, stride=1, padding=1, bias=False)
+        self.mu = nn.Conv2d(in_channels=input_channels, out_channels=output_channels,
+                            kernel_size=3, stride=1, padding=1, bias=False)
+        self.sigma = nn.Conv2d(in_channels=input_channels, out_channels=output_channels,
+                               kernel_size=3, stride=1, padding=1, bias=False)
 
         self.spectral_normalization = spectral_normalization
         if self.spectral_normalization:
@@ -396,11 +358,12 @@ class Dense(nn.Module):
 
 
 class Router(nn.Module):
-    def __init__(self, input_size, rep_dim, hidden_units=128, dropout=0, act_function='swish'):
+    def __init__(self, input_channels, rep_dim, hidden_units=128, dropout=0,
+                 act_function='swish', spectral_normalization=False):
         super(Router, self).__init__()
         # input is (encoded_size, 8, 8)
         self.act_function = act_function
-        self.conv1 = nn.Conv2d(in_channels=input_size, out_channels=1, kernel_size=3, stride=1, padding=1, bias=False)
+        self.conv1 = nn.Conv2d(in_channels=input_channels, out_channels=1, kernel_size=3, stride=1, padding=1, bias=False)
         self.dense1 = nn.Linear(1 * rep_dim * rep_dim, hidden_units, bias=False)
         self.dense2 = nn.Linear(hidden_units, hidden_units, bias=False)
         self.bn1 = nn.BatchNorm1d(hidden_units)
@@ -434,7 +397,7 @@ class Router(nn.Module):
             return d
 
 
-
+# Contrastive projection architecture -------------------------------------------------------------------------------
 class contrastive_projection(nn.Module):
     def __init__(self, input_size, rep_dim, hidden_unit=128, encoded_size=10, act_function='swish'):
         super(contrastive_projection, self).__init__()
@@ -455,36 +418,156 @@ class contrastive_projection(nn.Module):
         sigma = F.softplus(self.sigma(x))
 
         return x, mu, sigma
-        
 
-def get_encoder(architecture, input_shape, input_channels, output_shape, output_channels, act_function='swish'):
+
+# Get encoder and decoder architectures -----------------------------------------------------------------------------
+
+def get_encoder(architecture, input_shape, input_channels, output_shape, output_channels,
+                act_function='swish', spectral_normalization=False):
+    """
+    Get the encoder. Encodes the input image into the deterministic representation for the bottom-up pathway.
+    encoder input   = image
+    encoder output  = first deterministic representation of the image.
+
+    Attributes
+    ----------
+    architecture : str
+        The architecture of the encoder.
+    input_shape : int
+        The input shape for the encoder = the resolution size of the input image
+    input_channels : int
+        The number of channels of the input = the number of channels of the input image
+    output_shape : int
+        The output shape for the encoder = the resolution size of the latent representation
+    output_channels : int
+        The number of channels of the output = the number of channels of the latent representation
+    act_function : str
+        The activation function of the hidden layers.
+    spectral_normalization : bool
+        Whether to use spectral normalization or not.
+    """
     if architecture == 'mlp':
-        encoder = EncoderSmall(input_shape=input_shape, output_shape=output_shape)
+        # encoder = EncoderSmall(input_shape=input_shape, output_shape=output_shape)
+        raise NotImplementedError('The mlp encoder is not implemented.')
     elif architecture == 'cnn1':
-        encoder = EncoderSmallCnn(input_shape, input_channels, output_shape, output_channels, act_function=act_function)
+        encoder = EncoderSmallCnn(input_shape, input_channels, output_shape, output_channels,
+                                  act_function, spectral_normalization)
     elif architecture == 'cnn2':
-        encoder = Resnet_Encoder(input_shape, input_channels, output_shape, output_channels, act_function=act_function)
+        encoder = Resnet_Encoder(input_shape, input_channels, output_shape, output_channels,
+                                 act_function, spectral_normalization)
     elif architecture == 'cnn_omni':
-        encoder = EncoderOmniglot(output_shape)
+        # encoder = EncoderOmniglot(output_shape)
+        raise NotImplementedError('The omniglot encoder is not implemented.')
     else:
         raise ValueError('The encoder architecture is mispecified.')
     return encoder
 
 
-def get_decoder(architecture, input_shape, input_channels, output_shape, output_channels, activation, act_function='swish'):
+def get_decoder(architecture, input_shape, input_channels, output_shape, output_channels,
+                activation, act_function='swish', spectral_normalization=False):
+    """
+    Get an instance of a decoder. Needed to create the leaf-specific decoders.
+    decoder input   = latent representation of leaf
+    decoder output  = reconstructed image conditioned on the latent representation of leaf.
+
+    Attributes
+    ----------
+    architecture : str
+        The architecture of the decoder.
+    input_shape : int
+        The input shape for the decoder = the resolution size of the latent representation
+    input_channels : int
+        The number of channels of the input = the number of channels of the latent representation
+    output_shape : int
+        The output shape for the decoder = the resolution size of the reconstructed image
+    output_channels : int
+        The number of channels of the output = the number of channels of the reconstructed image
+    activation : str
+        The activation function of the output layer.
+    act_function : str
+        The activation function of the hidden layers.
+    spectral_normalization : bool
+        Whether to use spectral normalization or not.
+    """
     if architecture == 'mlp':
-        decoder = DecoderSmall(input_shape, output_shape, activation)
+        # decoder = DecoderSmall(input_shape, output_shape, activation)
+        raise NotImplementedError('The mlp decoder is not implemented.')
     elif architecture == 'cnn1':
         decoder = DecoderSmallCnn(input_shape, input_channels, output_shape, output_channels,
-                                  activation, act_function=act_function)
+                                  activation, act_function, spectral_normalization)
     elif architecture == 'cnn2':
         decoder = Resnet_Decoder(input_shape, input_channels, output_shape, output_channels,
-                                 activation, act_function=act_function)
+                                 activation, act_function, spectral_normalization)
     elif architecture == 'cnn_omni':
-        decoder = DecoderOmniglot(input_shape, activation) 
+        # decoder = DecoderOmniglot(input_shape, activation)
+        raise NotImplementedError('The omniglot decoder is not implemented.')
     else:
         raise ValueError('The decoder architecture is mispecified.')
     return decoder
+
+# Old and unused architectures --------------------------------------------------------------------------------------
+
+# class EncoderSmall(nn.Module):
+#     def __init__(self, input_shape, output_shape, act_function='swish'):
+#         super(EncoderSmall, self).__init__()
+#         self.act_function = act_function
+#
+#         self.dense1 = nn.Linear(in_features=input_shape, out_features=4*output_shape, bias=False)
+#         self.bn1 = nn.BatchNorm1d(4*output_shape)
+#         self.dense2 = nn.Linear(in_features=4*output_shape, out_features=4*output_shape, bias=False)
+#         self.bn2 = nn.BatchNorm1d(4*output_shape)
+#         self.dense3 = nn.Linear(in_features=4*output_shape, out_features=2*output_shape, bias=False)
+#         self.bn3 = nn.BatchNorm1d(2*output_shape)
+#         self.dense4 = nn.Linear(in_features=2*output_shape, out_features=output_shape, bias=False)
+#         self.bn4 = nn.BatchNorm1d(output_shape)
+#
+#     def forward(self, inputs):
+#         x = self.dense1(inputs)
+#         x = self.bn1(x)
+#         x = actvn(x, self.act_function)
+#         x = self.dense2(x)
+#         x = self.bn2(x)
+#         x = actvn(x, self.act_function)
+#         x = self.dense3(x)
+#         x = self.bn3(x)
+#         x = actvn(x, self.act_function)
+#         x = self.dense4(x)
+#         x = self.bn4(x)
+#         x = actvn(x, self.act_function)
+#         return x, None, None
+#
+# class DecoderSmall(nn.Module):
+#     def __init__(self, input_shape, output_shape, activation, act_function='swish'):
+#         super(DecoderSmall, self).__init__()
+#         self.activation = activation
+#         self.act_function = act_function
+#         self.dense1 = nn.Linear(in_features=input_shape, out_features=128, bias=False)
+#         self.bn1 = nn.BatchNorm1d(128)
+#         self.dense2 = nn.Linear(in_features=128, out_features=256, bias=False)
+#         self.bn2 = nn.BatchNorm1d(256)
+#         self.dense3 = nn.Linear(in_features=256, out_features=512, bias=False)
+#         self.bn3 = nn.BatchNorm1d(512)
+#         self.dense4 = nn.Linear(in_features=512, out_features=512, bias=False)
+#         self.bn4 = nn.BatchNorm1d(512)
+#         self.dense5 = nn.Linear(in_features=512, out_features=output_shape, bias=True)
+#
+#     def forward(self, inputs):
+#         x = self.dense1(inputs)
+#         x = self.bn1(x)
+#         x = actvn(x, self.act_function)
+#         x = self.dense2(x)
+#         x = self.bn2(x)
+#         x = actvn(x, self.act_function)
+#         x = self.dense3(x)
+#         x = self.bn3(x)
+#         x = actvn(x, self.act_function)
+#         x = self.dense4(x)
+#         x = self.bn4(x)
+#         x = actvn(x, self.act_function)
+#         x = self.dense5(x)
+#         if self.activation == "sigmoid":
+#             x = torch.sigmoid(x)
+#         return x
 
 
 # class EncoderOmniglot(nn.Module):

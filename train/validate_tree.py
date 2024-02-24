@@ -234,9 +234,9 @@ def compute_FID_scores(trainset, testset, model, device, configs):
 
     # precompute or load fid scores for train and test
     data_stats_train = get_precomputed_fid_scores_path(trainset.dataset.data, configs['data']['data_name'],
-                                                       subset="train", device=device)
-    data_stats_test = get_precomputed_fid_scores_path(testset.dataset.data, configs['data']['data_name'], subset="test",
-                                                      device=device)
+                                                       batch_size=50, subset="train", device=device)
+    data_stats_test = get_precomputed_fid_scores_path(testset.dataset.data, configs['data']['data_name'],
+                                                      batch_size=50, subset="test", device=device)
 
     # Generations FID -----------------------------------------------------------
 
@@ -256,10 +256,10 @@ def compute_FID_scores(trainset, testset, model, device, configs):
     # compute FID score for generated images
 
     # precompute FID scores for generated images
-    stats_generations = save_fid_stats_as_dict(gen_dataset, batch_size=256, device=device, dims=2048)
-    train_FID_generations = calculate_fid([data_stats_train, stats_generations], batch_size=256, device=device,
+    stats_generations = save_fid_stats_as_dict(gen_dataset, batch_size=50, device=device, dims=2048)
+    train_FID_generations = calculate_fid([data_stats_train, stats_generations], batch_size=50, device=device,
                                           dims=2048)
-    test_FID_generations = calculate_fid([data_stats_test, stats_generations], batch_size=256, device=device, dims=2048)
+    test_FID_generations = calculate_fid([data_stats_test, stats_generations], batch_size=50, device=device, dims=2048)
     print("FID score for generated images compared to train set:", train_FID_generations)
     print("FID score for generated images compared to test set:", test_FID_generations)
 
@@ -295,15 +295,15 @@ def compute_FID_scores(trainset, testset, model, device, configs):
         reconstructions_dataset = torch.stack(reconstructions_list).squeeze()
 
         # precompute FID scores for generated images
-        stats_reconstructions = save_fid_stats_as_dict(reconstructions_dataset, batch_size=256, device=device,
+        stats_reconstructions = save_fid_stats_as_dict(reconstructions_dataset, batch_size=50, device=device,
                                                        dims=2048)
 
         if subset == 'train':
-            train_FID_reconstructions = calculate_fid([data_stats_train, stats_reconstructions], batch_size=256,
+            train_FID_reconstructions = calculate_fid([data_stats_train, stats_reconstructions], batch_size=50,
                                                       device=device, dims=2048)
             print("FID score for reconstructed images, train set:", train_FID_reconstructions)
         elif subset == 'test':
-            test_FID_reconstructions = calculate_fid([data_stats_test, stats_reconstructions], batch_size=256,
+            test_FID_reconstructions = calculate_fid([data_stats_test, stats_reconstructions], batch_size=50,
                                                      device=device, dims=2048)
             print("FID score for reconstructed images, test set:", test_FID_reconstructions)
         _ = gc.collect()
