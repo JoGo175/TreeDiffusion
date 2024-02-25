@@ -87,8 +87,10 @@ def run_experiment(configs):
 	# Print and save run time to wandb
 	print("\n" * 2)
 	total_training_time = end_time - start_time
-	print("Total training time: ", total_training_time)
-	wandb.log({"total_training_time": total_training_time})
+	# print time in hours, minutes and seconds
+	print("Total training time: ", total_training_time // 3600, "hours", (total_training_time % 3600) // 60, "minutes", total_training_time % 60, "seconds")
+	# save time in hours
+	wandb.log({"total_training_time": total_training_time / 3600})
 
 	# Evaluation of TreeVAE
 	print("\n" * 2)
