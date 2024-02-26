@@ -27,16 +27,28 @@ class TreeVAE(nn.Module):
             The name of the activation function for the reconstruction loss [sigmoid, mse]
         loss : models.losses
             The loss function used by the decoder to reconstruct the input
+        act_function : str
+            The name of the activation function used in the hidden layers of the networks
+        spectral_norm : bool
+            Whether to use spectral normalization
         alpha : float
             KL-annealing weight initialization
-        encoded_sizes : list
-            A list of latent dimensions for each depth of the tree from the bottom to the root
-        hidden_layers : float
-            A list of hidden units number for the MLP transformations for each depth of the tree from bottom to root
+        dropout_router : float
+            Dropout rate in router networks
+        res_connections : bool
+            Whether to use residual connection in the transformation and bottom-up layers
+        latent_channels : list
+            A list of latent channels for each depth of the tree from the bottom to the root
+        bottom_up_channels : list
+            A list of bottom-up channels for each depth of the tree from the bottom to the root
+        representation_dim : int
+            The dimension of the latent representation after the encoder and before the decoder
         depth : int
             The depth of the tree (root has depth 0 and a root with two leaves has depth 1)
         inp_shape : int
-            The total dimensions of the input data (if images of 32x32 then 32x32x3)
+            The image resolution of the input data (if images of 32x32x3 then 32)
+        inp_channel : int
+            The number of input channels (if images of 32x32x3 then 3)
         augment : bool
              Whether to use contrastive learning through augmentation, if False no augmentation is used
         augmentation_method : str
@@ -104,13 +116,13 @@ class TreeVAE(nn.Module):
         else:
             raise NotImplementedError
 
-        # Activation function used between layers of the networks
+        # Activation function used in the hidden layers of the networks
         self.act_function = self.kwargs['act_function']
         # Spectral normalization
         self.spectral_norm = self.kwargs['spectral_norm']
         # KL-annealing weight initialization
         self.alpha = torch.tensor(self.kwargs['kl_start'])
-        # dropout in router networks
+        # Dropout rate in router networks
         self.dropout_router = self.kwargs['dropout_router']
         # Whether to use residual connection in the transformation and bottom-up layers
         self.res_connections = self.kwargs['res_connections']
@@ -137,25 +149,20 @@ class TreeVAE(nn.Module):
 
         # Construct the model architecture and the tree structure
 
-        # bottom up: the inference chain that from x computes the d units till the root
-        if self.activation == "mse":
-            encoder = get_encoder(architecture=self.kwargs['encoder'], input_shape=int((self.inp_shape)**0.5),
-                                  input_channels=self.inp_channel, output_shape=self.representation_dim,
-                                  output_channels=self.bottom_up_channels[0], act_function=self.act_function,
-                                  spectral_normalization=self.spectral_norm)
-        else:
-            encoder = get_encoder(architecture=self.kwargs['encoder'], input_shape=int((self.inp_shape)**0.5),
-                                  input_channels=self.inp_channel, output_shape=self.representation_dim,
-                                  output_channels=self.bottom_up_channels[0], act_function=self.act_function,
-                                  spectral_normalization=self.spectral_norm)
+        # bottom-up: the inference chain that from x computes the d units till the root
+        encoder = get_encoder(architecture=self.kwargs['encoder'], input_shape=self.inp_shape,
+                              input_channels=self.inp_channel, output_shape=self.representation_dim,
+                              output_channels=self.bottom_up_channels[0], act_function=self.act_function,
+                              spectral_normalization=self.spectral_norm)
 
         self.bottom_up = nn.ModuleList([encoder])
         for i in range(1, len(self.bottom_up_channels)):
-            self.bottom_up.append(Conv(self.bottom_up_channels[i-1], self.latent_channels[i],
+            self.bottom_up.append(Conv(input_channels=self.bottom_up_channels[i-1],
+                                       output_channels=self.latent_channels[i],
                                        res_connections=self.res_connections, act_function=self.act_function,
                                        spectral_normalization=self.spectral_norm))
 
-        # MLP's if we use contrastive loss on d's
+        # contrastive projection networks if we use contrastive loss on d's
         if len([i for i in self.augmentation_method if i in ['instancewise_first', 'instancewise_full']]) > 0:
             self.contrastive_mlp = nn.ModuleList([])
             for i in range(0, len(self.bottom_up_channels)):
@@ -163,15 +170,15 @@ class TreeVAE(nn.Module):
                                                                    rep_dim=self.representation_dim,
                                                                    act_function=self.act_function))
 
-        # top down: the generative model that from x computes the prior prob of all nodes from root till leaves
+        # top-down: the generative model that from x computes the prior prob of all nodes from root till leaves,
         # it has a tree structure which is constructed by passing a list of transformations and routers from root to
-        # leaves visiting nodes layer-wise from left to right
+        # leaves visiting nodes layer-wise from left to right.
         # N.B. root has None as transformation and leaves have None as routers
-        # the encoded sizes and layers are reversed from bottom up
+        # the encoded channel sizes and layers are reversed from bottom up
         # e.g. for bottom up [MLP(256, 32), MLP(128, 16), MLP(64, 8)] the list of top-down transformations are
         # [None, MLP(16, 64), MLP(16, 64), MLP(32, 128), MLP(32, 128), MLP(32, 128), MLP(32, 128)]
 
-        # select the top down generative networks
+        # select the top-down generative networks
         encoded_size_gen = self.latent_channels[-(self.depth+1):]  # e.g. encoded_sizes 32,16,8, depth 1
         encoded_size_gen = encoded_size_gen[::-1]  # encoded_size_gen = 16,8 => 8,16
         layers_gen = self.bottom_up_channels[-(self.depth+1):]  # e.g. encoded_sizes 256,128,64, depth 1
@@ -180,43 +187,51 @@ class TreeVAE(nn.Module):
         # add root transformation and dense layer, the dense layer is layer that connects the bottom-up with the nodes
         self.transformations = nn.ModuleList([None])
         self.denses = nn.ModuleList([Dense(layers_gen[0], encoded_size_gen[0], self.spectral_norm)])
+        # attach the rest of transformations and dense layers for each node
         for i in range(self.depth):
             for j in range(2 ** (i + 1)):
-                self.transformations.append(Conv(encoded_size_gen[i], encoded_size_gen[i+1],
+                # Transformation Conv from depth i to i+1
+                self.transformations.append(Conv(input_channels=encoded_size_gen[i],
+                                                 output_channels=encoded_size_gen[i+1],
                                                  res_connections=self.res_connections, act_function=self.act_function,
                                                  spectral_normalization=self.spectral_norm))
-                self.denses.append(Dense(layers_gen[i+1], encoded_size_gen[i+1], self.spectral_norm)) # Dense at depth i+1 from bottom-up to top-down
+                # Dense at depth i+1 from bottom-up to top-down
+                self.denses.append(Dense(input_channels=layers_gen[i+1], output_channels=encoded_size_gen[i+1],
+                                         spectral_normalization=self.spectral_norm))
 
+        # compute the list of decisions for both bottom-up (decisions_q) and top-down (decisions)
+        # for each node of the tree
         self.decisions = nn.ModuleList([])
-        for i in range(self.depth):
-            for j in range(2 ** i):
-                self.decisions.append(Router(encoded_size_gen[i], rep_dim=self.representation_dim,
-                                             hidden_units=layers_gen[i], dropout=self.dropout_router,
-                                             act_function=self.act_function, spectral_normalization=self.spectral_norm)) # Router at node of depth i
-
-        # decoders = [None, None, None, Dec, Dec, Dec, Dec]
-        self.decoders = nn.ModuleList([None for i in range(self.depth) for j in range(2 ** i)])
-        # the leaves do not have decisions but have decoders
-        for _ in range(2 ** (self.depth)):
-            self.decisions.append(None)
-            self.decoders.append(get_decoder(architecture=self.kwargs['encoder'], input_shape=self.representation_dim,
-                                             input_channels=self.latent_channels[-1], output_shape=int((self.inp_shape)**0.5),
-                                             output_channels= self.inp_channel, activation=self.activation,
-                                             act_function=self.act_function, spectral_normalization=self.spectral_norm))
-
-        # bottom-up decisions
         self.decisions_q = nn.ModuleList([])
         for i in range(self.depth):
             for _ in range(2 ** i):
-                self.decisions_q.append(Router(layers_gen[i], rep_dim=self.representation_dim,
+                # Router at node of depth i
+                self.decisions.append(Router(input_channels=encoded_size_gen[i], rep_dim=self.representation_dim,
+                                             hidden_units=layers_gen[i], dropout=self.dropout_router,
+                                             act_function=self.act_function,
+                                             spectral_normalization=self.spectral_norm))
+
+                self.decisions_q.append(Router(input_channels=layers_gen[i], rep_dim=self.representation_dim,
                                                hidden_units=layers_gen[i], dropout=self.dropout_router,
-                                               act_function=self.act_function, spectral_normalization=self.spectral_norm))
+                                               act_function=self.act_function,
+                                               spectral_normalization=self.spectral_norm))
+        # # the leaves do not have decisions (we set it to None)
         for _ in range(2 ** (self.depth)):
+            self.decisions.append(None)
             self.decisions_q.append(None)
+
+        # compute the list of decoders to attach to each node, note that internal nodes do not have a decoder
+        # e.g. for a tree with depth 2: decoders = [None, None, None, Dec, Dec, Dec, Dec]
+        self.decoders = nn.ModuleList([None for i in range(self.depth) for j in range(2 ** i)])
+        for _ in range(2 ** (self.depth)):
+            self.decoders.append(get_decoder(architecture=self.kwargs['encoder'], input_shape=self.representation_dim,
+                                             input_channels=self.latent_channels[-1], output_shape=self.inp_shape,
+                                             output_channels= self.inp_channel, activation=self.activation,
+                                             act_function=self.act_function, spectral_normalization=self.spectral_norm))
 
         # construct the tree
         self.tree = construct_tree(transformations=self.transformations, routers=self.decisions,
-                                        routers_q=self.decisions_q, denses=self.denses, decoders=self.decoders)
+                                   routers_q=self.decisions_q, denses=self.denses, decoders=self.decoders)
 
     def forward(self, x):
         """
@@ -252,8 +267,10 @@ class TreeVAE(nn.Module):
 
         for i in range(0, len(self.bottom_up_channels)):
             d, _, _ = self.bottom_up[i](d)
+            # store bottom-up embeddings for top-down
+            encoders.append(d)
 
-            # Pass through contrastive MLP's
+            # Pass through contrastive projection networks if contrastive learning is selected
             if 'instancewise_full' in self.augmentation_method:
                 _, emb_c, _ = self.contrastive_mlp[i](d)
                 emb_contr.append(emb_c)
@@ -262,10 +279,7 @@ class TreeVAE(nn.Module):
                     _, emb_c, _ = self.contrastive_mlp[i](d)
                     emb_contr.append(emb_c)
 
-            # store bottom-up embeddings for top-down
-            encoders.append(d)
-
-        # create a list of nodes of the tree that need to be processed
+        # create a list of nodes of the tree that need to be processed, self.tree is the root of the tree
         list_nodes = [{'node': self.tree, 'depth': 0, 'prob': torch.ones(x.size(0), device=device), 'z_parent_sample': None}]
         # initializate KL losses
         kl_nodes_tot = torch.zeros(len(x), device=device)
@@ -274,7 +288,8 @@ class TreeVAE(nn.Module):
         leaves_prob = []
         reconstructions = []
         node_leaves = []
-        decoder_magnitudes = []
+
+        # iterates over all nodes in the tree
         while len(list_nodes) != 0:
             # store info regarding the current node
             current_node = list_nodes.pop(0)
@@ -284,15 +299,19 @@ class TreeVAE(nn.Module):
             d = encoders[-(1+depth_level)]
             z_mu_q_hat, z_sigma_q_hat = node.dense(d)
 
-            if depth_level == 0:  
-                # here we are in the root
-                # standard gaussian
+            # here we are in the root
+            if depth_level == 0:
+                # the root has a standard gaussian prior
                 z_mu_p, z_sigma_p = torch.zeros_like(z_mu_q_hat, device=device), torch.ones_like(z_sigma_q_hat, device=device)
+                # z_p is 3-dimensional (channel, height, width)
                 z_p = td.Independent(td.Normal(z_mu_p, torch.sqrt(z_sigma_p + epsilon)), 3)
-                # sampled z is the top layer of deterministic bottom-up
+                # the samples z (from q(z|x)) is the top layer of deterministic bottom-up
                 z_mu_q, z_sigma_q = z_mu_q_hat, z_sigma_q_hat
+
+            # otherwise we are in the rest of the nodes of the tree
             else:
-                # the generative mu and sigma is the output of the top-down network given the sampled paren
+                # the generative probability distribution of internal nodes is a gaussian with mu and sigma that are
+                # the outputs of the top-down network conditioned on the sampled parent
                 _, z_mu_p, z_sigma_p = node.transformation(z_parent_sample)
                 # z_p is 3-dimensional (channel, height, width)
                 z_p = td.Independent(td.Normal(z_mu_p, torch.sqrt(z_sigma_p + epsilon)), 3)
@@ -302,7 +321,7 @@ class TreeVAE(nn.Module):
             z = td.Independent(td.Normal(z_mu_q, torch.sqrt(z_sigma_q + epsilon)), 3)
             z_sample = z.rsample()
 
-            # compute KL node between z, z_p, both are distributions for (sample, channel, height, width)
+            # compute KL node between z, z_p, both are distributions for (channel, height, width)
             # need multivariate gaussian KL
             kl_node = prob * td.kl_divergence(z, z_p)
             kl_node = torch.clamp(kl_node, min=-1, max=1000)
@@ -312,32 +331,36 @@ class TreeVAE(nn.Module):
             else:
                 kl_nodes_tot += kl_node
 
+            # if there is a router (i.e. decision probability) then we are in the internal nodes (not leaves)
             if node.router is not None:
-                # we are in the internal nodes (not leaves)
+                # compute the probability of the sample to go to the left child
                 prob_child_left = node.router(z_sample).squeeze()
                 prob_child_left_q = node.routers_q(d).squeeze()
 
+                # compute the KL of the decisions
                 kl_decisions = prob_child_left_q * (epsilon + prob_child_left_q / (prob_child_left + epsilon)).log() + \
                                 (1 - prob_child_left_q) * (epsilon + (1 - prob_child_left_q) / (1 - prob_child_left + epsilon)).log()
-                
-                if self.training is True and self.augment is True and 'simple' not in self.augmentation_method:
-                    if depth_level == 0:
-                        # Only do contrastive loss on representations once
-                        aug_decisions_loss += calc_aug_loss(prob_parent=prob, prob_router=prob_child_left_q, augmentation_methods=self.augmentation_method, emb_contr=emb_contr)
-                    else:
-                        aug_decisions_loss += calc_aug_loss(prob_parent=prob, prob_router=prob_child_left_q, augmentation_methods=self.augmentation_method, emb_contr=[])
-
                 kl_decisions = prob * kl_decisions
                 kl_decisions_tot += kl_decisions
 
+                # compute the contrastive loss of the embeddings and the decisions
+                if self.training is True and self.augment is True and 'simple' not in self.augmentation_method:
+                    if depth_level == 0:
+                        # compute the contrastive loss for all the bottom-up representations
+                        aug_decisions_loss += calc_aug_loss(prob_parent=prob, prob_router=prob_child_left_q, augmentation_methods=self.augmentation_method, emb_contr=emb_contr)
+                    else:
+                        # compute the contrastive loss for the decisions
+                        aug_decisions_loss += calc_aug_loss(prob_parent=prob, prob_router=prob_child_left_q, augmentation_methods=self.augmentation_method, emb_contr=[])
+
                 # we are not in a leaf, so we have to add the left and right child to the list
                 prob_node_left, prob_node_right = prob * prob_child_left_q, prob * (1 - prob_child_left_q)
-
                 node_left, node_right = node.left, node.right
                 list_nodes.append(
                     {'node': node_left, 'depth': depth_level + 1, 'prob': prob_node_left, 'z_parent_sample': z_sample})
                 list_nodes.append({'node': node_right, 'depth': depth_level + 1, 'prob': prob_node_right,
                                 'z_parent_sample': z_sample})
+
+            # if there is a decoder then we are in one of the leaf nodes
             elif node.decoder is not None:
                 # if we are in a leaf we need to store the prob of reaching that leaf and compute reconstructions
                 # as the nodes are explored left to right, these probabilities will be also ordered left to right
@@ -345,17 +368,9 @@ class TreeVAE(nn.Module):
                 dec = node.decoder
                 reconstructions.append(dec(z_sample))
                 node_leaves.append({'prob': prob, 'z_sample': z_sample})
-                # get decoder weights
-                params = []
-                for param in dec.parameters():
-                    if param.requires_grad:
-                        params.append(param)
-                params = torch.cat([param.view(-1) for param in params])
-                decoder_magnitudes.append(torch.norm(params, p=2))
 
-
+            # here we are in an internal node with pruned leaves and thus only have one child
             elif node.router is None and node.decoder is None:
-                # We are in an internal node with pruned leaves and thus only have one child
                 node_left, node_right = node.left, node.right
                 child = node_left if node_left is not None else node_right
                 list_nodes.append(
@@ -365,7 +380,7 @@ class TreeVAE(nn.Module):
         kl_decisions_loss = torch.mean(kl_decisions_tot)
         kl_root_loss = torch.mean(kl_root)
 
-        # p_c_z is the probability of reaching a leaf and should be of shape [batch_size, num_clusters]
+        # p_c_z is the probability of reaching a leaf and is of shape [batch_size, num_clusters]
         p_c_z = torch.cat([prob.unsqueeze(-1) for prob in leaves_prob], dim=-1)
         
         rec_losses = self.loss(x, reconstructions, leaves_prob)
@@ -373,14 +388,12 @@ class TreeVAE(nn.Module):
 
         return_dict = {
             'rec_loss': rec_loss,
-            'weights': leaves_prob,
             'kl_root': kl_root_loss,
             'kl_decisions': kl_decisions_loss,
             'kl_nodes': kl_nodes_loss,
             'aug_decisions': self.aug_decisions_weight * aug_decisions_loss,
             'p_c_z': p_c_z,
             'node_leaves': node_leaves,
-            'decoder_magnitudes': decoder_magnitudes
         }
 
         if self.return_elbo:
@@ -406,7 +419,7 @@ class TreeVAE(nn.Module):
             A leaf is defined by a dictionary: {'node': leaf node, 'depth': depth of the leaf node}.
             A leaf node is defined by the class Node in utils.model_utils.
         """
-        # returns leaves of the tree
+        # iterate over all nodes in the tree to find the leaves
         list_nodes = [{'node': self.tree, 'depth': 0}]
         nodes_leaves = []
         while len(list_nodes) != 0:
@@ -455,7 +468,6 @@ class TreeVAE(nn.Module):
         small_model: models.model_smalltree.SmallTreeVAE
             The sub-tree with one root and two leaves that needs to be attached to TreeVAE.
         """
-        # attaching a (trained) smalltree to the full tree
         assert node.left is None and node.right is None
         node.router = small_model.decision
         node.routers_q = small_model.decision_q
@@ -464,10 +476,13 @@ class TreeVAE(nn.Module):
             dense = small_model.denses[j]
             transformation = small_model.transformations[j]
             decoder = small_model.decoders[j]
+            # insert each leaf of the small tree as child of the node of TreeVAE
             node.insert(transformation, None, None, dense, decoder)
-        
+
+        # once the small tree is attached we re-compute the list of transformations, routers etc
         transformations, routers, denses, decoders, routers_q = return_list_tree(self.tree)
-        
+
+        # we then need to re-initialize the parameters of TreeVAE
         self.decisions_q = routers_q
         self.transformations = transformations
         self.decisions = routers
@@ -504,18 +519,19 @@ class TreeVAE(nn.Module):
 
         for i in range(0, len(self.bottom_up_channels)):
             d, _, _ = self.bottom_up[i](d)
-            # store the bottom-up layers for the top down computation
+            # store the bottom-up layers for the top-down computation
             encoders.append(d)
 
         # create a list of nodes of the tree that need to be processed
         list_nodes = [{'node': self.tree, 'depth': 0, 'prob': torch.ones(x.size(0), device=device), 'z_parent_sample': None}]
 
-        # initializate KL losses
+        # initialize KL losses
         leaves_prob = []
         reconstructions = []
         node_leaves = []
-        while len(list_nodes) != 0:
 
+        # iterate over the nodes
+        while len(list_nodes) != 0:
             # store info regarding the current node
             current_node = list_nodes.pop(0)
             node, depth_level, prob = current_node['node'], current_node['depth'], current_node['prob']
@@ -532,7 +548,7 @@ class TreeVAE(nn.Module):
                 z_mu_q, z_sigma_q = compute_posterior(z_mu_q_hat, z_mu_p, z_sigma_q_hat, z_sigma_p)
 
             # compute sample z using mu_q and sigma_q
-            z = td.Independent(td.Normal(z_mu_q, torch.sqrt(z_sigma_q + epsilon)), 1)
+            z = td.Independent(td.Normal(z_mu_q, torch.sqrt(z_sigma_q + epsilon)), 3)
             z_sample = z.rsample()
 
             # if we are in the internal nodes (not leaves)
@@ -548,6 +564,7 @@ class TreeVAE(nn.Module):
                     {'node': node_left, 'depth': depth_level + 1, 'prob': prob_node_left, 'z_parent_sample': z_sample})
                 list_nodes.append({'node': node_right, 'depth': depth_level + 1, 'prob': prob_node_right,
                                 'z_parent_sample': z_sample})
+
             elif node.decoder is not None:
                 # if we are in a leaf we need to store the prob of reaching that leaf and compute reconstructions
                 # as the nodes are explored left to right, these probabilities will be also ordered left to right
@@ -592,13 +609,16 @@ class TreeVAE(nn.Module):
         list_nodes = [{'node': self.tree, 'depth': 0, 'prob': torch.ones(n_samples, device=device), 'z_parent_sample': None}]
         leaves_prob = []
         reconstructions = []
+
+        # iterates over all nodes in the tree
         while len(list_nodes) != 0:
             current_node = list_nodes.pop(0)
             node, depth_level, prob = current_node['node'], current_node['depth'], current_node['prob']
             z_parent_sample = current_node['z_parent_sample']
 
             if depth_level == 0:
-                z_mu_p, z_sigma_p = torch.zeros([n_samples, sizes[-1], rep_dim, rep_dim], device=device), torch.ones([n_samples, sizes[-1], rep_dim, rep_dim], device=device)
+                z_mu_p, z_sigma_p = torch.zeros([n_samples, sizes[-1], rep_dim, rep_dim], device=device), \
+                    torch.ones([n_samples, sizes[-1], rep_dim, rep_dim], device=device)
                 z_p = td.Independent(td.Normal(z_mu_p, torch.sqrt(z_sigma_p)), 3)
                 z_sample = z_p.rsample()
 
@@ -618,6 +638,7 @@ class TreeVAE(nn.Module):
                                 'z_parent_sample': z_sample})
 
             elif node.decoder is not None:
+                # here we are in a leaf node and we attach the corresponding generations
                 leaves_prob.append(prob)
                 dec = node.decoder
                 reconstructions.append(dec(z_sample))
@@ -633,12 +654,22 @@ class TreeVAE(nn.Module):
         return reconstructions, p_c_z
 
     def posterior_parameters(self):
+        """
+        Return the posterior parameters for each node of the tree. The posterior parameters are the mu and sigma
+        of the generative distribution for each node of the tree.
+
+        Returns
+        -------
+        list
+            A list of tensors containing the posterior mu for each node of the tree.
+        """
 
         # create a list of nodes of the tree that need to be processed
         list_nodes = [{'node': self.tree, 'depth': 0}]
         posterior_mu = []
         posterior_sigma = []
 
+        # iterates over all nodes in the tree
         while len(list_nodes) != 0:
             # store info regarding the current node
             current_node = list_nodes.pop(0)
@@ -666,6 +697,21 @@ class TreeVAE(nn.Module):
         return posterior_mu, posterior_sigma
 
     def get_node_embeddings(self, x):
+        """
+        Compute the node embeddings for each node of the tree given the input x.
+
+        Parameters
+        ----------
+        x: Tensor
+            Input data.
+
+        Returns
+        -------
+        list
+            A list of dictionaries containing the node embeddings for each node of the tree.
+            Each node is described by a dictionary:
+            {'prob': sample-wise probability of reaching the node, 'z_sample': sample-wise leaf embedding}
+        """
         assert self.training == False  # Assuming self refers to an instance of your class
         epsilon = 1e-7
         device = x.device
@@ -685,6 +731,7 @@ class TreeVAE(nn.Module):
         # Create a list to store node information
         node_info_list = []
 
+        # iterates over all nodes in the tree
         while len(list_nodes) != 0:
             # Store info regarding the current node
             current_node = list_nodes.pop(0)
@@ -703,10 +750,10 @@ class TreeVAE(nn.Module):
                 z_mu_q, z_sigma_q = compute_posterior(z_mu_q_hat, z_mu_p, z_sigma_q_hat, z_sigma_p)
 
             # Compute sample z using mu_q and sigma_q
-            z = td.Independent(td.Normal(z_mu_q, torch.sqrt(z_sigma_q + epsilon)), 1)
+            z = td.Independent(td.Normal(z_mu_q, torch.sqrt(z_sigma_q + epsilon)), 3)
             z_sample = z.rsample()
 
-            # Store information in the list
+            # Store information of the node
             node_info = {'prob': prob, 'z_sample': z_sample}
             node_info_list.append(node_info)
 
@@ -730,51 +777,58 @@ class TreeVAE(nn.Module):
                     {'node': child, 'depth': depth_level + 1, 'prob': prob, 'z_parent_sample': z_sample})
 
         return node_info_list
-    
-    def get_latent_z(self, x):
-        # TODO: fix this function
-        # get the latent z from the node embeddings with the highest probability
 
-        node_info_list = self.get_node_embeddings(x)
-
-        # Initialize a tensor to keep track of the indices of the highest probability nodes
-        max_prob_indices = torch.zeros(x.size(0), dtype=torch.long, device=x.device)
-        max_probs = torch.zeros(x.size(0), device=x.device)
-
-        # Iterate over each node's info and update the indices based on the highest probability
-        for i, node_info in enumerate(node_info_list):
-            prob = node_info['prob']
-            mask = prob > max_probs
-            max_probs[mask] = prob[mask]
-            max_prob_indices[mask] = i
-
-        # Use the indices to select the corresponding z_samples
-        max_z_samples = torch.stack([node_info_list[idx]['z_sample'] for idx in max_prob_indices])
-
-        return max_z_samples
     
     def forward_recons(self, x, max_leaf):
-        res = self.compute_reconstruction(x)
+        """
+        Forward pass of the TreeVAE model to compute the conditioning information that is used as input to the
+        Diffusion model in Diffuse-TreeVAE.
+        Samples the leaf with the highest probability or samples from the leaf probabilities to get the conditioning
+        information.
+        Currently, the conditioning information is simply the leaf index and the corresponding reconstruction.
 
+        Parameters
+        ----------
+        x : Tensor
+            Input data
+        max_leaf: bool
+            Whether to use the leaf with the highest probability or sample from the leaf probabilities.
+
+        Returns
+        -------
+        Tensor
+            The selected reconstructions.
+        Tensor
+            The selected leaf indices. Can later be altered to be the latent embeddings z.
+        """
+        # Compute the reconstructions and the leaf embeddings
+        res = self.compute_reconstruction(x)
+        recons = res[0]
+        nodes = res[1]
+
+        # Save the chosen leaf_embeddings, reconstructions and the respective leaf indices
         max_z_sample = []
         max_recon = []
         leaf_ind = []
 
-        nodes = res[1]
+        # Iterate over the leaf nodes and select the leaf with the highest probability or sample given the leaf probs
         for i in range(len(nodes[0]['prob'])):
             probs = [node['prob'][i] for node in nodes]
             z_sample = [node['z_sample'][i] for node in nodes]
+
             if max_leaf:
                 ind = probs.index(max(probs))
             else:
                 ind = torch.multinomial(torch.stack(probs), 1).item()
 
             max_z_sample.append(z_sample[ind])
-            max_recon.append(res[0][ind][i])
+            max_recon.append(recons[ind][i])
             leaf_ind.append(ind)
 
+        # latent embedding will later be used to condition the Diffusion model
         # z = torch.stack(max_z_sample)
+
+        # leaf index and reconstruction is used to condition the Diffusion model
         z = torch.tensor(leaf_ind, dtype=torch.float).unsqueeze(1).to(x.device)
         cond = torch.stack(max_recon)
-
         return cond, z

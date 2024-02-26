@@ -24,7 +24,7 @@ training:
   kl_start: 0.01          # Initial KL annealing weight
 
   # Model parameters
-  inp_shape: 1024                                   # Input shape, 32*32 for CIFAR10
+  inp_shape: 32                                     # Image resolution (32 for CIFAR10)
   inp_channels: 3                                   # Input channels, 3 for RGB
   representation_dim: 4                             # size of the 2-dim latent representation -> should be a power of 2, (2, 4, 8, 16 ...)
   latent_channels: [16, 16, 16, 16, 16, 16, 16]     # channels of the latent representation -> (latent_channels, representation_dim, representation_dim)

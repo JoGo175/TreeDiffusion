@@ -24,7 +24,7 @@ training:
   kl_start: 0.5           # Initial KL annealing weight
 
   # Model parameters
-  inp_shape: 784                                    # Input shape, 28*28 for FMNIST
+  inp_shape: 28                                     # Image resolution (28 for FashionMNIST)
   inp_channels: 1                                   # Input channels, 1 for grayscale
   representation_dim: 2                             # size of the 2-dim latent representation -> (latent_channels, representation_dim, representation_dim)
   latent_channels: [16, 16, 16, 16, 16, 16, 16]     # channels of the latent representation

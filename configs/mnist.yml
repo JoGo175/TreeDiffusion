@@ -7,8 +7,8 @@ data:
 # TreeVAE specific parameters --------------------------------------------------------------------------------
 training:
   # Training parameters
-  num_epochs: 180                           # Nb. epochs for training the first small tree, root and 2 leaves
-  num_epochs_smalltree: 180                 # Nb. epochs for training the remaining small trees in each grow step
+  num_epochs: 150                           # Nb. epochs for training the first small tree, root and 2 leaves
+  num_epochs_smalltree: 150                 # Nb. epochs for training the remaining small trees in each grow step
   num_epochs_intermediate_fulltrain: 80     # Nb. epochs for the intermediate full tree training, in between the grow steps
   num_epochs_finetuning: 200                # Nb. epochs for the final full tree training after the grow steps
   intermediate_fulltrain: True              # Whether to train the intermediate full tree
@@ -24,7 +24,7 @@ training:
   kl_start: 0.5           # Initial KL annealing weight
 
   # Model parameters
-  inp_shape: 784                                    # Input shape, 28*28 for MNIST
+  inp_shape: 28                                     # Image resolution (28 for MNIST)
   inp_channels: 1                                   # Input channels, 1 for grayscale
   representation_dim: 2                             # size of the 2-dim latent representation -> should be a power of 2, (2, 4, 8, 16 ...)
   latent_channels: [16, 16, 16, 16, 16, 16, 16]     # channels of the latent representation -> (latent_channels, representation_dim, representation_dim)

@@ -25,7 +25,7 @@ training:
   kl_start: 0.01          # Initial KL annealing weight
 
   # Model parameters
-  inp_shape: 4096                                   # Input shape, 64*64 for CelebA
+  inp_shape: 64                                     # Image resolution (64 for CelebA)
   inp_channels: 3                                   # Input channels, 3 for RGB
   representation_dim: 2                             # size of the 2-dim latent representation -> should be a power of 2, (2, 4, 8, 16 ...)
   latent_channels: [16, 16, 16, 16, 16, 16, 16]     # channels of the latent representation -> (latent_channels, representation_dim, representation_dim)

@@ -24,21 +24,21 @@ class SmallTreeVAE(nn.Module):
         loss : models.losses
             The loss function used by the decoder to reconstruct the input
         act_function : str
-            The name of the activation function used between layers of the networks
+            The name of the activation function used in the hidden layers of the networks
         spectral_norm : bool
             Whether to use spectral normalization
         alpha : float
             KL-annealing weight initialization
         dropout_router : float
-            Dropout rate in router network
+            Dropout rate in router networks
         res_connections : bool
             Whether to use residual connection in the transformation and bottom-up layers
         depth : int
             The depth at which the sub-tree will be attached (root has depth 0 and a root with two leaves has depth 1)
         inp_shape : int
-            The total dimensions of the input data (if images of 32x32 then 32x32x3)
+            The image resolution of the input data (if images of 32x32x3 then 32)
         inp_channel : int
-            The number of input channels
+            The number of input channels (if images of 32x32x3 then 3)
         latent_channel : int
             The number of latent channels used in the sub-tree
         bottom_up_channel : int
@@ -89,7 +89,7 @@ class SmallTreeVAE(nn.Module):
         else:
             raise NotImplementedError
 
-        # Activation function used between layers of the networks
+        # Activation function used in the hidden layers of the networks
         self.act_function = self.kwargs['act_function']
         # Spectral normalization
         self.spectral_norm = self.kwargs['spectral_norm']
@@ -103,10 +103,10 @@ class SmallTreeVAE(nn.Module):
         self.depth = depth
         # Parameters for latent representation size and channels
         latent_channels = self.kwargs['latent_channels']
-        representation_dim = self.kwargs['representation_dim']
         bottom_up_channels = self.kwargs['bottom_up_channels']
         self.latent_channel = latent_channels[-self.depth-1]
         self.bottom_up_channel = bottom_up_channels[-self.depth]
+        self.representation_dim = self.kwargs['representation_dim']
         # Input shape and channels
         self.inp_shape = self.kwargs['inp_shape']
         self.inp_channel = self.kwargs['inp_channels']
@@ -126,21 +126,21 @@ class SmallTreeVAE(nn.Module):
                                                    act_function=self.act_function,
                                                    spectral_normalization=self.spectral_norm) for _ in range(2)])
         self.decision = Router(input_channels=self.latent_channel,
-                               rep_dim=representation_dim,
+                               rep_dim=self.representation_dim,
                                hidden_units=self.bottom_up_channel,
                                dropout=self.dropout_router,
                                act_function=self.act_function,
                                spectral_normalization=self.spectral_norm)
         self.decision_q = Router(input_channels=self.bottom_up_channel,
-                                 rep_dim=representation_dim,
+                                 rep_dim=self.representation_dim,
                                  hidden_units=self.bottom_up_channel,
                                  dropout=self.dropout_router,
                                  act_function=self.act_function,
                                  spectral_normalization=self.spectral_norm)
         self.decoders = nn.ModuleList([get_decoder(architecture=self.kwargs['encoder'],
-                                                   input_shape=representation_dim,
+                                                   input_shape=self.representation_dim,
                                                    input_channels=self.latent_channel,
-                                                   output_shape=int((self.inp_shape)**0.5),
+                                                   output_shape=self.inp_shape,
                                                    output_channels=self.inp_channel,
                                                    activation=self.activation,
                                                    act_function=self.act_function,
