@@ -1,4 +1,4 @@
-run_name: 'mnist_cnn'
+run_name: 'mnist_final'
 
 data:
   data_name: 'mnist'      # Dataset name

@@ -1,4 +1,4 @@
-run_name: 'fmnist_cnn'
+run_name: 'fmnist_final'
 
 data:
   data_name: 'fmnist'
