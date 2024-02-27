@@ -30,91 +30,70 @@ def actvn(x, actvn_function='swish'):
 
 # Encoder and decoder architectures ----------------------------------------------------------------------------------
 
-class Conv_BN_Act(nn.Module):
-    def __init__(self, input_channels, output_channels, act_function='swish', spectral_normalization=False):
-        """
-        Convolutional layer with batch normalization and activation function.
-
-        Input has shape (input_channels, rep_dim, rep_dim)
-        Output has shape (output_channels, rep_dim, rep_dim)
-        """
-        super(Conv_BN_Act, self).__init__()
-        # activation function
-        self.act_function = act_function
-        # convolutional layer that preserves the representation size, only changing the number of channels
-        self.conv = nn.Conv2d(in_channels=input_channels, out_channels=output_channels, kernel_size=3, stride=1, padding=1, bias=False)
-        # batch normalization between layers
-        self.bn = nn.BatchNorm2d(input_channels)
-
-        # spectral normalization
-        self.spectral_normalization = spectral_normalization
-        if self.spectral_normalization:
-            self.conv = spectral_norm(self.conv)
-
-    def forward(self, x):
-        x = self.conv(actvn(self.bn(x), self.act_function))
-        return x
-
-
-
 class EncoderSmallCnn(nn.Module):
     def __init__(self, input_shape, input_channels, output_shape, output_channels,
                  act_function='swish', spectral_normalization=False):
         """
         Encoder for the small CNN architecture, used for greyscale datasets. (e.g. MNIST, FashionMNIST)
+        Dynamic architecture with 3 convolutional layers and 3 batch normalization layers that
+        adapt to the input and output shapes and channels.
 
         Input has shape (input_channels, input_shape, input_shape)
         Output has shape (output_channels, output_shape, output_shape)
         """
         super(EncoderSmallCnn, self).__init__()
 
-        # activation function
+        # activation function for the hidden layers
         self.act_function = act_function
 
-        # need next bigger power of 2 for the spatial size because of the downsampling steps
-        dim = 2 ** (int(np.log2(input_shape)) + 1)    # 32 for input_shape = 28 (e.g. MNIST, FashionMNIST)
-        # padding to reach dim x dim
-        pad = (dim - input_shape) // 2
-        # number of downsampling steps to reach output_shape
-        nlayers = int(torch.log2(torch.tensor(dim / output_shape).float()))
-        # interpolate channels sizes
-        channels = np.linspace(input_channels, output_channels, nlayers + 1, dtype=int)
+        # interpolate channels and shapes
+        channels = np.linspace(input_channels, output_channels, 4, dtype=int)
+        shapes = np.linspace(input_shape, output_shape, 4, dtype=int)
 
-        # list of convolutional layers
-        blocks = []
-        # Downsample by factor 2 and add convolutional layer to the sequence, nlayers times
-        for i in range(nlayers):
-            nf0 = channels[i]
-            nf1 = channels[i + 1]
-            blocks += [
-                # changes spatial size, preserves number of channels
-                nn.AvgPool2d(kernel_size=3, stride=2, padding=1),
-                # changes the number of channels, preserves spatial size
-                Conv_BN_Act(nf0, nf1, act_function=self.act_function, spectral_normalization=spectral_normalization),
-            ]
+        # input_shape -> 4 * output_shape
+        s1 = max(int(shapes[0] / (shapes[1])), 1)
+        k1 = shapes[0] - s1 * (shapes[1] - 1) + 2 # padding = 1
+        self.cnn0 = nn.Conv2d(in_channels=channels[0], out_channels=channels[1], kernel_size=k1, stride=s1, padding=1, bias=False)
+        # 4 * output_shape -> 2 * output_shape
+        s2 = max(int(shapes[1] / (shapes[2])), 1)
+        k2 = shapes[1] - s2 * (shapes[2] - 1) + 2 # padding = 1
+        self.cnn1 = nn.Conv2d(in_channels=channels[1], out_channels=channels[2], kernel_size=k2, stride=s2, padding=1, bias=False)
+        # 2 * output_shape -> output_shape
+        s3 = max(int(shapes[2] / (shapes[3])), 1)
+        k3 = shapes[2] - s3 * (shapes[3] - 1) + 2 # padding = 1
+        self.cnn2 = nn.Conv2d(in_channels=channels[2], out_channels=channels[3], kernel_size=k3, stride=s3, padding=1, bias=False)
 
-        # Submodules of the encoder
-        self.conv_img = nn.Conv2d(input_channels, channels[0], kernel_size=3, stride=1, padding=(pad+1))
-        self.encoder = nn.Sequential(*blocks)
-        self.bn0 = nn.BatchNorm2d(output_channels)
+        # batch normalization between layers
+        self.bn0 = nn.BatchNorm2d(channels[1])
+        self.bn1 = nn.BatchNorm2d(channels[2])
+        self.bn2 = nn.BatchNorm2d(channels[3])
 
         # spectral normalization
         self.spectral_normalization = spectral_normalization
         if self.spectral_normalization:
-            self.conv_img = spectral_norm(self.conv_img)
+            self.cnn0 = spectral_norm(self.cnn0)
+            self.cnn1 = spectral_norm(self.cnn1)
+            self.cnn2 = spectral_norm(self.cnn2)
 
     def forward(self, x):
-        out = self.conv_img(x)
-        out = self.encoder(out)
-        out = actvn(self.bn0(out), self.act_function)
-        return out, None, None
+        x = self.cnn0(x)
+        x = self.bn0(x)
+        x = actvn(x, self.act_function)
+        x = self.cnn1(x)
+        x = self.bn1(x)
+        x = actvn(x, self.act_function)
+        x = self.cnn2(x)
+        x = self.bn2(x)
+        x = actvn(x, self.act_function)
+        return x, None, None
 
 class DecoderSmallCnn(nn.Module):
     def __init__(self, input_shape, input_channels, output_shape, output_channels,
                  activation, act_function='swish', spectral_normalization=False):
         """
         Decoder for the small CNN architecture, used for greyscale datasets. (e.g. MNIST, FashionMNIST)
-        Reversed architecture of the encoder.
+        Reversed architecture of the encoder. Dynamic architecture with 3 convolutional layers and
+        3 batch normalization layers that adapt to the input and output shapes and channels.
 
         Input has shape (input_channels, input_shape, input_shape)
         Output has shape (output_channels, output_shape, output_shape)
@@ -126,45 +105,46 @@ class DecoderSmallCnn(nn.Module):
         # activation function for the output layer
         self.activation = activation
 
-        # need next bigger power of 2 for the spatial size because of the upsampling steps
-        dim = 2 ** (int(np.log2(output_shape)) + 1)    # 32 for output_shape = 28 (e.g. MNIST, FashionMNIST)
-        # padding to reach dim x dim --> needs to be removed at the end
-        self.pad = (dim - output_shape) // 2
-        # number of upsampling steps to reach input_shape
-        nlayers = int(torch.log2(torch.tensor(dim / input_shape).float()))
-        # interpolate channels sizes
-        channels = np.linspace(input_channels, output_channels, nlayers + 1, dtype=int)
+        # interpolate channels and shapes
+        channels = np.linspace(input_channels, output_channels, 4, dtype=int)
+        shapes = np.linspace(input_shape, output_shape, 4, dtype=int)
 
-        # list of convolutional layers
-        blocks = []
-        # Upsample by factor 2 and add convolutional layer to the sequence, nlayers times
-        for i in range(nlayers):
-            nf0 = channels[i]
-            nf1 = channels[i + 1]
-            blocks += [
-                # changes number of channels, preserves spatial size
-                Conv_BN_Act(nf0, nf1, act_function=self.act_function, spectral_normalization=spectral_normalization),
-                # changes spatial size, preserves number of channels
-                nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),
-            ]
+        # input_shape -> 2 * input_shape
+        s1 = max(int(shapes[1] / (shapes[0])), 1)
+        k1 = shapes[1] - s1 * (shapes[0] - 1) + 2 # padding = 1
+        self.cnn0 = nn.ConvTranspose2d(in_channels=channels[0], out_channels=channels[1], kernel_size=k1, stride=s1, padding=1, bias=False)
+        # 2 * input_shape -> 4 * input_shape
+        s2 = max(int(shapes[2] / (shapes[1])), 1)
+        k2 = shapes[2] - s2 * (shapes[1] - 1) + 2 # padding = 1
+        self.cnn1 = nn.ConvTranspose2d(in_channels=channels[1], out_channels=channels[2], kernel_size=k2, stride=s2, padding=1, bias=False)
+        # 4 * input_shape -> output_shape
+        s3 = max(int(shapes[3] / (shapes[2])), 1)
+        k3 = shapes[3] - s3 * (shapes[2] - 1) + 2  # padding = 1
+        self.cnn2 = nn.ConvTranspose2d(in_channels=channels[2], out_channels=channels[3], kernel_size=k3, stride=s3, padding=1, bias=False)
 
-        # Submodules of the decoder
-        self.decoder = nn.Sequential(*blocks)
-        self.bn0 = nn.BatchNorm2d(output_channels)
-        self.conv_img = nn.Conv2d(output_channels, output_channels, kernel_size=3, stride=1, padding=1)
+        # batch normalization between layers
+        self.bn0 = nn.BatchNorm2d(channels[1])
+        self.bn1 = nn.BatchNorm2d(channels[2])
 
         # spectral normalization
         self.spectral_normalization = spectral_normalization
         if self.spectral_normalization:
-            self.conv_img = spectral_norm(self.conv_img)
+            self.cnn0 = spectral_norm(self.cnn0)
+            self.cnn1 = spectral_norm(self.cnn1)
+            self.cnn2 = spectral_norm(self.cnn2)
 
     def forward(self, inputs):
-        out = self.decoder(inputs)
-        out = self.conv_img(actvn(self.bn0(out), self.act_function))
-        out = out[:, :, self.pad:-self.pad, self.pad:-self.pad]
+        x = self.cnn0(inputs)
+        x = self.bn0(x)
+        x = actvn(x, self.act_function)
+        x = self.cnn1(x)
+        x = self.bn1(x)
+        x = actvn(x, self.act_function)
+        x = self.cnn2(x)
+
         if self.activation == 'sigmoid':
-            out = torch.sigmoid(out)
-        return out
+            x = torch.sigmoid(x)
+        return x
 
 
 class ResnetBlock(nn.Module):
@@ -591,6 +571,141 @@ def get_decoder(architecture, input_shape, input_channels, output_shape, output_
     return decoder
 
 # Old and unused architectures --------------------------------------------------------------------------------------
+
+class Conv_BN_Act(nn.Module):
+    def __init__(self, input_channels, output_channels, act_function='swish', spectral_normalization=False):
+        """
+        Convolutional layer with batch normalization and activation function.
+
+        Input has shape (input_channels, rep_dim, rep_dim)
+        Output has shape (output_channels, rep_dim, rep_dim)
+        """
+        super(Conv_BN_Act, self).__init__()
+        # activation function
+        self.act_function = act_function
+        # convolutional layer that preserves the representation size, only changing the number of channels
+        self.conv = nn.Conv2d(in_channels=input_channels, out_channels=output_channels, kernel_size=3, stride=1, padding=1, bias=False)
+        # batch normalization between layers
+        self.bn = nn.BatchNorm2d(input_channels)
+
+        # spectral normalization
+        self.spectral_normalization = spectral_normalization
+        if self.spectral_normalization:
+            self.conv = spectral_norm(self.conv)
+
+    def forward(self, x):
+        x = self.conv(actvn(self.bn(x), self.act_function))
+        return x
+
+class EncoderSmallCnn_Downsampling(nn.Module):
+    def __init__(self, input_shape, input_channels, output_shape, output_channels,
+                 act_function='swish', spectral_normalization=False):
+        """
+        Encoder for the small CNN architecture, used for greyscale datasets. (e.g. MNIST, FashionMNIST)
+
+        Input has shape (input_channels, input_shape, input_shape)
+        Output has shape (output_channels, output_shape, output_shape)
+        """
+        super(EncoderSmallCnn, self).__init__()
+
+        # activation function
+        self.act_function = act_function
+
+        # need next bigger power of 2 for the spatial size because of the downsampling steps
+        dim = 2 ** (int(np.log2(input_shape)) + 1)    # 32 for input_shape = 28 (e.g. MNIST, FashionMNIST)
+        # padding to reach dim x dim
+        pad = (dim - input_shape) // 2
+        # number of downsampling steps to reach output_shape
+        nlayers = int(torch.log2(torch.tensor(dim / output_shape).float()))
+        # interpolate channels sizes
+        channels = np.linspace(input_channels, output_channels, nlayers + 1, dtype=int)
+
+        # list of convolutional layers
+        blocks = []
+        # Downsample by factor 2 and add convolutional layer to the sequence, nlayers times
+        for i in range(nlayers):
+            nf0 = channels[i]
+            nf1 = channels[i + 1]
+            blocks += [
+                # changes spatial size, preserves number of channels
+                nn.AvgPool2d(kernel_size=3, stride=2, padding=1),
+                # changes the number of channels, preserves spatial size
+                Conv_BN_Act(nf0, nf1, act_function=self.act_function, spectral_normalization=spectral_normalization),
+            ]
+
+        # Submodules of the encoder
+        self.conv_img = nn.Conv2d(input_channels, channels[0], kernel_size=3, stride=1, padding=(pad+1))
+        self.encoder = nn.Sequential(*blocks)
+        self.bn0 = nn.BatchNorm2d(output_channels)
+
+        # spectral normalization
+        self.spectral_normalization = spectral_normalization
+        if self.spectral_normalization:
+            self.conv_img = spectral_norm(self.conv_img)
+
+    def forward(self, x):
+        out = self.conv_img(x)
+        out = self.encoder(out)
+        out = actvn(self.bn0(out), self.act_function)
+        return out, None, None
+
+class DecoderSmallCnn_Upsampling(nn.Module):
+    def __init__(self, input_shape, input_channels, output_shape, output_channels,
+                 activation, act_function='swish', spectral_normalization=False):
+        """
+        Decoder for the small CNN architecture, used for greyscale datasets. (e.g. MNIST, FashionMNIST)
+        Reversed architecture of the encoder.
+
+        Input has shape (input_channels, input_shape, input_shape)
+        Output has shape (output_channels, output_shape, output_shape)
+        """
+        super(DecoderSmallCnn, self).__init__()
+
+        # activation function for the hidden layers
+        self.act_function = act_function
+        # activation function for the output layer
+        self.activation = activation
+
+        # need next bigger power of 2 for the spatial size because of the upsampling steps
+        dim = 2 ** (int(np.log2(output_shape)) + 1)    # 32 for output_shape = 28 (e.g. MNIST, FashionMNIST)
+        # padding to reach dim x dim --> needs to be removed at the end
+        self.pad = (dim - output_shape) // 2
+        # number of upsampling steps to reach input_shape
+        nlayers = int(torch.log2(torch.tensor(dim / input_shape).float()))
+        # interpolate channels sizes
+        channels = np.linspace(input_channels, output_channels, nlayers + 1, dtype=int)
+
+        # list of convolutional layers
+        blocks = []
+        # Upsample by factor 2 and add convolutional layer to the sequence, nlayers times
+        for i in range(nlayers):
+            nf0 = channels[i]
+            nf1 = channels[i + 1]
+            blocks += [
+                # changes number of channels, preserves spatial size
+                Conv_BN_Act(nf0, nf1, act_function=self.act_function, spectral_normalization=spectral_normalization),
+                # changes spatial size, preserves number of channels
+                nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),
+            ]
+
+        # Submodules of the decoder
+        self.decoder = nn.Sequential(*blocks)
+        self.bn0 = nn.BatchNorm2d(output_channels)
+        self.conv_img = nn.Conv2d(output_channels, output_channels, kernel_size=3, stride=1, padding=1)
+
+        # spectral normalization
+        self.spectral_normalization = spectral_normalization
+        if self.spectral_normalization:
+            self.conv_img = spectral_norm(self.conv_img)
+
+    def forward(self, inputs):
+        out = self.decoder(inputs)
+        out = self.conv_img(actvn(self.bn0(out), self.act_function))
+        out = out[:, :, self.pad:-self.pad, self.pad:-self.pad]
+        if self.activation == 'sigmoid':
+            out = torch.sigmoid(out)
+        return out
+
 
 # class EncoderSmall(nn.Module):
 #     def __init__(self, input_shape, output_shape, act_function='swish'):

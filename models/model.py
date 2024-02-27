@@ -186,7 +186,7 @@ class TreeVAE(nn.Module):
 
         # add root transformation and dense layer, the dense layer is layer that connects the bottom-up with the nodes
         self.transformations = nn.ModuleList([None])
-        self.denses = nn.ModuleList([Dense(layers_gen[0], encoded_size_gen[0], self.spectral_norm)])
+        self.denses = nn.ModuleList([Dense(layers_gen[0], encoded_size_gen[0])])
         # attach the rest of transformations and dense layers for each node
         for i in range(self.depth):
             for j in range(2 ** (i + 1)):
@@ -194,10 +194,10 @@ class TreeVAE(nn.Module):
                 self.transformations.append(Conv(input_channels=encoded_size_gen[i],
                                                  output_channels=encoded_size_gen[i+1],
                                                  res_connections=self.res_connections, act_function=self.act_function,
-                                                 spectral_normalization=self.spectral_norm))
+                                                 spectral_normalization=False))
                 # Dense at depth i+1 from bottom-up to top-down
                 self.denses.append(Dense(input_channels=layers_gen[i+1], output_channels=encoded_size_gen[i+1],
-                                         spectral_normalization=self.spectral_norm))
+                                         spectral_normalization=False))
 
         # compute the list of decisions for both bottom-up (decisions_q) and top-down (decisions)
         # for each node of the tree
@@ -209,12 +209,12 @@ class TreeVAE(nn.Module):
                 self.decisions.append(Router(input_channels=encoded_size_gen[i], rep_dim=self.representation_dim,
                                              hidden_units=layers_gen[i], dropout=self.dropout_router,
                                              act_function=self.act_function,
-                                             spectral_normalization=self.spectral_norm))
+                                             spectral_normalization=False))
 
                 self.decisions_q.append(Router(input_channels=layers_gen[i], rep_dim=self.representation_dim,
                                                hidden_units=layers_gen[i], dropout=self.dropout_router,
                                                act_function=self.act_function,
-                                               spectral_normalization=self.spectral_norm))
+                                               spectral_normalization=False))
         # # the leaves do not have decisions (we set it to None)
         for _ in range(2 ** (self.depth)):
             self.decisions.append(None)

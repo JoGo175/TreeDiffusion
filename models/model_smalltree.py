@@ -124,19 +124,19 @@ class SmallTreeVAE(nn.Module):
                                                    output_channels=self.latent_channel,
                                                    res_connections=self.res_connections,
                                                    act_function=self.act_function,
-                                                   spectral_normalization=self.spectral_norm) for _ in range(2)])
+                                                   spectral_normalization=False) for _ in range(2)])
         self.decision = Router(input_channels=self.latent_channel,
                                rep_dim=self.representation_dim,
                                hidden_units=self.bottom_up_channel,
                                dropout=self.dropout_router,
                                act_function=self.act_function,
-                               spectral_normalization=self.spectral_norm)
+                               spectral_normalization=False)
         self.decision_q = Router(input_channels=self.bottom_up_channel,
                                  rep_dim=self.representation_dim,
                                  hidden_units=self.bottom_up_channel,
                                  dropout=self.dropout_router,
                                  act_function=self.act_function,
-                                 spectral_normalization=self.spectral_norm)
+                                 spectral_normalization=False)
         self.decoders = nn.ModuleList([get_decoder(architecture=self.kwargs['encoder'],
                                                    input_shape=self.representation_dim,
                                                    input_channels=self.latent_channel,
