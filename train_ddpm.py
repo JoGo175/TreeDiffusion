@@ -68,15 +68,17 @@ def train():
     parser.add_argument('--config_name', default=f'{dataset}', type=str,
                         choices=['mnist', 'fmnist', 'news20', 'omniglot', 'cifar10', 'cifar100', 'celeba'],
                         help='the override file name for config.yml')
+    parser.add_argument('--seed', default=42, type=int, help='random seed')
     parser.add_argument('--vae_chkpt_path', default='', type=str, help='path to the pretrained TreeVAE model')
     parser.add_argument('--results_dir', default='', type=str, help='path to the results directory')
-    parser.add_argument('--seed', default=42, type=int, help='random seed')
 
     args = parser.parse_args()
     configs = prepare_config(args, project_dir)
     # Configs specific to DDPM
     configs_ddpm = configs['ddpm']
     configs_ddpm['globals']['seed'] = args.seed
+    configs_ddpm['training']['vae_chkpt_path'] = args.vae_chkpt_path
+    configs_ddpm['training']['results_dir'] = args.results_dir
 
     # Reproducibility
     reset_random_seeds(configs_ddpm['globals']['seed'])
