@@ -35,6 +35,9 @@ def train():
     parser.add_argument('--config_name', default=f'{dataset}', type=str,
                         choices=['mnist', 'fmnist', 'news20', 'omniglot', 'cifar10', 'cifar100', 'celeba'],
                         help='the override file name for config.yml')
+    parser.add_argument('--vae_chkpt_path', default='', type=str, help='path to the pretrained TreeVAE model')
+    parser.add_argument('--results_dir', default='', type=str, help='path to the results directory')
+    parser.add_argument('--seed_ddpm', default=42, type=int, help='random seed')
 
     args = parser.parse_args()
     configs = prepare_config(args, project_dir)
@@ -42,7 +45,7 @@ def train():
     configs_ddpm = configs['ddpm']
 
     # Reproducibility
-    reset_random_seeds(configs['globals']['seed'])
+    reset_random_seeds(configs_ddpm['globals']['seed_ddpm'])
 
     # Dataset
     trainset, trainset_eval, testset = get_data(configs_ddpm)

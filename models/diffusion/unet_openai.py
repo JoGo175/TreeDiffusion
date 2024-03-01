@@ -1,3 +1,34 @@
+"""
+This file has been modified from a file in the original DiffuseVAE reporitory
+which was released under the MIT License, to adapt and improve it for the TreeVAE project.
+
+Source:
+https://github.com/kpandey008/DiffuseVAE?tab=readme-ov-file
+
+---------------------------------------------------------------
+MIT License
+
+Copyright (c) 2021 Kushagra Pandey
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+---------------------------------------------------------------
+"""
 import math
 from abc import abstractmethod
 
@@ -425,6 +456,7 @@ class UNetModel(nn.Module):
             linear(time_embed_dim, time_embed_dim),
         )
 
+        # if we condition on latent embeddings
         self.proj = None
         if use_z:
             self.proj = nn.Sequential(
@@ -433,6 +465,7 @@ class UNetModel(nn.Module):
                 linear(time_embed_dim, time_embed_dim),
             )
 
+        # if we condition on true class labels (not used for TreeVAE)
         if self.num_classes is not None:
             self.label_emb = nn.Embedding(num_classes, time_embed_dim)
 
@@ -541,6 +574,7 @@ class UNetModel(nn.Module):
         Apply the model to an input batch.
         :param x: an [N x C x ...] Tensor of inputs.
         :param timesteps: a 1-D batch of timesteps.
+        :param z: a [N] Tensor of latent codes with cluster id for TreeVAE.
         :param y: an [N] Tensor of labels, if class-conditional.
         :return: an [N x C x ...] Tensor of outputs.
         """
@@ -562,7 +596,7 @@ class UNetModel(nn.Module):
         hs = []
         emb = self.time_embed(timestep_embedding(timesteps, self.model_channels))
 
-        # Incorporate latent code infomation (if any)
+        # Incorporate latent code information (if any) --> used for TreeVAE, using the cluster id as latent code
         z_proj = None
         if z is not None:
             assert self.proj is not None
@@ -570,7 +604,7 @@ class UNetModel(nn.Module):
             assert z_proj.shape == emb.shape
             emb = emb + z_proj
 
-        # Incorporate class label information (if any)
+        # Incorporate class label information (if any) --> not used for TreeVAE, assumes y is known
         if self.num_classes is not None:
             assert y.shape == (x.shape[0],)
             emb = emb + self.label_emb(y)

@@ -144,7 +144,7 @@ class SmallTreeVAE(nn.Module):
                                                    output_channels=self.inp_channel,
                                                    activation=self.activation,
                                                    act_function=self.act_function,
-                                                   spectral_normalization=self.spectral_norm) for _ in range(2)])
+                                                   spectral_normalization=False) for _ in range(2)])
 
     def forward(self, x, z_parent, p, bottom_up):
         """

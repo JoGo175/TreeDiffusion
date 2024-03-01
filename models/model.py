@@ -227,7 +227,7 @@ class TreeVAE(nn.Module):
             self.decoders.append(get_decoder(architecture=self.kwargs['encoder'], input_shape=self.representation_dim,
                                              input_channels=self.latent_channels[-1], output_shape=self.inp_shape,
                                              output_channels= self.inp_channel, activation=self.activation,
-                                             act_function=self.act_function, spectral_normalization=self.spectral_norm))
+                                             act_function=self.act_function, spectral_normalization=False))
 
         # construct the tree
         self.tree = construct_tree(transformations=self.transformations, routers=self.decisions,

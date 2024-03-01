@@ -1,3 +1,34 @@
+"""
+This file has been modified from a file in the original DiffuseVAE reporitory
+which was released under the MIT License, to adapt and improve it for the TreeVAE project.
+
+Source:
+https://github.com/kpandey008/DiffuseVAE?tab=readme-ov-file
+
+---------------------------------------------------------------
+MIT License
+
+Copyright (c) 2021 Kushagra Pandey
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+---------------------------------------------------------------
+"""
 import copy
 import os
 import numpy as np
@@ -37,6 +68,9 @@ def train():
     parser.add_argument('--config_name', default=f'{dataset}', type=str,
                         choices=['mnist', 'fmnist', 'news20', 'omniglot', 'cifar10', 'cifar100', 'celeba'],
                         help='the override file name for config.yml')
+    parser.add_argument('--vae_chkpt_path', default='', type=str, help='path to the pretrained TreeVAE model')
+    parser.add_argument('--results_dir', default='', type=str, help='path to the results directory')
+    parser.add_argument('--seed_ddpm', default=42, type=int, help='random seed')
 
     args = parser.parse_args()
     configs = prepare_config(args, project_dir)
@@ -44,7 +78,7 @@ def train():
     configs_ddpm = configs['ddpm']
 
     # Reproducibility
-    reset_random_seeds(configs['globals']['seed'])
+    reset_random_seeds(configs_ddpm['globals']['seed_ddpm'])
 
     # Dataset
     trainset, trainset_eval, testset = get_data(configs_ddpm)
