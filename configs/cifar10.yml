@@ -69,7 +69,7 @@ ddpm:
     ddpm_latent_path: ""    # If sharing DDPM latents between diffusevae samples, path to .pt tensor containing latent codes
 
   globals:
-    seed_ddpm: 42                # Random seed for reproducibility
+    seed: 42                # Random seed for reproducibility
 
   # UNet specific params. Check the DDPM implementation for details on these
   model:
