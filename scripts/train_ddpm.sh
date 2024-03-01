@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --time=36:00:00
+#SBATCH --time=100:00:00
 eval "$(conda shell.bash hook)"
 # Needed for deterministic computations
 export CUBLAS_WORKSPACE_CONFIG=":4096:8"
