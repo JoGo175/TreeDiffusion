@@ -49,8 +49,10 @@ from utils.model_utils import construct_tree_fromnpy
 from utils.utils import reset_random_seeds, prepare_config
 
 ###############################################################################################################
-# SELECT THE DATASET
+# SELECT THE DATASET AND PATHS
 dataset = "mnist"       # mnist, fmnist, cifar10, celeba is supported
+vae_chkpt_path = 'models/experiments/mnist/20240228-114539_b2acb'           # path to the pretrained TreeVAE model
+results_dir = '/cluster/work/vogtlab/Group/jogoncalves/results/mnist/'      # path to the results directory
 ###############################################################################################################
 
 
@@ -69,8 +71,8 @@ def train():
                         choices=['mnist', 'fmnist', 'news20', 'omniglot', 'cifar10', 'cifar100', 'celeba'],
                         help='the override file name for config.yml')
     parser.add_argument('--seed', default=42, type=int, help='random seed')
-    parser.add_argument('--vae_chkpt_path', default='', type=str, help='path to the pretrained TreeVAE model')
-    parser.add_argument('--results_dir', default='', type=str, help='path to the results directory')
+    parser.add_argument('--vae_chkpt_path', default=vae_chkpt_path, type=str, help='path to the pretrained TreeVAE model')
+    parser.add_argument('--results_dir', default=results_dir, type=str, help='path to the results directory')
 
     args = parser.parse_args()
     configs = prepare_config(args, project_dir)
