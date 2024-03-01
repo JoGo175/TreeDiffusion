@@ -21,7 +21,7 @@ training:
 
   # KL annealing
   decay_kl: 0.001         # KL annealing weight increase after each epoch until reaching 1
-  kl_start: 0.5           # Initial KL annealing weight
+  kl_start: 0             # Initial KL annealing weight
 
   # Model parameters
   inp_shape: 28                                     # Image resolution (28 for MNIST)
@@ -37,7 +37,7 @@ training:
   prune: True                                       # Whether to prune the tree after each grow steps
   num_clusters_tree: 10                             # Maximum number of effective clusters to grow the tree to
   dropout_router: 0.0                               # Dropout rate for the router networks
-  res_connections: True                             # Whether to use residual connections in the bottom-up and transformation networks
+  res_connections: False                            # Whether to use residual connections in the bottom-up and transformation networks
 
   # Augmentation parameters for contrastive learning
   augment: False                      # Whether to use augmentation for contrastive learning
