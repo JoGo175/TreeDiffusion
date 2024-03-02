@@ -252,6 +252,7 @@ def compute_FID_scores(trainset, testset, model, device, configs):
         leaf_ind = torch.argmax(p_c_z[i])
         generations_list.append(generations[leaf_ind][i])
     gen_dataset = torch.stack(generations_list).squeeze()
+    _ = gc.collect()
 
     # compute FID score for generated images
 
@@ -293,6 +294,8 @@ def compute_FID_scores(trainset, testset, model, device, configs):
                 # add reconstruction to list
                 reconstructions_list.append(reconstructions[leaf_ind][i])
         reconstructions_dataset = torch.stack(reconstructions_list).squeeze()
+        _ = gc.collect()
+        torch.cuda.empty_cache()
 
         # precompute FID scores for generated images
         stats_reconstructions = save_fid_stats_as_dict(reconstructions_dataset, batch_size=50, device=device,

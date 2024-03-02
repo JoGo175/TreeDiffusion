@@ -141,7 +141,8 @@ def get_activations(dataset, model, batch_size=50, dims=2048, device='cpu',
                             batch_size=batch_size,
                             shuffle=False,
                             drop_last=False,
-                            num_workers=num_workers)
+                            num_workers=num_workers,
+                            pin_memory=True if device != 'cpu' else False)
 
     # compute and return activations
     pred_arr = np.empty((len(dataset), dims))
