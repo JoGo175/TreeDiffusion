@@ -9,16 +9,16 @@ dataset="fmnist"
 O_DIR="/cluster/work/vogtlab/Group/jogoncalves/logs/output.%x.%J_${dataset}.out"
 
 # list of vae_chkpt_path strings
-path_1='models/experiments/fmnist/'
-path_2='models/experiments/fmnist/'
-path_3='models/experiments/fmnist/'
-path_4='models/experiments/fmnist/'
-path_5='models/experiments/fmnist/'
-path_6='models/experiments/fmnist/'
-path_7='models/experiments/fmnist/'
-path_8='models/experiments/fmnist/'
-path_9='models/experiments/fmnist/'
-path_10='models/experiments/fmnist/'
+path_1='models/experiments/fmnist/20240301-060407_1bdf0'
+path_2='models/experiments/fmnist/20240301-060408_a24b4'
+path_3='models/experiments/fmnist/20240301-060423_4e2bb'
+path_4='models/experiments/fmnist/20240301-060921_6ba52'
+path_5='models/experiments/fmnist/20240301-060951_6feb0'
+path_6='models/experiments/fmnist/20240301-061104_19a4f'
+path_7='models/experiments/fmnist/20240301-061231_d3690'
+path_8='models/experiments/fmnist/20240301-061325_54312'
+path_9='models/experiments/fmnist/20240301-061325_ff0e8'
+path_10='models/experiments/fmnist/20240301-061348_26b65'
 # create the list of vae_chkpt_path strings
 path_list=($path_1 $path_2 $path_3 $path_4 $path_5 $path_6 $path_7 $path_8 $path_9 $path_10)
 
