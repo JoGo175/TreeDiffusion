@@ -28,7 +28,7 @@ done
 #path_4='models/experiments/fmnist/20240301-060921_6ba52'
 #path_5='models/experiments/fmnist/20240301-060951_6feb0'
 #path_6='models/experiments/fmnist/20240301-061104_19a4f'
-#path_7='models/experiments/fmnist/20240301-061231_d3690'
+#path_7='models/experiments/fmnist/20240302-152702_45499'
 #path_8='models/experiments/fmnist/20240301-061325_54312'
 #path_9='models/experiments/fmnist/20240301-061325_ff0e8'
 #path_10='models/experiments/fmnist/20240301-061348_26b65'
