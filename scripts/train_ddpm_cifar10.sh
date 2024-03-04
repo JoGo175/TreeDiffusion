@@ -22,6 +22,7 @@ path_10='models/experiments/cifar10/20240229-105018_deb67'
 # create the list of vae_chkpt_path strings
 path_list=($path_1 $path_2 $path_3 $path_4 $path_5 $path_6 $path_7 $path_8 $path_9 $path_10)
 
+# directory to save the results
 base_results_dir='/cluster/work/vogtlab/Group/jogoncalves/results/cifar10/'
 
 # loop over seeds and vae_chkpt_path

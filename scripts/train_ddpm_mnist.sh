@@ -22,8 +22,7 @@ path_10='models/experiments/mnist/20240228-130223_0a478'
 # create the list of vae_chkpt_path strings
 path_list=($path_1 $path_2 $path_3 $path_4 $path_5 $path_6 $path_7 $path_8 $path_9 $path_10)
 
-# list
-
+# directory to save the results
 base_results_dir='/cluster/work/vogtlab/Group/jogoncalves/results/mnist/'
 
 # loop over seeds and vae_chkpt_path
