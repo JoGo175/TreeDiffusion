@@ -45,6 +45,6 @@ for seed in 1 2 3 4 5 6 7 8 9 10; do
   # loop over eval_mode = ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
   for eval_mode in 'sample' 'sample_all_leaves' 'recons' 'recons_all_leaves'; do
     # run the job
-    sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=1 -o $O_DIR --wrap="python test_ddpm.py --config_name $dataset --vae_chkpt_path ${path_list[$seed-1]} --ddpm_chkpt_path ${ddpm_path_list[$seed-1]} --results_dir $results_dir --save_path $results_dir --seed $seed --eval_mode $eval_mode"
+    sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=1 -o $O_DIR --wrap="python test_ddpm.py --config_name $dataset --vae_chkpt_path ${path_list[$seed-1]} --chkpt_path ${ddpm_path_list[$seed-1]} --results_dir $results_dir --save_path $results_dir --seed $seed --eval_mode $eval_mode"
   done
 done
