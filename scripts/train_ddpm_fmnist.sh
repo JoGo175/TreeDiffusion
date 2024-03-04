@@ -8,7 +8,7 @@ conda activate treevae
 dataset="fmnist"
 O_DIR="/cluster/work/vogtlab/Group/jogoncalves/logs/output.%x.%J_${dataset}.out"
 
-# list of vae_chkpt_path strings
+# list of vae_chkpt_path strings to the trained TreeVAE models
 path_7='models/experiments/fmnist/20240301-061231_d3690'
 
 base_results_dir='/cluster/work/vogtlab/Group/jogoncalves/results/fmnist/'
@@ -21,7 +21,7 @@ for seed in 7; do
 done
 
 
-## list of vae_chkpt_path strings
+## list of vae_chkpt_path strings to the trained TreeVAE models
 #path_1='models/experiments/fmnist/20240301-060407_1bdf0'
 #path_2='models/experiments/fmnist/20240301-060408_a24b4'
 #path_3='models/experiments/fmnist/20240301-060423_4e2bb'

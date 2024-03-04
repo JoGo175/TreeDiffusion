@@ -22,13 +22,11 @@ path_10='models/experiments/mnist/20240228-130223_0a478'
 # create the list of vae_chkpt_path strings
 path_list=($path_1 $path_2 $path_3 $path_4 $path_5 $path_6 $path_7 $path_8 $path_9 $path_10)
 
-# list
-
 base_results_dir='/cluster/work/vogtlab/Group/jogoncalves/results/mnist/'
 
 # loop over seeds and vae_chkpt_path
 for seed in 1 2 3 4 5 6 7 8 9 10; do
   results_dir="${base_results_dir}seed_${seed}/"
   # run the job
-  sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=1 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed"
+  sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=1 -o $O_DIR --wrap="python test_ddpm.py --config_name $dataset --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed"
 done

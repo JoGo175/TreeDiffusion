@@ -8,7 +8,7 @@ conda activate treevae
 dataset="cifar10"
 O_DIR="/cluster/work/vogtlab/Group/jogoncalves/logs/output.%x.%J_${dataset}.out"
 
-# list of vae_chkpt_path strings
+# list of vae_chkpt_path strings to the trained TreeVAE models
 path_1='models/experiments/cifar10/20240229-100309_d92b3'
 path_2='models/experiments/cifar10/20240229-101730_bf3e0'
 path_3='models/experiments/cifar10/20240229-103928_3096f'
