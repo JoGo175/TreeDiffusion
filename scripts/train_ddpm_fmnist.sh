@@ -9,7 +9,7 @@ dataset="fmnist"
 O_DIR="/cluster/work/vogtlab/Group/jogoncalves/logs/output.%x.%J_${dataset}.out"
 
 # list of vae_chkpt_path strings to the trained TreeVAE models
-path_7='models/experiments/fmnist/20240301-061231_d3690'
+path_7='models/experiments/fmnist/20240302-152702_45499'
 
 base_results_dir='/cluster/work/vogtlab/Group/jogoncalves/results/fmnist/'
 
