@@ -283,6 +283,8 @@ def compute_FID_scores(trainset, testset, model, device, configs):
             inputs_gpu, labels_gpu = inputs.to(device), labels.to(device)
             with torch.no_grad():
                 reconstructions, node_leaves = model.compute_reconstruction(inputs_gpu)
+            reconstructions = move_to(reconstructions, 'cpu')
+            node_leaves = move_to(node_leaves, 'cpu')
             _ = gc.collect()
 
             # add reconstruction to list
@@ -293,9 +295,7 @@ def compute_FID_scores(trainset, testset, model, device, configs):
                 leaf_ind = torch.argmax(torch.tensor(probs))
                 # add reconstruction to list
                 reconstructions_list.append(reconstructions[leaf_ind][i])
-        reconstructions_dataset = torch.stack(reconstructions_list).squeeze()
-        if configs['data']['data_name'] == 'cifar10':
-            reconstructions_dataset = move_to(reconstructions_dataset, 'cpu')
+        reconstructions_dataset = torch.stack(reconstructions_list).squeeze().detach()
         _ = gc.collect()
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
