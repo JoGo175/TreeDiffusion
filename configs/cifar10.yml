@@ -1,4 +1,4 @@
-run_name: 'cifar10_final2'
+run_name: 'cifar10_final3'
 
 data:
   data_name: 'cifar10'    # Dataset name

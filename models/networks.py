@@ -379,6 +379,8 @@ class Dense(nn.Module):
     def __init__(self, input_channels, output_channels, spectral_normalization=False):
         """
         Dense layer connects the bottom-up with the nodes in the top-down pathway.
+        "Dense" is a misnomer, as it is actually a convolutional layer, but the name is kept
+        to remain consistent with the original implementation.
 
         Input has shape (input_channels, rep_dim, rep_dim)
         Returns a mu and a sigma of shape (output_channels, rep_dim, rep_dim) each.
