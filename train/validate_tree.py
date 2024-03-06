@@ -244,6 +244,8 @@ def compute_FID_scores(trainset, testset, model, device, configs):
     n_imgs = 10000
     with torch.no_grad():
         generations, p_c_z = model.generate_images(n_imgs, device)
+    generations = move_to(generations, 'cpu')
+    p_c_z = move_to(p_c_z, 'cpu')
 
     # for each generated image, only save the ones that are in the leaf with the highest probability
     generations_list = []
@@ -266,10 +268,18 @@ def compute_FID_scores(trainset, testset, model, device, configs):
 
     wandb.log({"train_FID_generations": train_FID_generations, "test_FID_generations": test_FID_generations})
     _ = gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
 
     # Reconstructions FID -----------------------------------------------------------
 
-    for subset in ['train', 'test']:
+    # only compute reconstruction FID for test set in colored images to reduce cuda memory usage
+    if configs['data']['data_name'] == "cifar10":
+        fid_eval_set = ['test']
+    else:
+        fid_eval_set = ['train', 'test']
+
+    for subset in fid_eval_set:
         reconstructions_list = []
 
         if subset == 'train':
@@ -300,22 +310,27 @@ def compute_FID_scores(trainset, testset, model, device, configs):
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
-        # precompute FID scores for generated images
-        stats_reconstructions = save_fid_stats_as_dict(reconstructions_dataset, batch_size=50, device=device,
-                                                       dims=2048)
+        if configs['data']['data_name'] == "cifar10":
+            batch_size_fid = 25
+        else:
+            batch_size_fid = 50
 
-        if subset == 'train':
-            train_FID_reconstructions = calculate_fid([data_stats_train, stats_reconstructions], batch_size=50,
-                                                      device=device, dims=2048)
-            print("FID score for reconstructed images, train set:", train_FID_reconstructions)
-        elif subset == 'test':
-            test_FID_reconstructions = calculate_fid([data_stats_test, stats_reconstructions], batch_size=50,
-                                                     device=device, dims=2048)
-            print("FID score for reconstructed images, test set:", test_FID_reconstructions)
+        # precompute FID scores for generated images
+        stats_reconstructions = save_fid_stats_as_dict(reconstructions_dataset, batch_size=batch_size_fid, device=device,
+                                                       dims=2048)
         _ = gc.collect()
 
-    wandb.log({"train_FID_reconstructions": train_FID_reconstructions,
-               "test_FID_reconstructions": test_FID_reconstructions})
+        if subset == 'train':
+            train_FID_reconstructions = calculate_fid([data_stats_train, stats_reconstructions], batch_size=batch_size_fid,
+                                                      device=device, dims=2048)
+            print("FID score for reconstructed images, train set:", train_FID_reconstructions)
+            wandb.log({"train_FID_reconstructions": train_FID_reconstructions})
+        elif subset == 'test':
+            test_FID_reconstructions = calculate_fid([data_stats_test, stats_reconstructions], batch_size=batch_size_fid,
+                                                     device=device, dims=2048)
+            print("FID score for reconstructed images, test set:", test_FID_reconstructions)
+            wandb.log({"test_FID_reconstructions": test_FID_reconstructions})
+        _ = gc.collect()
 
     return
 

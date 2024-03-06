@@ -62,6 +62,7 @@ except ImportError:
     def tqdm(x):
         return x
 
+
 def convert_images_to_rgb(images_tensor):
     """
     Converts a tensor of images to RGB format (if not already in RGB format).
@@ -92,11 +93,11 @@ def convert_images_to_rgb(images_tensor):
     return rgb_images
 
 
-
 class ImagePathDataset(torch.utils.data.Dataset):
     """
     Dataset class given dataset of images.
     """
+
     def __init__(self, images, transforms=None):
         self.images = images
         self.transforms = transforms
@@ -109,6 +110,7 @@ class ImagePathDataset(torch.utils.data.Dataset):
         if self.transforms is not None:
             img = self.transforms(img)
         return img
+
 
 def get_activations(dataset, model, batch_size=50, dims=2048, device='cpu',
                     num_workers=1):
@@ -141,8 +143,7 @@ def get_activations(dataset, model, batch_size=50, dims=2048, device='cpu',
                             batch_size=batch_size,
                             shuffle=False,
                             drop_last=False,
-                            num_workers=num_workers,
-                            pin_memory=True if device != 'cpu' else False)
+                            num_workers=num_workers)
 
     # compute and return activations
     pred_arr = np.empty((len(dataset), dims))
@@ -350,7 +351,7 @@ def save_fid_stats_as_dict(dataset, batch_size, device, dims, num_workers=1):
     return {'mu': m1, 'sigma': s1}
 
 
-################################################################# 
+#################################################################
 #################################################################
 
 # above-mentioned code has been modified to TreeVAE
@@ -395,4 +396,4 @@ def get_precomputed_fid_scores_path(dataset, data_name, subset, batch_size=50, d
     # return path to precomputed FID stats
     return fid_stats_data_path
 
-                
+
