@@ -1,4 +1,4 @@
-run_name: 'mnist_final'
+run_name: 'mnist_final2'
 
 data:
   data_name: 'mnist'      # Dataset name
@@ -17,7 +17,7 @@ training:
   decay_lr: 0.1                             # Learning rate decay factor
   decay_stepsize: 100                       # Learning rate decay step size for StepLR scheduler
   weight_decay: 0.00001                     # Weight decay factor
-  spectral_norm: False                      # Whether to use spectral normalization, only applied to decoders
+  spectral_norm: True                      # Whether to use spectral normalization, only applied to decoders
 
   # KL annealing
   decay_kl: 0.001         # KL annealing weight increase after each epoch until reaching 1

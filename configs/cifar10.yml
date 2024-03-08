@@ -21,7 +21,7 @@ training:
 
   # KL annealing
   decay_kl: 0.01          # KL annealing weight increase after each epoch until reaching 1
-  kl_start: 0.0           # Initial KL annealing weight
+  kl_start: 0.01          # Initial KL annealing weight
 
   # Model parameters
   inp_shape: 32                                     # Image resolution (32 for CIFAR10)

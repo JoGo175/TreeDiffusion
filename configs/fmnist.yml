@@ -30,7 +30,7 @@ training:
   latent_channels: [16, 16, 16, 16, 16, 16, 16]     # channels of the latent representation
   bottom_up_channels: [32, 32, 32, 32, 32, 32, 32]  # channels of the bottom-up representation, only works for equal channels at the moment
   initial_depth: 1                                  # Initial depth of the tree (1 for the root + 2 leaves)
-  act_function: "swish"                             # Activation function used between layers in TreeVAE (swish, relu, leaky_relu)
+  act_function: "leaky_relu"                        # Activation function used between layers in TreeVAE (swish, relu, leaky_relu)
   activation: "sigmoid"                             # Activation function for final layer of the decoder (sigmoid to get pixel values between 0 and 1)
   encoder: 'cnn1'                                   # Encoder architecture (smaller cnn1 or larger cnn2)
   grow: True                                        # Whether to grow the tree
