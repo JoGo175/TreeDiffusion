@@ -14,7 +14,7 @@ path_2='models/experiments/fmnist/20240301-214631_426ff'
 path_3='models/experiments/fmnist/20240301-214630_72678'
 path_4='models/experiments/fmnist/20240301-214704_24277'
 path_5='models/experiments/fmnist/20240301-214949_7e0c7'
-path_6='models/experiments/fmnist/20240301-214949_ef88e'
+path_6='models/experiments/fmnist/20240308-152339_8c247'
 path_7='models/experiments/fmnist/20240301-214949_f6999'
 path_8='models/experiments/fmnist/20240301-214617_40bff'
 path_9='models/experiments/fmnist/20240301-214617_cdc1b'
@@ -26,7 +26,7 @@ path_list=($path_1 $path_2 $path_3 $path_4 $path_5 $path_6 $path_7 $path_8 $path
 base_results_dir='/cluster/work/vogtlab/Group/jogoncalves/results/fmnist/'
 
 # loop over seeds and vae_chkpt_path
-for seed in 1 2 3 4 5 6 7 8 9 10; do
+for seed in 6; do
   results_dir="${base_results_dir}seed_${seed}/"
   # run the job
   sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed"
