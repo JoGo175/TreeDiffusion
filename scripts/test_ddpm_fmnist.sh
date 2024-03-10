@@ -23,16 +23,16 @@ path_10='models/experiments/fmnist/20240301-214617_8b3a7'
 path_list=($path_1 $path_2 $path_3 $path_4 $path_5 $path_6 $path_7 $path_8 $path_9 $path_10)
 
 # list of the chkpt_path strings to the trained DDPM models
-ddpm_path_1='/cluster/work/vogtlab/Group/jogoncalves/results/fmnist/seed_1/checkpoints/ddpmv2-vae-epoch=999-loss=0.0136.ckpt'
-ddpm_path_2='/cluster/work/vogtlab/Group/jogoncalves/results/fmnist/seed_2/checkpoints/ddpmv2-vae-epoch=999-loss=0.0127.ckpt'
+ddpm_path_1='/cluster/work/vogtlab/Group/jogoncalves/results/fmnist/seed_1/checkpoints/ddpmv2-vae-epoch=999-loss=0.0147.ckpt'
+ddpm_path_2='/cluster/work/vogtlab/Group/jogoncalves/results/fmnist/seed_2/checkpoints/ddpmv2-vae-epoch=999-loss=0.0119.ckpt'
 ddpm_path_3='/cluster/work/vogtlab/Group/jogoncalves/results/fmnist/seed_3/checkpoints/ddpmv2-vae-epoch=999-loss=0.0152.ckpt'
-ddpm_path_4='/cluster/work/vogtlab/Group/jogoncalves/results/fmnist/seed_4/checkpoints/ddpmv2-vae-epoch=999-loss=0.0108.ckpt'
-ddpm_path_5='/cluster/work/vogtlab/Group/jogoncalves/results/fmnist/seed_5/checkpoints/ddpmv2-vae-epoch=999-loss=0.0148.ckpt'
-ddpm_path_6='/cluster/work/vogtlab/Group/jogoncalves/results/fmnist/seed_6/checkpoints/ddpmv2-vae-epoch=999-loss=0.0135.ckpt'
-ddpm_path_7='/cluster/work/vogtlab/Group/jogoncalves/results/fmnist/seed_7/checkpoints/ddpmv2-vae-epoch=999-loss=0.0097.ckpt'
-ddpm_path_8='/cluster/work/vogtlab/Group/jogoncalves/results/fmnist/seed_8/checkpoints/ddpmv2-vae-epoch=999-loss=0.0159.ckpt'
-ddpm_path_9='/cluster/work/vogtlab/Group/jogoncalves/results/fmnist/seed_9/checkpoints/ddpmv2-vae-epoch=999-loss=0.0108.ckpt'
-ddpm_path_10='/cluster/work/vogtlab/Group/jogoncalves/results/fmnist/seed_10/checkpoints/ddpmv2-vae-epoch=999-loss=0.0208.ckpt'
+ddpm_path_4='/cluster/work/vogtlab/Group/jogoncalves/results/fmnist/seed_4/checkpoints/ddpmv2-vae-epoch=999-loss=0.0125.ckpt'
+ddpm_path_5='/cluster/work/vogtlab/Group/jogoncalves/results/fmnist/seed_5/checkpoints/ddpmv2-vae-epoch=999-loss=0.0149.ckpt'
+ddpm_path_6='/cluster/work/vogtlab/Group/jogoncalves/results/fmnist/seed_6/checkpoints/ddpmv2-vae-epoch=999-loss=0.0088.ckpt'
+ddpm_path_7='/cluster/work/vogtlab/Group/jogoncalves/results/fmnist/seed_7/checkpoints/ddpmv2-vae-epoch=999-loss=0.0124.ckpt'
+ddpm_path_8='/cluster/work/vogtlab/Group/jogoncalves/results/fmnist/seed_8/checkpoints/ddpmv2-vae-epoch=999-loss=0.0163.ckpt'
+ddpm_path_9='/cluster/work/vogtlab/Group/jogoncalves/results/fmnist/seed_9/checkpoints/ddpmv2-vae-epoch=999-loss=0.0158.ckpt'
+ddpm_path_10='/cluster/work/vogtlab/Group/jogoncalves/results/fmnist/seed_10/checkpoints/ddpmv2-vae-epoch=999-loss=0.0209.ckpt'
 # create the list of chkpt_path strings
 ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3 $ddpm_path_4 $ddpm_path_5 $ddpm_path_6 $ddpm_path_7 $ddpm_path_8 $ddpm_path_9 $ddpm_path_10)
 
