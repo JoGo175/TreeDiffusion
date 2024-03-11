@@ -73,7 +73,7 @@ ddpm:
 
   # UNet specific params. Check the DDPM implementation for details on these
   model:
-    dim: 64                   # UNet base dimension
+    dim: 64                   # UNet base dimension for channels
     attn_resolutions: "16,"   # Attention resolutions for the UNet
     n_residual: 2             # Number of residual blocks per level in UNet between the resolutions
     dim_mults: "1,2,2,2"      # Multiplier for Nb of channels for each level in UNet

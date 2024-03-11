@@ -179,7 +179,7 @@ class ImageWriter(BasePredictionWriter):
                             axs[c].set_title(f"L{c}: " + f"p=%.2f" % torch.round(prob, decimals=2))
                             axs[c].axis('off')
                         # save whole image
-                        plt.savefig(os.path.join(vae_save_path, f"output_vae_{self.sample_prefix}_{rank}_{i}.png"))
+                        plt.savefig(os.path.join(vae_save_path, f"output_vae_{self.sample_prefix}_{rank}_{batch_idx}_{i}.png"))
                         plt.close()
             # If not conditional, DDPM is not conditioned on TreeVAE
             else:
@@ -217,7 +217,7 @@ class ImageWriter(BasePredictionWriter):
                     axs[c].set_title(f"L{c}: " + f"p=%.2f" % torch.round(prob, decimals=2))
                     axs[c].axis('off')
                 # save whole image
-                plt.savefig(os.path.join(img_save_path, f"output_{self.sample_prefix}_{rank}_{i}.png"))
+                plt.savefig(os.path.join(img_save_path, f"output_{self.sample_prefix}_{rank}_{batch_idx}_{i}.png"))
                 plt.close()
 
             # loop over each class and save every DDPM reconstruction of this class separately
@@ -233,7 +233,7 @@ class ImageWriter(BasePredictionWriter):
                     axs.set_title(f"L{c}: " + f"p=%.2f" % torch.round(prob, decimals=2))
                     axs.axis('off')
                     # save image
-                    plt.savefig(os.path.join(class_save_pass, f"output_{self.sample_prefix}_{rank}_{i}_{prob}.png"))
+                    plt.savefig(os.path.join(class_save_pass, f"output_{self.sample_prefix}_{rank}_{batch_idx}_{i}_{prob}.png"))
                     plt.close()
 
         # save samples for all leaves + original for each sample in dataset
@@ -268,7 +268,7 @@ class ImageWriter(BasePredictionWriter):
                                 axs[c].set_title(f"L{c}: " + f"p=%.2f" % torch.round(p_c_z[i][c], decimals=2))
                                 axs[c].axis('off')
                         # save image
-                        plt.savefig(os.path.join(vae_save_path, f"output_vae_{self.sample_prefix}_{rank}_{i}.png"))
+                        plt.savefig(os.path.join(vae_save_path, f"output_vae_{self.sample_prefix}_{rank}_{batch_idx}_{i}.png"))
                         plt.close()
             # If not conditional, DDPM is not conditioned on TreeVAE
             else:
@@ -302,7 +302,7 @@ class ImageWriter(BasePredictionWriter):
                         axs[c].set_title(f"L{c}: " + f"p=%.2f" % torch.round(p_c_z[i][c], decimals=2))
                         axs[c].axis('off')
                 # save image
-                plt.savefig(os.path.join(img_save_path, f"output_{self.sample_prefix}_{rank}_{i}.png"))
+                plt.savefig(os.path.join(img_save_path, f"output_{self.sample_prefix}_{rank}_{batch_idx}_{i}.png"))
                 plt.close()
 
             # loop over each class and save every DDPM sample of this class separately
@@ -318,7 +318,7 @@ class ImageWriter(BasePredictionWriter):
                     axs.set_title(f"L{c}: " + f"p=%.2f" % torch.round(prob, decimals=2))
                     axs.axis('off')
                     # save image
-                    plt.savefig(os.path.join(class_save_pass, f"output_{self.sample_prefix}_{rank}_{i}_{prob}.png"))
+                    plt.savefig(os.path.join(class_save_pass, f"output_{self.sample_prefix}_{rank}_{batch_idx}_{i}_{prob}.png"))
                     plt.close()
 
         # self.eval_mode in ["sample", "recons"] --> only save samples or reconstructions for selected leaf
