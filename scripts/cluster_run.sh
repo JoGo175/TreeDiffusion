@@ -10,13 +10,13 @@ O_DIR="/cluster/work/vogtlab/Group/jogoncalves/logs/output.%x.%J_${dataset}.out"
 
 
 # loop over kl_start
-for kl_start in 0.0; do
+for kl_start in 0.0 0.5; do     # use 0.01 instead of 0.0 for CIFAR10!
   # loop over spectral_norm = False
-  for spectral_norm in True; do
+  for spectral_norm in True False; do
     # loop over act_function in ["swish", "leaky_relu"]
-    for act_function in "swish"; do
+    for act_function in "swish" "leaky_relu"; do
       # loop over res_connections in [True, False]
-      for res_connections in False; do
+      for res_connections in True False; do
         # loop over seeds
         for seed in 1 2 3 4 5 6 7 8 9 10; do
           # run the job
