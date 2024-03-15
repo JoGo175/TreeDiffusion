@@ -65,9 +65,3 @@ The folders are structured as follows:
 - train_ddpm.py: trains the DDPM based on a TreeVAE model
 - test_ddpm.py: generates the reconstructions/samples for the DDPM 
 
-
-
-
-## Reconstructions of the Models
-![Reconstructions](/images/Reconstructions.png)
-
