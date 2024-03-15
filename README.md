@@ -1,8 +1,9 @@
 
 # Enhancing TreeVAE: Advancements in Modeling Hierarchical Latent Spaces for Improved Variational Autoencoders
 
+Master Thesis
 
-Author: This code was used for the Master Thesis by Jorge Fernando da Silva Gonçalves.
+Author:Jorge Fernando da Silva Gonçalves.
 
 Submission Date: March 15, 2024
 
