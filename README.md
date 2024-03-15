@@ -1,13 +1,14 @@
 
 # Enhancing TreeVAE: Advancements in Modeling Hierarchical Latent Spaces for Improved Variational Autoencoders
 
-Master Thesis
+**Master Thesis**
 
-Author:Jorge Fernando da Silva Gonçalves.
+Author: Jorge Fernando da Silva Gonçalves.
 
 Submission Date: March 15, 2024
 
 Supervisors Prof. Dr. Julia Vogt, Dr. Markus Kalisch
+
 Advisors: Moritz Vandenhirtz, Laura Manduchi
 
 
