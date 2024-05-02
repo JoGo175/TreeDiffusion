@@ -235,7 +235,8 @@ class Resnet_Encoder(nn.Module):
             nf1 = channels[i + 1]
             blocks += [
                 # changes spatial size, preserves number of channels
-                nn.AvgPool2d(kernel_size=3, stride=2, padding=1),
+                # nn.AvgPool2d(kernel_size=3, stride=2, padding=1),
+                nn.Conv2d(in_channels=nf0, out_channels=nf0, kernel_size=3, stride=2, padding=1),
                 # changes the number of channels, preserves spatial size
                 ResnetBlock(nf0, nf1, act_function=self.act_function, spectral_normalization=spectral_normalization),
             ]
@@ -288,7 +289,8 @@ class Resnet_Decoder(nn.Module):
                 # changes number of channels, preserves spatial size
                 ResnetBlock(nf0, nf1, act_function=self.act_function, spectral_normalization=spectral_normalization),
                 # changes spatial size, preserves number of channels
-                nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),
+                # nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),
+                nn.ConvTranspose2d(in_channels=nf1, out_channels=nf1, kernel_size=4, stride=2, padding=1, bias=False),
             ]
         blocks += [
             ResnetBlock(nf, nf, act_function=self.act_function, spectral_normalization=spectral_normalization),

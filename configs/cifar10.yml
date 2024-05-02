@@ -7,10 +7,10 @@ data:
 # TreeVAE specific parameters --------------------------------------------------------------------------------
 training:
   # Training parameters
-  num_epochs: 150                           # Nb. epochs for training the first small tree, root and 2 leaves
-  num_epochs_smalltree: 150                 # Nb. epochs for training the remaining small trees in each grow step
-  num_epochs_intermediate_fulltrain: 0      # Nb. epochs for the intermediate full tree training, in between the grow steps
-  num_epochs_finetuning: 0                  # Nb. epochs for the final full tree training after the grow steps
+  num_epochs: 1                           # Nb. epochs for training the first small tree, root and 2 leaves
+  num_epochs_smalltree: 1                 # Nb. epochs for training the remaining small trees in each grow step
+  num_epochs_intermediate_fulltrain: 1      # Nb. epochs for the intermediate full tree training, in between the grow steps
+  num_epochs_finetuning: 1                  # Nb. epochs for the final full tree training after the grow steps
   intermediate_fulltrain: True              # Whether to train the intermediate full tree
   batch_size: 256                           # Effective batch size
   lr: 0.001                                 # Learning rate
@@ -40,9 +40,14 @@ training:
   res_connections: True                             # Whether to use residual connections in the bottom-up and transformation networks
 
   # Augmentation parameters for contrastive learning
-  augment: True                                           # Whether to use augmentation for contrastive learning
-  augmentation_method: 'InfoNCE,instancewise_full'        # Augmentation method. One of ['simple', 'InfoNCE,instancewise_full']
-  aug_decisions_weight: 100                               # Weight for the contrastive loss
+  #augment: True                                           # Whether to use augmentation for contrastive learning
+  #augmentation_method: 'InfoNCE,instancewise_full'        # Augmentation method. One of ['simple', 'InfoNCE,instancewise_full']
+  #aug_decisions_weight: 100                               # Weight for the contrastive loss
+
+  # Augmentation parameters for contrastive learning
+  augment: False                      # Whether to use augmentation for contrastive learning
+  augmentation_method: 'simple'       # Augmentation method. One of ['simple', 'InfoNCE,instancewise_full']
+  aug_decisions_weight: 1             # Weight for the contrastive loss
 
   # Evaluation parameters
   compute_ll: False           # Whether to compute test log-likelihood
