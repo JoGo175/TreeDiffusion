@@ -88,6 +88,9 @@ class SmallTreeVAE(nn.Module):
             self.loss = loss_reconstruction_mse
         else:
             raise NotImplementedError
+        
+        # Whether to change dimensionality using Conv2d & ConvTranspose2d or Downsample & Upsample
+        self.dim_mod_conv = self.kwargs['dim_mod_conv']
 
         # Activation function used in the hidden layers of the networks
         self.act_function = self.kwargs['act_function']
@@ -144,7 +147,8 @@ class SmallTreeVAE(nn.Module):
                                                    output_channels=self.inp_channel,
                                                    activation=self.activation,
                                                    act_function=self.act_function,
-                                                   spectral_normalization=False) for _ in range(2)])
+                                                   spectral_normalization=False, 
+                                                   dim_mod_conv=self.dim_mod_conv) for _ in range(2)])
 
     def forward(self, x, z_parent, p, bottom_up):
         """
