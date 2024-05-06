@@ -5,27 +5,43 @@ eval "$(conda shell.bash hook)"
 export CUBLAS_WORKSPACE_CONFIG=":4096:8"
 source ~/.bashrc
 conda activate treevae
-dataset="mnist"
+dataset="cifar10"
 O_DIR="/cluster/work/vogtlab/Group/jogoncalves/logs/output.%x.%J_${dataset}.out"
 
 
-# loop over kl_start
-for kl_start in 0.0 0.5; do     # use 0.01 instead of 0.0 for CIFAR10!
-  # loop over spectral_norm = False
-  for spectral_norm in True False; do
-    # loop over act_function in ["swish", "leaky_relu"]
-    for act_function in "swish" "leaky_relu"; do
-      # loop over res_connections in [True, False]
-      for res_connections in True False; do
-        # loop over seeds
-        for seed in 1 2 3 4 5 6 7 8 9 10; do
-          # run the job
-          sbatch --time=36:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python main.py --save_model True --config_name $dataset --kl_start $kl_start --spectral_norm $spectral_norm --act_function $act_function --res_connections $res_connections --seed $seed"
-        done
-      done
+
+
+# loop over dim_mod_conv 
+for dim_mod_conv in True False; do
+  # loop over representation_dim
+  for representation_dim in 1 2 4; do
+    # loop over seeds
+    for seed in 1 2 3 4 5 6 7 8 9 10; do
+      # run the job
+      sbatch --time=36:00:00 --mem-per-cpu=10G -p gpu --gres=gpu:1 -A vogtlab --tmp=10G --cpus-per-task=2 -o $O_DIR --wrap="python main.py --save_model True --config_name $dataset --representation_dim $representation_dim --dim_mod_conv $dim_mod_conv --seed $seed"
     done
   done
 done
+
+
+
+# # loop over kl_start
+# for kl_start in 0.0 0.5; do     # use 0.01 instead of 0.0 for CIFAR10!
+#   # loop over spectral_norm = False
+#   for spectral_norm in True False; do
+#     # loop over act_function in ["swish", "leaky_relu"]
+#     for act_function in "swish" "leaky_relu"; do
+#       # loop over res_connections in [True, False]
+#       for res_connections in True False; do
+#         # loop over seeds
+#         for seed in 1 2 3 4 5 6 7 8 9 10; do
+#           # run the job
+#           sbatch --time=36:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python main.py --save_model True --config_name $dataset --kl_start $kl_start --spectral_norm $spectral_norm --act_function $act_function --res_connections $res_connections --seed $seed"
+#         done
+#       done
+#     done
+#   done
+# done
 
 
 
