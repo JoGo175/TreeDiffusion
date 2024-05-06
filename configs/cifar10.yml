@@ -7,10 +7,10 @@ data:
 # TreeVAE specific parameters --------------------------------------------------------------------------------
 training:
   # Training parameters
-  num_epochs: 1                           # Nb. epochs for training the first small tree, root and 2 leaves
-  num_epochs_smalltree: 1                 # Nb. epochs for training the remaining small trees in each grow step
-  num_epochs_intermediate_fulltrain: 1      # Nb. epochs for the intermediate full tree training, in between the grow steps
-  num_epochs_finetuning: 1                  # Nb. epochs for the final full tree training after the grow steps
+  num_epochs: 10                           # Nb. epochs for training the first small tree, root and 2 leaves
+  num_epochs_smalltree: 10                # Nb. epochs for training the remaining small trees in each grow step
+  num_epochs_intermediate_fulltrain: 0      # Nb. epochs for the intermediate full tree training, in between the grow steps
+  num_epochs_finetuning: 0                  # Nb. epochs for the final full tree training after the grow steps
   intermediate_fulltrain: True              # Whether to train the intermediate full tree
   batch_size: 256                           # Effective batch size
   lr: 0.001                                 # Learning rate
@@ -26,7 +26,7 @@ training:
   # Model parameters
   inp_shape: 32                                     # Image resolution (32 for CIFAR10)
   inp_channels: 3                                   # Input channels, 3 for RGB
-  representation_dim: 4                             # size of the 2-dim latent representation -> should be a power of 2, (2, 4, 8, 16 ...)
+  representation_dim: 1                             # size of the 2-dim latent representation -> should be a power of 2, (2, 4, 8, 16 ...)
   latent_channels: [16, 16, 16, 16, 16, 16, 16]     # channels of the latent representation -> (latent_channels, representation_dim, representation_dim)
   bottom_up_channels: [64, 64, 64, 64, 64, 64, 64]  # channels of the bottom-up representation, only works for equal channels at the moment
   initial_depth: 1                                  # Initial depth of the tree (1 for the root + 2 leaves)
