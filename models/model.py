@@ -117,7 +117,10 @@ class TreeVAE(nn.Module):
             raise NotImplementedError
         
         # Whether to change dimensionality using Conv2d & ConvTranspose2d or Downsample & Upsample
-        self.dim_mod_conv = self.kwargs['dim_mod_conv']
+        if 'dim_mod_conv' not in self.kwargs:
+            self.dim_mod_conv = False
+        else:
+            self.dim_mod_conv = self.kwargs['dim_mod_conv']
 
         # Activation function used in the hidden layers of the networks
         self.act_function = self.kwargs['act_function']

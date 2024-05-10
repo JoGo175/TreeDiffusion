@@ -195,7 +195,7 @@ class ResnetBlock(nn.Module):
         dx = self.conv_0(actvn(self.bn0(x), self.act_function))
         dx = self.conv_1(actvn(self.bn1(dx), self.act_function))
         dx = self.conv_2(actvn(self.bn2(dx), self.act_function))
-        out = x_s + 0.1 * dx
+        out = x_s + 0.1 * dx  # what if we use 1 instead of 0.1?  or add the dx earlier?
         return out
 
     def _shortcut(self, x):

@@ -159,9 +159,53 @@ def draw_scatter_node(node_id, node_embeddings, colors, ax, pca = True):
     ax.set_yticks([])
 
 
+# Create a function to draw scatter plots as nodes
+def draw_flattened_dist_node(node_id, node_embeddings, colors, ax, pca = True):
+    """
+    Draw a distribution plot for a node. The distribution plot shows the first principal component of the latent space of the node.
+
+    Parameters
+    ----------
+    node_id: int
+        The id of the node
+    node_embeddings: dict
+        The node embeddings
+    colors: np.array
+        The colors of the observations
+    ax: matplotlib axes
+        The axes to draw the scatter plot on, important for the layout of the tree graph
+    pca: bool
+        Whether to use PCA to reduce the dimensionality of the latent space for visualization
+    """
+
+    # if list is empty --> node has been pruned
+    if node_embeddings[node_id]['z_sample'] == []:
+        # return empty plot
+        ax.set_title(f"Node {node_id}")
+        ax.set_xticks([])
+        ax.set_yticks([])
+        return
+
+    # get the latent space embeddings and the probabilities of the observations
+    z_sample = node_embeddings[node_id]['z_sample'].reshape(node_embeddings[node_id]['z_sample'].shape[0], -1)
+    weights = node_embeddings[node_id]['prob']
+
+    # if pca is True, reduce the dimensionality of the latent space to 2 dimensions
+    # otherwise, use the first two dimensions of the latent space
+    if pca:
+        pca_fit = PCA(n_components=2)
+        z_sample = pca_fit.fit_transform(z_sample)
+
+    # plot the distribution plot at the given axes
+    ax.hist(z_sample[:, 0], bins=50, color='darkblue', alpha=0.7)
+    # ax.scatter(z_sample[:, 0], z_sample[:, 1], c=colors, cmap='tab10', alpha=weights, s = 0.25)
+    ax.set_title(f"Node {node_id}")
+    ax.set_xticks([])
+    ax.set_yticks([])
 
 
-def draw_tree_with_scatter_plots(data, node_embeddings, label_list, pca = True, dataset = None):
+
+def draw_tree_with_scatter_plots(data, node_embeddings, label_list, pca = True, dataset = None, flattened = False):
     """
     Draw the full tree graph with scatter plots as nodes. The scatter plots show the latent space of the node.
 
@@ -200,7 +244,10 @@ def draw_tree_with_scatter_plots(data, node_embeddings, label_list, pca = True, 
         x, y = pos[node_id]
         # Create a subplot for each node, centered on the node, and draw the scatter plot
         sub_ax = fig.add_axes([x, y+0.9, 0.1, 0.1])
-        draw_scatter_node(node_id, node_embeddings, label_list, sub_ax, pca)
+        if flattened:
+            draw_flattened_dist_node(node_id, node_embeddings, label_list, sub_ax, pca)
+        else:
+            draw_scatter_node(node_id, node_embeddings, label_list, sub_ax, pca)
 
     # Draw the lines between node plots
     for node in data:
@@ -267,4 +314,5 @@ def draw_tree_with_scatter_plots(data, node_embeddings, label_list, pca = True, 
     fig.legend(handles=patches, ncol=len(unique_labels), frameon=False, fontsize=15, loc='center', bbox_to_anchor=(0.5, 0.05))
 
     plt.show()
+
 
