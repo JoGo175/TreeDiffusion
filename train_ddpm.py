@@ -71,6 +71,7 @@ def train():
     parser.add_argument('--seed', default=42, type=int, help='random seed')
     parser.add_argument('--vae_chkpt_path', default='', type=str, help='path to the pretrained TreeVAE model')
     parser.add_argument('--results_dir', default='', type=str, help='path to the results directory')
+    parser.add_argument('--epochs', default=1000, type=int, help='number of training epochs')
 
     args = parser.parse_args()
     configs = prepare_config(args, project_dir)
