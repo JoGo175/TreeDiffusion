@@ -5,7 +5,7 @@ eval "$(conda shell.bash hook)"
 export CUBLAS_WORKSPACE_CONFIG=":4096:8"
 source ~/.bashrc
 conda activate treevae
-dataset="mnist"
+dataset="cifar10"
 O_DIR="/cluster/work/vogtlab/Group/jogoncalves/logs/output.%x.%J_${dataset}.out"
 
 # sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset"
