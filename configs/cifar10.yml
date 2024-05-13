@@ -1,4 +1,4 @@
-run_name: 'cifar10'
+run_name: 'cifar10_full_res_signal'
 
 data:
   data_name: 'cifar10'    # Dataset name
@@ -10,7 +10,7 @@ training:
   num_epochs: 150                           # Nb. epochs for training the first small tree, root and 2 leaves
   num_epochs_smalltree: 150                 # Nb. epochs for training the remaining small trees in each grow step
   num_epochs_intermediate_fulltrain: 0      # Nb. epochs for the intermediate full tree training, in between the grow steps
-  num_epochs_finetuning: 150                  # Nb. epochs for the final full tree training after the grow steps
+  num_epochs_finetuning: 0                  # Nb. epochs for the final full tree training after the grow steps
   intermediate_fulltrain: True              # Whether to train the intermediate full tree
   batch_size: 256                           # Effective batch size
   lr: 0.001                                 # Learning rate
