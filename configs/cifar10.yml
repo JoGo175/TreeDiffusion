@@ -92,8 +92,8 @@ ddpm:
   # Training parameters for the DDPM part given TreeVAE model
   training:
     # paths
-    vae_chkpt_path: 'models/experiments/cifar10/20240221-150914_9e40a'      # TreeVAE checkpoint path
-    results_dir: '/cluster/work/vogtlab/Group/jogoncalves/results/cifar10/' # Directory to store the DDPM checkpoint in
+    vae_chkpt_path: 'models/experiments/cifar10/20240506-143804_675eb'      # TreeVAE checkpoint path
+    results_dir: '/cluster/work/vogtlab/Group/jogoncalves/results/cifar10/seed_42/epoch_100' # Directory to store the DDPM checkpoint in
     chkpt_prefix: "vae"                                                     # prefix appended to the checkpoint name
     restore_path: ""                                                        # Checkpoint restore path
     chkpt_interval: 1                                                       # Number of epochs between two checkpoints
@@ -108,7 +108,7 @@ ddpm:
 
     # General training parameters
     batch_size: 256       # Batch size
-    epochs: 1000          # Max number of epochs
+    epochs: 100          # Max number of epochs
     n_anneal_steps: 5000  # number of warmup steps
     loss: "l2"            # Diffusion loss type. Among ['l2', 'l1']
     optimizer: "Adam"     # Optimizer
