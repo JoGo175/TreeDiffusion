@@ -9,20 +9,33 @@ dataset="cifar10"
 O_DIR="/cluster/work/vogtlab/Group/jogoncalves/logs/output.%x.%J_${dataset}.out"
 
 
-
-
-# loop over dim_mod_conv 
-for dim_mod_conv in True False; do
-  # loop over representation_dim
-  for representation_dim in 1 2 4; do
+# loop over latent_channels in [64, 64, 64, 64, 64, 64, 64], [8, 16, 32, 64, 128, 256, 512], [512 256 128 64 32 16 8]
+for latent_channels in "64,64,64,64,64,64,64" "8,16,32,64,128,256,512" "512,256,128,64,32,16,8"; do
+  # loop over bottom_up_channels in [128, 128, 128, 128, 128, 128, 128], [16, 32, 64, 128, 256, 512, 1024], [1024, 512, 256, 128, 64, 32, 16]
+  for bottom_up_channels in "128,128,128,128,128,128,128" "16,32,64,128,256,512,1024" "1024,512,256,128,64,32,16"; do
     # loop over seeds
     for seed in 1 2 3 4 5 6 7 8 9 10; do
       # run the job
-      sbatch --time=36:00:00 --mem-per-cpu=10G -p gpu --gres=gpu:1 -A vogtlab --tmp=10G --cpus-per-task=2 -o $O_DIR --wrap="python main.py --save_model True --config_name $dataset --representation_dim $representation_dim --dim_mod_conv $dim_mod_conv --seed $seed"
+      sbatch --time=36:00:00 --mem-per-cpu=10G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python main.py --save_model True --config_name $dataset --latent_channels $latent_channels --bottom_up_channels $bottom_up_channels --seed $seed"
     done
   done
 done
 
+
+
+
+## loop over dim_mod_conv
+#for dim_mod_conv in True False; do
+#  # loop over representation_dim
+#  for representation_dim in 1 2 4; do
+#    # loop over seeds
+#    for seed in 1 2 3 4 5 6 7 8 9 10; do
+#      # run the job
+#      sbatch --time=36:00:00 --mem-per-cpu=10G -p gpu --gres=gpu:1 -A vogtlab --tmp=10G --cpus-per-task=2 -o $O_DIR --wrap="python main.py --save_model True --config_name $dataset --representation_dim $representation_dim --dim_mod_conv $dim_mod_conv --seed $seed"
+#    done
+#  done
+#done
+#
 
 
 # # loop over kl_start
