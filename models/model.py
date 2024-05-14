@@ -164,7 +164,8 @@ class TreeVAE(nn.Module):
         self.bottom_up = nn.ModuleList([encoder])
         for i in range(1, len(self.bottom_up_channels)):
             self.bottom_up.append(Conv(input_channels=self.bottom_up_channels[i-1],
-                                       output_channels=self.latent_channels[i],
+                                       output_channels=self.bottom_up_channels[i],
+                                       encoded_channels=self.latent_channels[i],
                                        res_connections=self.res_connections, act_function=self.act_function,
                                        spectral_normalization=self.spectral_norm))
 
@@ -198,7 +199,8 @@ class TreeVAE(nn.Module):
             for j in range(2 ** (i + 1)):
                 # Transformation Conv from depth i to i+1
                 self.transformations.append(Conv(input_channels=encoded_size_gen[i],
-                                                 output_channels=encoded_size_gen[i+1],
+                                                 output_channels=layers_gen[i+1],
+                                                 encoded_channels=encoded_size_gen[i+1],
                                                  res_connections=self.res_connections, act_function=self.act_function,
                                                  spectral_normalization=False))
                 # Dense at depth i+1 from bottom-up to top-down

@@ -195,7 +195,7 @@ class ResnetBlock(nn.Module):
         dx = self.conv_0(actvn(self.bn0(x), self.act_function))
         dx = self.conv_1(actvn(self.bn1(dx), self.act_function))
         dx = self.conv_2(actvn(self.bn2(dx), self.act_function))
-        out = x_s + dx # 0.1 * dx  # what if we use 1 instead of 0.1?  or add the dx earlier?
+        out = x_s + 0.1 * dx  
         return out
 
     def _shortcut(self, x):
@@ -325,7 +325,7 @@ class Resnet_Decoder(nn.Module):
 # Transformation, router, bottom-up, and dense layer architectures --------------------------------------------------
 
 class Conv(nn.Module):
-    def __init__(self, input_channels, output_channels, res_connections=False,
+    def __init__(self, input_channels, output_channels, encoded_channels, res_connections=False,
                  act_function='swish', spectral_normalization=False):
         """
         Convolutional layer for the bottom-up pathway and the transformations in the top-down pathway.
@@ -341,16 +341,16 @@ class Conv(nn.Module):
                                kernel_size=3, stride=1, padding=1, bias=False)
         self.conv1 = nn.Conv2d(in_channels=input_channels, out_channels=input_channels,
                                kernel_size=3, stride=1, padding=1, bias=False)
-        self.conv2 = nn.Conv2d(in_channels=input_channels, out_channels=input_channels,
+        self.conv2 = nn.Conv2d(in_channels=input_channels, out_channels=output_channels,
                                kernel_size=3, stride=1, padding=1, bias=False)
         # batch normalization between layers
         self.bn0 = nn.BatchNorm2d(input_channels)
         self.bn1 = nn.BatchNorm2d(input_channels)
-        self.bn2 = nn.BatchNorm2d(input_channels)
+        self.bn2 = nn.BatchNorm2d(output_channels)
         # mu and sigma layers
-        self.mu = nn.Conv2d(in_channels=input_channels, out_channels=output_channels,
+        self.mu = nn.Conv2d(in_channels=output_channels, out_channels=encoded_channels,
                             kernel_size=3, stride=1, padding=1, bias=False)
-        self.sigma = nn.Conv2d(in_channels=input_channels, out_channels=output_channels,
+        self.sigma = nn.Conv2d(in_channels=output_channels, out_channels=encoded_channels,
                                kernel_size=3, stride=1, padding=1, bias=False)
 
         # Whether to use residual connections
