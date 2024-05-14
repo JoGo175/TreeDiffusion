@@ -233,7 +233,7 @@ class TreeVAE(nn.Module):
         self.decoders = nn.ModuleList([None for i in range(self.depth) for j in range(2 ** i)])
         for _ in range(2 ** (self.depth)):
             self.decoders.append(get_decoder(architecture=self.kwargs['encoder'], input_shape=self.representation_dim,
-                                             input_channels=self.latent_channels[-1], output_shape=self.inp_shape,
+                                             input_channels=encoded_size_gen[i+1], output_shape=self.inp_shape,
                                              output_channels= self.inp_channel, activation=self.activation,
                                              act_function=self.act_function, spectral_normalization=False, 
                                              dim_mod_conv=self.dim_mod_conv))

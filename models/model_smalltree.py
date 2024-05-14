@@ -108,11 +108,13 @@ class SmallTreeVAE(nn.Module):
         # Depth of the sub-tree
         self.depth = depth
         # Parameters for latent representation size and channels
+        self.representation_dim = self.kwargs['representation_dim']
         latent_channels = self.kwargs['latent_channels']
         bottom_up_channels = self.kwargs['bottom_up_channels']
-        self.latent_channel = latent_channels[-self.depth-1]
-        self.bottom_up_channel = bottom_up_channels[-self.depth]
-        self.representation_dim = self.kwargs['representation_dim']
+        latent_channels_gen = latent_channels[-(self.depth+1):-(self.depth-1)] # e.g. latent_channel_sizes = 32, 16, depth 2
+        self.latent_channel = latent_channels_gen[::-1]
+        bottom_up_channels_gen = bottom_up_channels[-(self.depth+1):-(self.depth-1)]
+        self.bottom_up_channel = bottom_up_channels_gen[::-1]
         # Input shape and channels
         self.inp_shape = self.kwargs['inp_shape']
         self.inp_channel = self.kwargs['inp_channels']
@@ -124,28 +126,29 @@ class SmallTreeVAE(nn.Module):
         # Define the networks for the sub-tree
         # -> 2 children and 1 root nodes
         # -> 2 decoders, 2 transformations, 2 denses, 1 decision, 1 decision_q
-        self.denses = nn.ModuleList([Dense(self.bottom_up_channel, self.latent_channel,
+        self.denses = nn.ModuleList([Dense(self.bottom_up_channel[1], self.latent_channel[1],
                                            self.spectral_norm) for _ in range(2)])
-        self.transformations = nn.ModuleList([Conv(input_channels=self.latent_channel,
-                                                   output_channels=self.latent_channel,
+        self.transformations = nn.ModuleList([Conv(input_channels=self.latent_channel[0],
+                                                   output_channels=self.bottom_up_channel[1],
+                                                   encoded_channels=self.latent_channel[1],
                                                    res_connections=self.res_connections,
                                                    act_function=self.act_function,
                                                    spectral_normalization=False) for _ in range(2)])
-        self.decision = Router(input_channels=self.latent_channel,
+        self.decision = Router(input_channels=self.latent_channel[0],
                                rep_dim=self.representation_dim,
-                               hidden_units=self.bottom_up_channel,
+                               hidden_units=self.bottom_up_channel[0],
                                dropout=self.dropout_router,
                                act_function=self.act_function,
                                spectral_normalization=False)
-        self.decision_q = Router(input_channels=self.bottom_up_channel,
+        self.decision_q = Router(input_channels=self.bottom_up_channel[0],
                                  rep_dim=self.representation_dim,
-                                 hidden_units=self.bottom_up_channel,
+                                 hidden_units=self.bottom_up_channel[0],
                                  dropout=self.dropout_router,
                                  act_function=self.act_function,
                                  spectral_normalization=False)
         self.decoders = nn.ModuleList([get_decoder(architecture=self.kwargs['encoder'],
                                                    input_shape=self.representation_dim,
-                                                   input_channels=self.latent_channel,
+                                                   input_channels=self.latent_channel[1],
                                                    output_shape=self.inp_shape,
                                                    output_channels=self.inp_channel,
                                                    activation=self.activation,
