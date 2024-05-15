@@ -7,8 +7,8 @@ data:
 # TreeVAE specific parameters --------------------------------------------------------------------------------
 training:
   # Training parameters
-  num_epochs: 1                           # Nb. epochs for training the first small tree, root and 2 leaves
-  num_epochs_smalltree: 1                 # Nb. epochs for training the remaining small trees in each grow step
+  num_epochs: 150                           # Nb. epochs for training the first small tree, root and 2 leaves
+  num_epochs_smalltree: 150                 # Nb. epochs for training the remaining small trees in each grow step
   num_epochs_intermediate_fulltrain: 0      # Nb. epochs for the intermediate full tree training, in between the grow steps
   num_epochs_finetuning: 0                  # Nb. epochs for the final full tree training after the grow steps
   intermediate_fulltrain: True              # Whether to train the intermediate full tree
