@@ -1,4 +1,4 @@
-run_name: 'fmnist_final'
+run_name: 'fmnist'
 
 data:
   data_name: 'fmnist'
@@ -38,6 +38,7 @@ training:
   num_clusters_tree: 10                             # Maximum number of effective clusters to grow the tree to
   dropout_router: 0.0                               # Dropout rate for the router networks
   res_connections: True                             # Whether to use residual connections in the bottom-up and transformation networks
+
 
   # Augmentation parameters for contrastive learning
   augment: False                      # Whether to use augmentation for contrastive learning
