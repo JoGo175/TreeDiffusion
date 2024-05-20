@@ -9,16 +9,16 @@ dataset="mnist"
 O_DIR="/cluster/work/vogtlab/Group/jogoncalves/logs/output.%x.%J_${dataset}.out"
 
 # list of vae_chkpt_path strings to the trained TreeVAE models
-path_1='models/experiments/mnist/20240308-131511_3da26'
-path_2='models/experiments/mnist/20240308-131511_c1dd8'
-path_3='models/experiments/mnist/20240308-131659_3f919'
-path_4='models/experiments/mnist/20240308-131812_c0f1c'
-path_5='models/experiments/mnist/20240308-131827_de94a'
-path_6='models/experiments/mnist/20240308-131910_84919'
-path_7='models/experiments/mnist/20240308-132241_d41ab'
-path_8='models/experiments/mnist/20240308-132716_e3417'
-path_9='models/experiments/mnist/20240308-134426_588df'
-path_10='models/experiments/mnist/20240308-134733_deb52'
+path_1='models/experiments/mnist/20240517-230954_75a36'
+path_2='models/experiments/mnist/20240517-231719_59f89'
+path_3='models/experiments/mnist/20240517-231748_14dd3'
+path_4='models/experiments/mnist/20240517-233407_796c5'
+path_5='models/experiments/mnist/20240518-012729_f8538'
+path_6='models/experiments/mnist/20240518-012729_6aec4'
+path_7='models/experiments/mnist/20240518-013602_b03e4'
+path_8='models/experiments/mnist/20240518-013609_7f0b4'
+path_9='models/experiments/mnist/20240518-015059_e6fa1'
+path_10='models/experiments/mnist/20240518-015059_61823'
 # create the list of vae_chkpt_path strings
 path_list=($path_1 $path_2 $path_3 $path_4 $path_5 $path_6 $path_7 $path_8 $path_9 $path_10)
 

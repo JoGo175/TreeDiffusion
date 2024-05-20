@@ -9,16 +9,16 @@ dataset="cifar10"
 O_DIR="/cluster/work/vogtlab/Group/jogoncalves/logs/output.%x.%J_${dataset}.out"
 
 # list of vae_chkpt_path strings to the trained TreeVAE models
-path_1='models/experiments/cifar10/20240506-143804_675eb'
-path_2='models/experiments/cifar10/20240506-143804_7046c'
-path_3='models/experiments/cifar10/20240506-143804_0dc03'
-path_4='models/experiments/cifar10/20240506-143840_5ff2c'
-path_5='models/experiments/cifar10/20240506-143840_a0916'
-path_6='models/experiments/cifar10/20240506-143840_e1d83'
-path_7='models/experiments/cifar10/20240506-143915_40f66'
-path_8='models/experiments/cifar10/20240506-143915_a7a82'
-path_9='models/experiments/cifar10/20240506-143915_157f7'
-path_10='models/experiments/cifar10/20240506-143826_0f7d6'
+path_1='models/experiments/cifar10/20240517-211016_29e00'
+path_2='models/experiments/cifar10/20240517-211354_a40d6'
+path_3='models/experiments/cifar10/20240517-212017_72a55'
+path_4='models/experiments/cifar10/20240517-220711_c2411'
+path_5='models/experiments/cifar10/20240517-220943_bfc4c'
+path_6='models/experiments/cifar10/20240517-221210_1848d'
+path_7='models/experiments/cifar10/20240517-230406_d8c70'
+path_8='models/experiments/cifar10/20240517-230536_c6132'
+path_9='models/experiments/cifar10/20240517-230819_0fc1e'
+path_10='models/experiments/cifar10/20240517-230934_76241'
 # create the list of vae_chkpt_path strings
 path_list=($path_1 $path_2 $path_3 $path_4 $path_5 $path_6 $path_7 $path_8 $path_9 $path_10)
 

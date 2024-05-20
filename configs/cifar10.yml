@@ -21,7 +21,7 @@ training:
 
   # KL annealing
   decay_kl: 0.01          # KL annealing weight increase after each epoch until reaching 1
-  kl_start: 0.1          # Initial KL annealing weight
+  kl_start: 0.01          # Initial KL annealing weight
 
   # Model parameters
   inp_shape: 32                                     # Image resolution (32 for CIFAR10)
@@ -108,7 +108,7 @@ ddpm:
 
     # General training parameters
     batch_size: 256       # Batch size
-    epochs: 100          # Max number of epochs
+    epochs: 1000          # Max number of epochs
     n_anneal_steps: 5000  # number of warmup steps
     loss: "l2"            # Diffusion loss type. Among ['l2', 'l1']
     optimizer: "Adam"     # Optimizer
