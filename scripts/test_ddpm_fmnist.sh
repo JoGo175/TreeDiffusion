@@ -23,7 +23,7 @@ path_10='models/experiments/fmnist/20240301-214617_8b3a7'
 path_list=($path_1 $path_2 $path_3 $path_4 $path_5 $path_6 $path_7 $path_8 $path_9 $path_10)
 
 # list of the chkpt_path strings to the trained DDPM models
-ddpm_path_1='/cluster/work/vogtlab/Group/jogoncalves/results/fmnist/seed_1/checkpoints/ddpmv2-vae-epoch=999-loss=0.0147.ckpt'
+ddpm_path_1='/cluster/work/vogtlab/Group/jogoncalves/results_uncond/fmnist/seed_1/checkpoints/ddpmv2-vae-epoch=999-loss=0.0148.ckpt'
 ddpm_path_2='/cluster/work/vogtlab/Group/jogoncalves/results/fmnist/seed_2/checkpoints/ddpmv2-vae-epoch=999-loss=0.0119.ckpt'
 ddpm_path_3='/cluster/work/vogtlab/Group/jogoncalves/results/fmnist/seed_3/checkpoints/ddpmv2-vae-epoch=999-loss=0.0152.ckpt'
 ddpm_path_4='/cluster/work/vogtlab/Group/jogoncalves/results/fmnist/seed_4/checkpoints/ddpmv2-vae-epoch=999-loss=0.0125.ckpt'
@@ -37,13 +37,13 @@ ddpm_path_10='/cluster/work/vogtlab/Group/jogoncalves/results/fmnist/seed_10/che
 ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3 $ddpm_path_4 $ddpm_path_5 $ddpm_path_6 $ddpm_path_7 $ddpm_path_8 $ddpm_path_9 $ddpm_path_10)
 
 # directory to save the results
-base_results_dir='/cluster/work/vogtlab/Group/jogoncalves/results_all_leaves/fmnist/'
+base_results_dir='/cluster/work/vogtlab/Group/jogoncalves/results_uncond/fmnist/'
 
 # loop over seeds and vae_chkpt_path
 for seed in 1; do
   results_dir="${base_results_dir}seed_${seed}/"
   # loop over eval_mode = ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
-  for eval_mode in 'sample_all_leaves' 'recons_all_leaves'; do
+  for eval_mode in 'sample_all_leaves' 'recons_all_leaves' 'sample' 'recons'; do
     # run the job
     sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=1 -o $O_DIR --wrap="python test_ddpm.py --config_name $dataset --vae_chkpt_path ${path_list[$seed-1]} --chkpt_path ${ddpm_path_list[$seed-1]} --results_dir $results_dir --save_path $results_dir --seed $seed --eval_mode $eval_mode"
   done
