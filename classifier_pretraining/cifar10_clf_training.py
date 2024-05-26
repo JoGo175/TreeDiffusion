@@ -67,7 +67,12 @@ def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # Load model 
-    model = models.resnet50(pretrained=True)
+    if not os.path.exists('classifier_pretraining/resnet50.pth'):
+        model = models.resnet50(pretrained=True)
+        torch.save(model, 'classifier_pretraining/resnet50.pth')
+    else:
+        model = torch.load('classifier_pretraining/resnet50.pth')
+    
     model = model.to(device)
 
     # Loss function and optimizer
