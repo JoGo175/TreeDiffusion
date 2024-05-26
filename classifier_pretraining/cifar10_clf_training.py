@@ -1,20 +1,10 @@
 import os
 import sys
 import torch
-import torchvision
-import yaml
 import tqdm
 
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-import seaborn as sns
 import torchvision.models as models
-
-from PIL import Image
-from omegaconf import OmegaConf
-from torchvision import transforms
-from torch.utils.data import Dataset, DataLoader
 from sklearn.metrics import confusion_matrix
 
 # set directory to parent directory, one level up
