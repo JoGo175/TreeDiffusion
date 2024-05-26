@@ -6,7 +6,7 @@ export CUBLAS_WORKSPACE_CONFIG=":4096:8"
 source ~/.bashrc
 conda activate treevae
 
-dataset="cifar10bash sc"
+dataset="cifar10"
 
 O_DIR="/cluster/work/vogtlab/Group/jogoncalves/logs/output.%x.%J_${dataset}.out"
 
