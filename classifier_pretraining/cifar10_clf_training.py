@@ -46,9 +46,6 @@ def main():
     gen_train_eval = get_gen(trainset_eval, configs, validation=True, shuffle=False)
     gen_test = get_gen(testset, configs, validation=True, shuffle=False)
 
-    gen_train_eval_iter = iter(gen_train_eval)
-    gen_test_iter = iter(gen_test)
-
     y_train = trainset_eval.dataset.targets.clone().detach()[trainset_eval.indices].numpy()
     y_test = testset.dataset.targets.clone().detach()[testset.indices].numpy()
 
@@ -100,13 +97,14 @@ def main():
             if i % 10 == 0:
                 model.eval()
                 with torch.no_grad():
-                    x_batch_eval, y_batch_eval = next(gen_train_eval_iter)
-                    x_batch_eval, y_batch_eval = x_batch_eval.to(device), y_batch_eval.to(device)
+                    loss_eval = []
+                    for x_eval, y_eval in gen_train_eval:
+                        x_eval, y_eval = x_eval.to(device), y_eval.to(device)
+                        y_pred_eval = model(x_eval)
+                        loss_eval.append(criterion(y_pred_eval, y_eval))
 
-                    y_pred_eval = model(x_batch_eval)
-                    loss_eval = criterion(y_pred_eval, y_batch_eval)
-
-                    print(f"Epoch: {epoch}, Batch: {i}, Loss: {loss.item()}, Loss eval: {loss_eval.item()}")
+                loss_eval = torch.mean(torch.stack(loss_eval))
+                print(f"Epoch: {epoch}, Batch: {i}, Loss: {loss.item()}, Loss Eval: {loss_eval.item()}")
                 model.train()
 
     # Save model
@@ -117,12 +115,13 @@ def main():
 
     with torch.no_grad():
         for i, (x, y) in enumerate(gen_test):
+            x, y = x.to(device), y.to(device)
             if i == 0:
                 y_pred = model(x)
             else:
                 y_pred = torch.cat([y_pred, model(x)], dim=0)
 
-    y_pred = y_pred.argmax(dim=1).numpy()
+    y_pred = y_pred.argmax(dim=1).cpu().numpy()
 
     print("Accuracy:", np.mean(y_pred == y_test))
     print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
