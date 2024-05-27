@@ -137,7 +137,7 @@ def vae_recons():
         # get new generations
 
         # setup dirs
-        vae_save_path = '../results_all_leaves/cifar10/vae'
+        vae_save_path = f"../results_all_leaves/{dataset}/seed_1/vae"
         img_save_path = os.path.join(vae_save_path, "sample_all_leaves")
 
         # loop over gen_test --> not really used, only to get again 10k
