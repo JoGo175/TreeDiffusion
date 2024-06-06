@@ -5,7 +5,7 @@ eval "$(conda shell.bash hook)"
 export CUBLAS_WORKSPACE_CONFIG=":4096:8"
 source ~/.bashrc
 conda activate treevae
-dataset="mnist"
+dataset="cifar10"
 O_DIR="/cluster/work/vogtlab/Group/jogoncalves/logs/output.%x.%J_${dataset}.out"
 
 for seed in 1 2 3 4 5 6 7 8 9 10; do

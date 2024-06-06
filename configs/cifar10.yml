@@ -1,4 +1,4 @@
-run_name: 'cifar10_final3'
+run_name: 'cifar10_channel_exp'
 
 data:
   data_name: 'cifar10'    # Dataset name
@@ -27,8 +27,8 @@ training:
   inp_shape: 32                                     # Image resolution (32 for CIFAR10)
   inp_channels: 3                                   # Input channels, 3 for RGB
   representation_dim: 4                             # size of the 2-dim latent representation -> should be a power of 2, (2, 4, 8, 16 ...)
-  latent_channels: [16, 16, 16, 16, 16, 16, 16]     # channels of the latent representation -> (latent_channels, representation_dim, representation_dim)
-  bottom_up_channels: [64, 64, 64, 64, 64, 64, 64]  # channels of the bottom-up representation, only works for equal channels at the moment
+  latent_channels: [64, 64, 64, 64, 64, 64, 64]     # channels of the latent representation -> (latent_channels, representation_dim, representation_dim)
+  bottom_up_channels: [128, 128, 128, 128, 128, 128, 128]  # channels of the bottom-up representation, only works for equal channels at the moment
   initial_depth: 1                                  # Initial depth of the tree (1 for the root + 2 leaves)
   act_function: "swish"                             # Activation function used between layers in TreeVAE (swish, relu, leaky_relu)
   activation: 'mse'                                 # Activation function for final layer of the decoder (mse does not scale the pixel values between 0 and 1, as in the case of sigmoid activation)
@@ -38,11 +38,17 @@ training:
   num_clusters_tree: 10                             # Maximum number of effective clusters to grow the tree to
   dropout_router: 0.0                               # Dropout rate for the router networks
   res_connections: True                             # Whether to use residual connections in the bottom-up and transformation networks
+  dim_mod_conv: True                                # # Whether to change dimensionality using Conv2d & ConvTranspose2d or Downsample & Upsample
 
   # Augmentation parameters for contrastive learning
   augment: True                                           # Whether to use augmentation for contrastive learning
   augmentation_method: 'InfoNCE,instancewise_full'        # Augmentation method. One of ['simple', 'InfoNCE,instancewise_full']
   aug_decisions_weight: 100                               # Weight for the contrastive loss
+
+  # Augmentation parameters for contrastive learning
+  #augment: False                      # Whether to use augmentation for contrastive learning
+  #augmentation_method: 'simple'       # Augmentation method. One of ['simple', 'InfoNCE,instancewise_full']
+  #aug_decisions_weight: 1             # Weight for the contrastive loss
 
   # Evaluation parameters
   compute_ll: False           # Whether to compute test log-likelihood
@@ -86,8 +92,8 @@ ddpm:
   # Training parameters for the DDPM part given TreeVAE model
   training:
     # paths
-    vae_chkpt_path: 'models/experiments/cifar10/20240221-150914_9e40a'      # TreeVAE checkpoint path
-    results_dir: '/cluster/work/vogtlab/Group/jogoncalves/results/cifar10/' # Directory to store the DDPM checkpoint in
+    vae_chkpt_path: 'models/experiments/cifar10/20240506-143804_675eb'      # TreeVAE checkpoint path
+    results_dir: '/cluster/work/vogtlab/Group/jogoncalves/results/cifar10/seed_42/epoch_100' # Directory to store the DDPM checkpoint in
     chkpt_prefix: "vae"                                                     # prefix appended to the checkpoint name
     restore_path: ""                                                        # Checkpoint restore path
     chkpt_interval: 1                                                       # Number of epochs between two checkpoints
@@ -102,7 +108,7 @@ ddpm:
 
     # General training parameters
     batch_size: 256       # Batch size
-    epochs: 1000          # Max number of epochs
+    epochs: 100          # Max number of epochs
     n_anneal_steps: 5000  # number of warmup steps
     loss: "l2"            # Diffusion loss type. Among ['l2', 'l1']
     optimizer: "Adam"     # Optimizer

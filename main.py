@@ -37,6 +37,7 @@ def main():
     parser.add_argument('--res_connections', type=lambda x: bool(distutils.util.strtobool(x)), help='whether to use residual connections in transformations and bottom-up model layers')
     parser.add_argument('--grow', type=lambda x: bool(distutils.util.strtobool(x)), help='whether to grow the tree')
     parser.add_argument('--act_function', type=str, help='activation function')
+    parser.add_argument('--dim_mod_conv', type=lambda x: bool(distutils.util.strtobool(x)), help='whether to change the dimensionality via convolutional layers')
 
     # Contrastive learning parameters
     parser.add_argument('--augment', type=lambda x:bool(distutils.util.strtobool(x)), help='augment images or not')
@@ -54,7 +55,7 @@ def main():
     parser.add_argument('--wandb_logging', type=str, help='online, disabled, offline enables logging in wandb')
 
     # Specify config name
-    parser.add_argument('--config_name', default='mnist', type=str,
+    parser.add_argument('--config_name', default='cifar10', type=str,
                         choices=['mnist', 'fmnist', 'news20', 'omniglot', 'cifar10', 'cifar100', 'celeba'],
                         help='the override file name for config.yml')
 

@@ -115,6 +115,12 @@ class TreeVAE(nn.Module):
             self.loss = loss_reconstruction_mse
         else:
             raise NotImplementedError
+        
+        # Whether to change dimensionality using Conv2d & ConvTranspose2d or Downsample & Upsample
+        if 'dim_mod_conv' not in self.kwargs:
+            self.dim_mod_conv = False
+        else:
+            self.dim_mod_conv = self.kwargs['dim_mod_conv']
 
         # Activation function used in the hidden layers of the networks
         self.act_function = self.kwargs['act_function']
@@ -153,12 +159,13 @@ class TreeVAE(nn.Module):
         encoder = get_encoder(architecture=self.kwargs['encoder'], input_shape=self.inp_shape,
                               input_channels=self.inp_channel, output_shape=self.representation_dim,
                               output_channels=self.bottom_up_channels[0], act_function=self.act_function,
-                              spectral_normalization=self.spectral_norm)
+                              spectral_normalization=self.spectral_norm, dim_mod_conv=self.dim_mod_conv)
 
         self.bottom_up = nn.ModuleList([encoder])
         for i in range(1, len(self.bottom_up_channels)):
             self.bottom_up.append(Conv(input_channels=self.bottom_up_channels[i-1],
-                                       output_channels=self.latent_channels[i],
+                                       output_channels=self.bottom_up_channels[i],
+                                       encoded_channels=self.latent_channels[i],
                                        res_connections=self.res_connections, act_function=self.act_function,
                                        spectral_normalization=self.spectral_norm))
 
@@ -192,7 +199,8 @@ class TreeVAE(nn.Module):
             for j in range(2 ** (i + 1)):
                 # Transformation Conv from depth i to i+1
                 self.transformations.append(Conv(input_channels=encoded_size_gen[i],
-                                                 output_channels=encoded_size_gen[i+1],
+                                                 output_channels=layers_gen[i+1],
+                                                 encoded_channels=encoded_size_gen[i+1],
                                                  res_connections=self.res_connections, act_function=self.act_function,
                                                  spectral_normalization=False))
                 # Dense at depth i+1 from bottom-up to top-down
@@ -225,9 +233,10 @@ class TreeVAE(nn.Module):
         self.decoders = nn.ModuleList([None for i in range(self.depth) for j in range(2 ** i)])
         for _ in range(2 ** (self.depth)):
             self.decoders.append(get_decoder(architecture=self.kwargs['encoder'], input_shape=self.representation_dim,
-                                             input_channels=self.latent_channels[-1], output_shape=self.inp_shape,
+                                             input_channels=encoded_size_gen[i+1], output_shape=self.inp_shape,
                                              output_channels= self.inp_channel, activation=self.activation,
-                                             act_function=self.act_function, spectral_normalization=False))
+                                             act_function=self.act_function, spectral_normalization=False, 
+                                             dim_mod_conv=self.dim_mod_conv))
 
         # construct the tree
         self.tree = construct_tree(transformations=self.transformations, routers=self.decisions,

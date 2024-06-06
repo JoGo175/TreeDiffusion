@@ -195,7 +195,7 @@ class ResnetBlock(nn.Module):
         dx = self.conv_0(actvn(self.bn0(x), self.act_function))
         dx = self.conv_1(actvn(self.bn1(dx), self.act_function))
         dx = self.conv_2(actvn(self.bn2(dx), self.act_function))
-        out = x_s + 0.1 * dx
+        out = x_s + 0.1 * dx  
         return out
 
     def _shortcut(self, x):
@@ -207,7 +207,7 @@ class ResnetBlock(nn.Module):
 
 class Resnet_Encoder(nn.Module):
     def __init__(self, input_shape, input_channels, output_shape, output_channels,
-                 act_function='swish', spectral_normalization=False):
+                 act_function='swish', spectral_normalization=False, dim_mod_conv=False):
         """
         Encoder for the ResNet architecture, used for colored datasets. (e.g. CIFAR-10, CelebA)
 
@@ -233,10 +233,15 @@ class Resnet_Encoder(nn.Module):
         for i in range(nlayers):
             nf0 = channels[i]
             nf1 = channels[i + 1]
+            
+            # changes spatial size, preserves number of channels
+            if dim_mod_conv:
+                blocks += [nn.Conv2d(in_channels=nf0, out_channels=nf0, kernel_size=3, stride=2, padding=1),]
+            else:
+                blocks += [nn.AvgPool2d(kernel_size=3, stride=2, padding=1),]
+
+            # changes the number of channels, preserves spatial size
             blocks += [
-                # changes spatial size, preserves number of channels
-                nn.AvgPool2d(kernel_size=3, stride=2, padding=1),
-                # changes the number of channels, preserves spatial size
                 ResnetBlock(nf0, nf1, act_function=self.act_function, spectral_normalization=spectral_normalization),
             ]
 
@@ -258,7 +263,7 @@ class Resnet_Encoder(nn.Module):
     
 class Resnet_Decoder(nn.Module):
     def __init__(self, input_shape, input_channels, output_shape, output_channels,
-                 activation='sigmoid', act_function='swish', spectral_normalization=False):
+                 activation='sigmoid', act_function='swish', spectral_normalization=False, dim_mod_conv=False):
         """
         Decoder for the ResNet architecture, used for colored datasets. (e.g. CIFAR-10, CelebA)
         Reversed architecture of the encoder.
@@ -284,12 +289,17 @@ class Resnet_Decoder(nn.Module):
         for i in range(nlayers):
             nf0 = channels[i]
             nf1 = channels[i + 1]
+
+            # changes number of channels, preserves spatial size
             blocks += [
-                # changes number of channels, preserves spatial size
                 ResnetBlock(nf0, nf1, act_function=self.act_function, spectral_normalization=spectral_normalization),
-                # changes spatial size, preserves number of channels
-                nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),
-            ]
+                ]
+            # changes spatial size, preserves number of channels
+            if dim_mod_conv:
+                blocks += [nn.ConvTranspose2d(in_channels=nf1, out_channels=nf1, kernel_size=4, stride=2, padding=1, bias=False),]
+            else:
+                blocks += [nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),]
+
         blocks += [
             ResnetBlock(nf, nf, act_function=self.act_function, spectral_normalization=spectral_normalization),
         ]
@@ -315,7 +325,7 @@ class Resnet_Decoder(nn.Module):
 # Transformation, router, bottom-up, and dense layer architectures --------------------------------------------------
 
 class Conv(nn.Module):
-    def __init__(self, input_channels, output_channels, res_connections=False,
+    def __init__(self, input_channels, output_channels, encoded_channels, res_connections=False,
                  act_function='swish', spectral_normalization=False):
         """
         Convolutional layer for the bottom-up pathway and the transformations in the top-down pathway.
@@ -331,16 +341,16 @@ class Conv(nn.Module):
                                kernel_size=3, stride=1, padding=1, bias=False)
         self.conv1 = nn.Conv2d(in_channels=input_channels, out_channels=input_channels,
                                kernel_size=3, stride=1, padding=1, bias=False)
-        self.conv2 = nn.Conv2d(in_channels=input_channels, out_channels=input_channels,
+        self.conv2 = nn.Conv2d(in_channels=input_channels, out_channels=output_channels,
                                kernel_size=3, stride=1, padding=1, bias=False)
         # batch normalization between layers
         self.bn0 = nn.BatchNorm2d(input_channels)
         self.bn1 = nn.BatchNorm2d(input_channels)
-        self.bn2 = nn.BatchNorm2d(input_channels)
+        self.bn2 = nn.BatchNorm2d(output_channels)
         # mu and sigma layers
-        self.mu = nn.Conv2d(in_channels=input_channels, out_channels=output_channels,
+        self.mu = nn.Conv2d(in_channels=output_channels, out_channels=encoded_channels,
                             kernel_size=3, stride=1, padding=1, bias=False)
-        self.sigma = nn.Conv2d(in_channels=input_channels, out_channels=output_channels,
+        self.sigma = nn.Conv2d(in_channels=output_channels, out_channels=encoded_channels,
                                kernel_size=3, stride=1, padding=1, bias=False)
 
         # Whether to use residual connections
@@ -490,7 +500,7 @@ class contrastive_projection(nn.Module):
 # Get encoder and decoder architectures -----------------------------------------------------------------------------
 
 def get_encoder(architecture, input_shape, input_channels, output_shape, output_channels,
-                act_function='swish', spectral_normalization=False):
+                act_function='swish', spectral_normalization=False, dim_mod_conv=False):
     """
     Get the encoder. Encodes the input image into the deterministic representation for the bottom-up pathway.
     encoder input   = image from dataset
@@ -521,7 +531,7 @@ def get_encoder(architecture, input_shape, input_channels, output_shape, output_
                                   act_function, spectral_normalization)
     elif architecture == 'cnn2':
         encoder = Resnet_Encoder(input_shape, input_channels, output_shape, output_channels,
-                                 act_function, spectral_normalization)
+                                 act_function, spectral_normalization, dim_mod_conv)
     elif architecture == 'cnn_omni':
         # encoder = EncoderOmniglot(output_shape)
         raise NotImplementedError('The omniglot encoder is not implemented.')
@@ -531,7 +541,7 @@ def get_encoder(architecture, input_shape, input_channels, output_shape, output_
 
 
 def get_decoder(architecture, input_shape, input_channels, output_shape, output_channels,
-                activation, act_function='swish', spectral_normalization=False):
+                activation, act_function='swish', spectral_normalization=False, dim_mod_conv=False):
     """
     Get an instance of a decoder. Needed to create the leaf-specific decoders.
     decoder input   = latent representation of leaf
@@ -564,7 +574,7 @@ def get_decoder(architecture, input_shape, input_channels, output_shape, output_
                                   activation, act_function, spectral_normalization)
     elif architecture == 'cnn2':
         decoder = Resnet_Decoder(input_shape, input_channels, output_shape, output_channels,
-                                 activation, act_function, spectral_normalization)
+                                 activation, act_function, spectral_normalization, dim_mod_conv)
     elif architecture == 'cnn_omni':
         # decoder = DecoderOmniglot(input_shape, activation)
         raise NotImplementedError('The omniglot decoder is not implemented.')
