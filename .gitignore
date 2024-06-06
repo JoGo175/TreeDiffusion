@@ -155,3 +155,4 @@ logs/*
 datasets/*
 rebuttal/*
 results/*
+classifier_pretraining/*.pth
