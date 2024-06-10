@@ -8,7 +8,15 @@ conda activate treevae
 dataset="mnist"
 O_DIR="/cluster/work/vogtlab/Group/jogoncalves/logs/output.%x.%J_${dataset}.out"
 
+if $dataset == "mnist"; then
+  model_name = "/20240308-131511_3da26"
+elif $dataset == "fmnist"; then
+  model_name = "/20240301-204616_da161"
+elif $dataset == "cifar10"; then
+  model_name = "/20240307-195731_9e95e"
+fi
+
 
 for mode in 'vae_recons' 'vae_samples'; do
-  sbatch --time=36:00:00 --mem-per-cpu=15G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python vae_generations.py --config_name $dataset --mode $mode"
+  sbatch --time=36:00:00 --mem-per-cpu=15G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python vae_generations.py --config_name $dataset --mode $mode --model_name $model_name"
 done

@@ -10,7 +10,6 @@ O_DIR="/cluster/work/vogtlab/Group/jogoncalves/logs/output.%x.%J_${dataset}.out"
 
 
 # list of the chkpt_path strings to the trained DDPM models
-<<<<<<< HEAD
 ddpm_path_1='/cluster/work/vogtlab/Group/jogoncalves/results_uncond/cifar10/seed_1/checkpoints/ddpmv2-vae-epoch=999-loss=0.0153.ckpt'
 ddpm_path_2='/cluster/work/vogtlab/Group/jogoncalves/results/cifar10/seed_2/checkpoints/ddpmv2-vae-epoch=999-loss=0.0139.ckpt'
 ddpm_path_3='/cluster/work/vogtlab/Group/jogoncalves/results/cifar10/seed_3/checkpoints/ddpmv2-vae-epoch=999-loss=0.0127.ckpt'
@@ -35,22 +34,6 @@ for seed in 1; do
     # run the job
     sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=1 -o $O_DIR --wrap="python test_ddpm.py --config_name $dataset --vae_chkpt_path ${path_list[$seed-1]} --chkpt_path ${ddpm_path_list[$seed-1]} --results_dir $results_dir --save_path $results_dir --seed $seed --eval_mode $eval_mode"
   done
-=======
-ddpm_path='/cluster/work/vogtlab/Group/jogoncalves/results/cifar10/seed_42/checkpoints/ddpmv2-vae-epoch=99-loss=0.0151.ckpt'
-#ddpm_path='/cluster/work/vogtlab/Group/jogoncalves/results/cifar10/seed_42/checkpoints/ddpmv2-vae-epoch=499-loss=0.0179.ckpt'
-#ddpm_path='/cluster/work/vogtlab/Group/jogoncalves/results/cifar10/seed_42/checkpoints/ddpmv2-vae-epoch=999-loss=0.0142.ckpt'
-#ddpm_path='/cluster/work/vogtlab/Group/jogoncalves/results/cifar10/seed_42/checkpoints/ddpmv2-vae-epoch=1999-loss=0.0142.ckpt'
-
-# directory to save the results
-results_dir='/cluster/work/vogtlab/Group/jogoncalves/results_all_leaves/cifar10/seed_42/epoch_100/'
-
-# loop over seeds and vae_chkpt_path
-
-# loop over eval_mode = ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
-for eval_mode in 'sample' 'recons' 'sample_all_leaves' 'recons_all_leaves'; do
-  # run the job
-  sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=1 -o $O_DIR --wrap="python test_ddpm.py --config_name $dataset --chkpt_path $ddpm_path --results_dir $results_dir --save_path $results_dir --eval_mode $eval_mode"
->>>>>>> e88af6ada81a874c97e65febcb51f0e311db46cd
 done
 
 

@@ -50,6 +50,7 @@ def vae_recons():
                         help='the override file name for config.yml')
     parser.add_argument('--seed', default=42, type=int, help='random seed')
     parser.add_argument('--mode', default='vae_recons', type=str, help='evaluation mode: vae_recons or vae_samples')
+    parser.add_argument('--model_name', default='', type=str, help='path to the pretrained TreeVAE model')
     
     args = parser.parse_args()
 
@@ -59,12 +60,7 @@ def vae_recons():
 
     mode = args.mode
     dataset = args.config_name
-    if dataset == 'cifar10':
-        ex_name = '/20240307-195731_9e95e'
-    elif dataset == 'fmnist':
-        ex_name = '/20240301-204616_da161'
-    elif dataset == 'mnist':
-        ex_name = '/20240308-131511_3da26'
+    ex_name = args.model_name
 
     path = '/Users/jorgegoncalves/Desktop/Repositories/Master_Thesis/treevae/models/experiments/'
     checkpoint_path = path+dataset+ex_name
