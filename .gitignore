@@ -154,9 +154,17 @@ data/*
 logs/*
 datasets/*
 rebuttal/*
-results/*
 
 # images
 *.png
 !images/readme/*
+
+
+# folders
+.DS_Store
+.vscode/
+results/
+scripts/
+notebooks/
+
 

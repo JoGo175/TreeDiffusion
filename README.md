@@ -20,7 +20,7 @@ The proposed approach generates new images by sampling from CNN-TreeVAE, and uti
 <img src="images/readme/Diffuse-TreeVAE.png" width="100%">
 
 
-## Setting up the dependencies
+## Setting up the Dependencies
 
 ```
 conda env create --name envname --file=treevae.yml
