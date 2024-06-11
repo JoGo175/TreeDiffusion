@@ -148,10 +148,21 @@ configs/*
 dataset/*
 baselines/lvae/wandb/*
 baselines/lvae/models/experiments/
-*.png
+classifier_pretraining/*.pth
 *.ckpt
 data/*
 logs/*
 datasets/*
 rebuttal/*
-results/*
+
+# images
+*.png
+!images/readme/*
+
+
+# folders
+.DS_Store
+.vscode/
+results/
+
+

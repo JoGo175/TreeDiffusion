@@ -23,7 +23,7 @@ path_10='models/experiments/fmnist/20240518-052508_38f71'
 path_list=($path_1 $path_2 $path_3 $path_4 $path_5 $path_6 $path_7 $path_8 $path_9 $path_10)
 
 # directory to save the results
-base_results_dir='/cluster/work/vogtlab/Group/jogoncalves/results/fmnist/'
+base_results_dir='/cluster/work/vogtlab/Group/jogoncalves/results_uncond/fmnist/'
 
 # loop over seeds and vae_chkpt_path
 for seed in 1 2 3 4 5 6 7 8 9 10; do

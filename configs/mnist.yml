@@ -96,7 +96,7 @@ ddpm:
     # Model-specific training parameters
     use_ema: True       # Whether to use EMA (Improves sample quality)
     ema_decay: 0.9999   # EMA decay rate
-    z_cond: True        # Whether to condition UNet on vae latent
+    z_cond: False        # Whether to condition UNet on vae latent
     z_dim: 1            # Dimensionality of the vae latent --> 1 for leaf index
     type: 'form1'       # DiffuseVAE formulation type, One of ['form1', 'form2', 'uncond']. `uncond` is baseline DDPM
     cfd_rate: 0.0       # Conditioning signal dropout rate as in Classifier-free guidance
@@ -121,7 +121,7 @@ ddpm:
     eval_mode: 'sample_all_leaves'        # Evaluation mode. One of ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
 
     # Model-specific evaluation parameters
-    z_cond: True          # Whether to condition UNet on vae latent
+    z_cond: False          # Whether to condition UNet on vae latent
     z_dim: 1              # Dimensionality of the vae latent --> 1 for leaf index
     type: 'form1'         # DiffuseVAE type. One of ['form1', 'form2', 'uncond']. `uncond` is baseline DDPM
     guidance_weight: 0.0  # Guidance weight during sampling if using Classifier free guidance
