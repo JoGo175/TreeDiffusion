@@ -14,7 +14,7 @@ This repository contains the implementation of **CNN-TreeVAE** and **Diffuse-Tre
 
 ### Diffuse-TreeVAE
 
-**Diffuse-TreeVAE** is a deep generative model that integrates hierarchical clustering into the framework of Denoising Diffusion Probabilistic Models (DDPMs).
+**Diffuse-TreeVAE** is a deep generative model that integrates hierarchical clustering into the framework of Denoising Diffusion Probabilistic Models (DDPMs) [(Ho et al., 2020)](https://proceedings.neurips.cc/paper/2020/file/4c5bcfec8584af0d967f1ab10179ca4b-Paper.pdf).
 The proposed approach generates new images by sampling from CNN-TreeVAE, and utilizes a second-stage DDPM to refine and generate distinct, high-quality images for each data cluster. This is achieved using an adapted version of the [DiffuseVAE framework](https://github.com/JoGo175/DiffuseVAE/tree/main) by [Pandey et. al. (2022)](https://arxiv.org/abs/2201.00308). The result is a model that not only improves image clarity but also ensures that the generated samples are representative of their respective clusters, addressing the limitations of previous VAE-based methods and advancing the state of clustering-based generative modeling. The following figure illustrates the architecture and workflow of Diffuse-TreeVAE.
 
 <img src="images/readme/Diffuse-TreeVAE.png" width="100%">
@@ -106,7 +106,7 @@ To evaluate the quality of the generated images, we trained a classifier on the 
 <img src="images/readme/Tree%20generations%20-%20CIFAR10%20generations%20highprob.png" width="100%">
 
 
-For the classifier, we utilize a ResNet-50 model [(He et al., 2016)](https://www.cv-foundation.org/openaccess/content_cvpr_2016/papers/He_Deep_Residual_Learning_CVPR_2016_paper.pdf) trained on each dataset. The pre-trained classifiers are included in this repo under the `"classifier_pretraining"` directory. To train the models yourself, you can run the following command: 
+For the classifier, we utilize a ResNet-50 model [(He et al., 2016)](https://www.cv-foundation.org/openaccess/content_cvpr_2016/papers/He_Deep_Residual_Learning_CVPR_2016_paper.pdf) trained on each dataset. The pre-trained classifiers are included in this repo under the `"classifier_pretraining"` directory. If you want to retrain the models yourself, you can run the following command: 
 ```
 python classifier_pretraining/clf_training.py --data_name "cifar10"
 ```
@@ -116,7 +116,7 @@ python classifier_pretraining/clf_training.py --data_name "cifar10"
 ### Cluster-conditioning in Diffuse-TreeVAE
 
 
-The following image compares two Diffuse-TreeVAE models: one conditioned only on reconstructions and the other on both reconstructions and the leaf index. Both models were trained using the same underlying CNN-TreeVAE. The picture shows the image generations from each leaf of (top) the CNN-TreeVAE, (middle) the cluster-unconditional Diffuse-TreeVAE, and (bottom) the cluster-conditional Diffuse-TreeVAE, all trained on CIFAR-10. Each row displays the generated images from all leaves of the specified model, starting with the same sample from the root. The corresponding leaf probabilities are shown at the top of the image and are by design the same for all models.
+The following image compares two Diffuse-TreeVAE models: one conditioned only on reconstructions and the other on both reconstructions and the leaf index. Both models were trained using the same underlying CNN-TreeVAE. The picture shows the image generations from each leaf of the CNN-TreeVAE, the cluster-unconditional Diffuse-TreeVAE, and the cluster-conditional Diffuse-TreeVAE, all trained on CIFAR-10. Each row displays the generated images from all leaves of the specified model, starting with the same sample from the root. The corresponding leaf probabilities are shown at the top of the image and are by design the same for all models.
 
 <img src="images/readme/comparison_uncond_vs_cond.png" width="100%">
 
