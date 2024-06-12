@@ -49,8 +49,8 @@ from utils.model_utils import construct_tree_fromnpy
 from utils.utils import reset_random_seeds, prepare_config
 
 ###############################################################################################################
-# SELECT THE DATASET AND PATHS
-dataset = "mnist"       # mnist, fmnist, cifar10, celeba is supported
+# SELECT THE DATASET
+dataset = "mnist"       # mnist, fmnist, cifar10 is supported
 ###############################################################################################################
 
 
@@ -68,18 +68,20 @@ def train():
     parser.add_argument('--config_name', default=f'{dataset}', type=str,
                         choices=['mnist', 'fmnist', 'news20', 'omniglot', 'cifar10', 'cifar100', 'celeba'],
                         help='the override file name for config.yml')
-    parser.add_argument('--seed', default=42, type=int, help='random seed')
-    parser.add_argument('--vae_chkpt_path', default='', type=str, help='path to the pretrained TreeVAE model')
-    parser.add_argument('--results_dir', default='', type=str, help='path to the results directory')
+    parser.add_argument('--seed', type=int, help='random seed')
+    parser.add_argument('--vae_chkpt_path', type=str, help='path to the pretrained TreeVAE model')
+    parser.add_argument('--results_dir', type=str, help='path to the results directory')
 
     args = parser.parse_args()
     configs = prepare_config(args, project_dir)
+
     # Configs specific to DDPM
     configs_ddpm = configs['ddpm']
-    configs_ddpm['globals']['seed'] = args.seed
-    if args.vae_chkpt_path != '':
+    if args.seed is not None:
+        configs_ddpm['globals']['seed'] = args.seed
+    if args.vae_chkpt_path is not None:
         configs_ddpm['training']['vae_chkpt_path'] = args.vae_chkpt_path
-    if args.results_dir != '':
+    if args.results_dir is not None:
         configs_ddpm['training']['results_dir'] = args.results_dir
 
     # Reproducibility

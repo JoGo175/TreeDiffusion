@@ -51,11 +51,10 @@ python main.py --config_name "cifar10"
 
 ### Image Generation
 
-Given a trained and saved CNN-TreeVAE model on a given dataset, you can use the following command to generate the 10,000 reconstructions of the testset (mode = `"vae_recons"`) or create 10,000 newly generated images (mode = `"vae_samples"`). In the following command, `"/20240307-195731_9e95e"` denotes the folder in the `"models/experiments/{dataset}"` directory for the trained CNN-TreeVAE instance. 
+Given a trained and saved CNN-TreeVAE model on a given dataset, you can use the following command to generate the 10,000 reconstructions of the testset (mode = `"vae_recons"`) or create 10,000 newly generated images (mode = `"vae_samples"`) for each leaf in the tree. In the following command, `"/20240307-195731_9e95e"` denotes the folder in the `"models/experiments/{dataset}"` directory for the trained CNN-TreeVAE instance. However, the specific folder name will be different for each trained model instance.
 ```
-python vae_generations.py --config_name "cifar10" --mode "vae_recons" --model_name "/20240307-195731_9e95e" 
+python vae_generations.py --config_name "cifar10" --seed 1 --mode "vae_recons" --model_name "/20240307-195731_9e95e"
 ```
-
 
 
 
@@ -67,7 +66,7 @@ Given a trained and saved CNN-TreeVAE model, you can train the conditional secon
 
 ### Model Training
 
-The recommended approach is to modify the appropriate `.yml` file in the `configs` folder to set up your configurations. In particular, make sure to update the paths, such as the directory to the folder of the pre-trained CNN-TreeVAE model on which the DDPM is conditioned. Once you've updated the configuration file, run the following command for the desired dataset:
+The recommended approach is to modify the appropriate `.yml` file in the `configs` folder to set up your configurations. In particular, make sure to update the paths, such as the directory to the folder of the pre-trained CNN-TreeVAE model on which the DDPM is conditioned (`vae_chkpt_path`), the results directory (`results_dir`). Once you've updated the configuration file, run the following command for the desired dataset:
 ```
 python train_ddpm.py --config_name "cifar10"
 ```
@@ -75,7 +74,7 @@ python train_ddpm.py --config_name "cifar10"
 ### Image Generation
 
 
-To retrieve the reconstructions or samples from the diffusion model, further adjust the appropriate `.yml` file in the `configs` script with the corresponding paths to the trained DDPM model. You can use the following command to generate the 10,000 reconstructions of the testset for the most probable leaf (eval_mode = `"recons"`) or for all leaves (eval_mode = `"recons_all_leaves"`). Furhtermore, you can create 10,000 newly generated images for the most probable leaf (eval_mode = `"sample"`) or for all leaves (eval_mode = `"sample_all_leaves"`). 
+To retrieve the reconstructions or samples from the diffusion model, further adjust the appropriate `.yml` file in the `configs` script with the corresponding paths to the trained DDPM model (`chkpt_path`). You can use the following command to generate the 10,000 reconstructions of the testset for the most probable leaf (eval_mode = `"recons"`) or for all leaves (eval_mode = `"recons_all_leaves"`). Furhtermore, you can create 10,000 newly generated images for the most probable leaf (eval_mode = `"sample"`) or for all leaves (eval_mode = `"sample_all_leaves"`). 
 ```
 python test_ddpm.py --config_name $dataset --seed $seed --eval_mode "sample"
 ```
