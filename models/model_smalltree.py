@@ -107,13 +107,17 @@ class SmallTreeVAE(nn.Module):
         self.res_connections = self.kwargs['res_connections']
         # Depth of the sub-tree
         self.depth = depth
+        if -(self.depth-1) == 0:
+            last_index = None
+        else:
+            last_index = -(self.depth-1)
         # Parameters for latent representation size and channels
         self.representation_dim = self.kwargs['representation_dim']
         latent_channels = self.kwargs['latent_channels']
         bottom_up_channels = self.kwargs['bottom_up_channels']
-        latent_channels_gen = latent_channels[-(self.depth+1):-(self.depth-1)] # e.g. latent_channel_sizes = 32, 16, depth 2
+        latent_channels_gen = latent_channels[-(self.depth+1):last_index] # e.g. latent_channel_sizes = 32, 16, depth 2
         self.latent_channel = latent_channels_gen[::-1]
-        bottom_up_channels_gen = bottom_up_channels[-(self.depth+1):-(self.depth-1)]
+        bottom_up_channels_gen = bottom_up_channels[-(self.depth+1):last_index]
         self.bottom_up_channel = bottom_up_channels_gen[::-1]
         # Input shape and channels
         self.inp_shape = self.kwargs['inp_shape']

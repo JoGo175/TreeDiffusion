@@ -1,41 +1,19 @@
-
+"""
+Given a trained TreeVAE model, this script generates reconstructions and samples for each leaf in the learned tree.
+"""
 import os
-import sys
 import yaml
 import torch
 import argparse
 
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-
-import torchvision.transforms as transforms
-import torchvision.models as models
-
-from torch.utils.data import DataLoader
-from torchvision import transforms
-from torch.utils.data import Dataset, DataLoader
-from omegaconf import OmegaConf
-from PIL import Image
-
-
-# set directory to parent directory
-os.chdir("/cluster/work/vogtlab/Group/jogoncalves/treevae")
-
-# print current working directory
-print("Current Working Directory:", os.getcwd())
 
 from utils.data_utils import get_data, get_gen
 from utils.data_utils import get_data, get_gen
 from utils.model_utils import construct_tree_fromnpy
-from utils.utils import reset_random_seeds, prepare_config, display_image
+from utils.utils import display_image
 from models.model import TreeVAE
-
-
-from utils.plotting_utils import plot_tree_graph
-
-from utils.plotting_utils import plot_tree_graph
-
 
 
 #mode = 'vae_recons'
@@ -43,14 +21,13 @@ from utils.plotting_utils import plot_tree_graph
 
 
 def vae_recons():
-
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config_name', default=f'{dataset}', type=str,
+    parser.add_argument('--config_name', type=str,
                         choices=['mnist', 'fmnist', 'news20', 'omniglot', 'cifar10', 'cifar100', 'celeba'],
-                        help='the override file name for config.yml')
-    parser.add_argument('--seed', default=42, type=int, help='random seed')
-    parser.add_argument('--mode', default='vae_recons', type=str, help='evaluation mode: vae_recons or vae_samples')
-    parser.add_argument('--model_name', default='', type=str, help='path to the pretrained TreeVAE model')
+                        help='the override file name for config.yml', default='cifar10')
+    parser.add_argument('--seed', type=int, help='random seed', default=42)
+    parser.add_argument('--mode', type=str, help='evaluation mode: vae_recons or vae_samples')
+    parser.add_argument('--model_name', type=str, help='path to the pretrained TreeVAE model')
     
     args = parser.parse_args()
 
@@ -62,21 +39,15 @@ def vae_recons():
     dataset = args.config_name
     ex_name = args.model_name
 
-    path = '/Users/jorgegoncalves/Desktop/Repositories/Master_Thesis/treevae/models/experiments/'
+    path = 'models/experiments/'
     checkpoint_path = path+dataset+ex_name
 
     with open(checkpoint_path + "/config.yaml", 'r') as stream:
         configs = yaml.load(stream,Loader=yaml.Loader)
     print(configs)
 
-
-    trainset, trainset_eval, testset = get_data(configs)
-    gen_train = get_gen(trainset, configs, validation=False, shuffle=False)
-    gen_train_eval = get_gen(trainset_eval, configs, validation=True, shuffle=False)
+    _, _, testset = get_data(configs)
     gen_test = get_gen(testset, configs, validation=True, shuffle=False)
-
-    y_train = trainset_eval.dataset.targets.clone().detach()[trainset_eval.indices].numpy()
-    y_test = testset.dataset.targets.clone().detach()[testset.indices].numpy()
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = TreeVAE(**configs['training'])
@@ -91,14 +62,11 @@ def vae_recons():
     model.to(device)
     model.eval()
         
-
+    # get test set reconstructions
     if mode == 'vae_recons':
-        # get test set reconstructions
-
         # setup dirs
         vae_save_path = f"../results_all_leaves/{dataset}/seed_1/vae"
         img_save_path = os.path.join(vae_save_path, "recons_all_leaves")
-
 
         # loop over gen_test
         for j, (x, y) in enumerate(gen_test):
@@ -109,7 +77,6 @@ def vae_recons():
                 res = model.compute_reconstruction(x)
                 recons = res[0]
                 nodes = res[1]
-
                 num_leaves = len(nodes)
 
                 # loop over each class and save every TreeVAE reconstruction of this class separately
@@ -128,10 +95,8 @@ def vae_recons():
                         plt.savefig(os.path.join(class_save_pass, f"output__{0}_{j}_{i}_{prob}.png"))
                         plt.close()
 
-
+    # get new generations
     elif mode == 'vae_samples':
-        # get new generations
-
         # setup dirs
         vae_save_path = f"../results_all_leaves/{dataset}/seed_1/vae"
         img_save_path = os.path.join(vae_save_path, "sample_all_leaves")
@@ -140,7 +105,6 @@ def vae_recons():
         for j, (x, y) in enumerate(gen_test):
             n_samples = x[0].size(0)
             reconstructions, p_c_z = model.generate_images(n_samples, x[0].device)
-
             num_leaves = len(reconstructions)
 
             # loop over each class and save every TreeVAE reconstruction of this class separately
@@ -159,9 +123,6 @@ def vae_recons():
                     plt.savefig(os.path.join(class_save_pass, f"output__{0}_{j}_{i}_{prob}.png"))
                     plt.close()
 
-            
 
 if __name__ == '__main__':
     vae_recons()
-
-

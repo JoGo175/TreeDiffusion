@@ -35,26 +35,28 @@ def train():
     parser.add_argument('--config_name', default=f'{dataset}', type=str,
                         choices=['mnist', 'fmnist', 'news20', 'omniglot', 'cifar10', 'cifar100', 'celeba'],
                         help='the override file name for config.yml')
-    parser.add_argument('--seed', default=42, type=int, help='random seed')
-    parser.add_argument('--vae_chkpt_path', default='', type=str, help='path to the pretrained TreeVAE model')
-    parser.add_argument('--results_dir', default='', type=str, help='path to the results directory')
-    parser.add_argument('--chkpt_path', default='', type=str, help='path to the pretrained DDPM model')
-    parser.add_argument('--save_path', default='', type=str, help='path to save the results')
-    parser.add_argument('--eval_mode', default='sample', type=str, help='evaluation mode: sample or recons')
+    parser.add_argument('--seed', type=int, help='random seed')
+    parser.add_argument('--vae_chkpt_path', type=str, help='path to the pretrained TreeVAE model')
+    parser.add_argument('--results_dir', type=str, help='path to the results directory')
+    parser.add_argument('--chkpt_path', type=str, help='path to the pretrained DDPM model')
+    parser.add_argument('--save_path', type=str, help='path to save the results')
+    parser.add_argument('--eval_mode', type=str, help='evaluation mode: sample or recons')
 
     args = parser.parse_args()
     configs = prepare_config(args, project_dir)
     # Configs specific to DDPM
     configs_ddpm = configs['ddpm']
-    configs_ddpm['globals']['seed'] = args.seed
-    configs_ddpm['evaluation']['eval_mode'] = args.eval_mode
-    if args.vae_chkpt_path != '':
+    if args.seed is not None:
+        configs_ddpm['globals']['seed'] = args.seed
+    if args.eval_mode is not None:
+        configs_ddpm['evaluation']['eval_mode'] = args.eval_mode
+    if args.vae_chkpt_path is not None:
         configs_ddpm['training']['vae_chkpt_path'] = args.vae_chkpt_path
-    if args.results_dir != '':
+    if args.results_dir is not None:
         configs_ddpm['training']['results_dir'] = args.results_dir
-    if args.chkpt_path != '':
+    if args.chkpt_path is not None:
         configs_ddpm['evaluation']['chkpt_path'] = args.chkpt_path
-    if args.save_path != '':
+    if args.save_path is not None:
         configs_ddpm['evaluation']['save_path'] = args.save_path
 
     # Reproducibility
@@ -162,9 +164,3 @@ def train():
 
 if __name__ == "__main__":
     train()
-
-
-
-
-
-

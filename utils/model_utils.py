@@ -141,8 +141,32 @@ def construct_tree_fromnpy(model, data_tree, configs):
 
 			nodes[id_node_left] = {'node': node.left, 'depth': new_depth}
 			nodes[id_node_right] = {'node': node.right, 'depth': new_depth}
-		elif data_tree[i][2] != data_tree[i - 1][2]: # Internal node w/ 1 child only
+		elif (data_tree[i][2] != data_tree[i - 1][2]): # Internal node w/ 1 child only
 			id_parent = node_left[2]
+
+			parent = nodes[id_parent]
+			node = parent['node']
+			depth = parent['depth']
+
+			new_depth = depth + 1
+
+			small_model = SmallTreeVAE(new_depth, **configs['training'])
+
+			node.router = None
+			node.routers_q = None
+
+			node.decoder = None
+			n = []
+			for j in range(1):
+				dense = small_model.denses[j]
+				transformation = small_model.transformations[j]
+				decoder = small_model.decoders[j]
+				n.append(Node(transformation, None, None, dense, decoder))
+
+			node.left = n[0]
+			nodes[id_node_left] = {'node': node.left, 'depth': new_depth}
+		elif (i == (len(data_tree)-2) and (data_tree[i][2] != data_tree[i + 1][2])): # Last node is only child 
+			id_parent = node_right[2]
 
 			parent = nodes[id_parent]
 			node = parent['node']
@@ -251,4 +275,3 @@ def print_parameters(model, wandb_log = False):
 		for name, sub_modules in model.named_children():
 			num_params = sum(p.numel() for p in sub_modules.parameters() if p.requires_grad)
 			wandb.log({f"{name}_params": num_params})
-
