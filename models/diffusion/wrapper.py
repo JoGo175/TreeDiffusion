@@ -62,6 +62,7 @@ class DDPMWrapper(pl.LightningModule):
         guidance_weight=0.0,
         z_cond=False,
         ddpm_latents=None,
+        z_signal="cluster_id"
     ):
         super().__init__()
         assert loss in ["l1", "l2"]
@@ -103,6 +104,9 @@ class DDPMWrapper(pl.LightningModule):
 
         # TreeVAE use max_leaf or sample_leaf
         self.max_leaf = False
+
+        # Conditioning on cluster_id or latent embeddings
+        self.z_signal = z_signal
 
     def forward(
         self,
@@ -194,9 +198,15 @@ class DDPMWrapper(pl.LightningModule):
                     max_recon.append(recons[ind][i])
                     leaf_ind.append(ind)
 
-                # z = torch.stack(max_z_sample) # use latent embeddings as conditioning signal
-                # here, we use leaf index as conditioning signal instead of latent embeddings, z should be (batch, 1)
-                z = torch.tensor(leaf_ind, dtype=torch.float).unsqueeze(1).to(x.device)
+                # latent embeddings as conditioning signal
+                if self.z_signal == "latent":
+                    z = torch.stack(max_z_sample)
+
+                # leaf index as conditioning signal instead of latent embeddings, z should be (batch, 1)
+                elif self.z_signal == "cluster_id":
+                    z = torch.tensor(leaf_ind, dtype=torch.float).unsqueeze(1).to(x.device)
+
+                # reconstructions
                 cond = torch.stack(max_recon)
 
 
@@ -206,7 +216,7 @@ class DDPMWrapper(pl.LightningModule):
                 z = torch.zeros_like(z)
         else:
             # unconditional, just a normal DDPM
-            x = batch
+            x = batch[0]
 
         # Sample timepoints
         t = torch.randint(

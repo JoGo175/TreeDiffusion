@@ -429,7 +429,8 @@ class UNetModel(nn.Module):
         num_heads=1,
         num_heads_upsample=-1,
         use_scale_shift_norm=False,
-        use_z=False
+        use_z=False,
+        z_signal="cluster_id"
     ):
         super().__init__()
 
@@ -448,6 +449,7 @@ class UNetModel(nn.Module):
         self.use_checkpoint = use_checkpoint
         self.num_heads = num_heads
         self.num_heads_upsample = num_heads_upsample
+        self.z_signal = z_signal
 
         time_embed_dim = model_channels * 4
         self.time_embed = nn.Sequential(
@@ -459,11 +461,21 @@ class UNetModel(nn.Module):
         # if we condition on latent embeddings
         self.proj = None
         if use_z:
-            self.proj = nn.Sequential(
-                linear(z_dim, time_embed_dim),
-                nn.SiLU(),
-                linear(time_embed_dim, time_embed_dim),
-            )
+            if self.z_signal == "cluster_id":
+                # z has dim (batch_size, z_dim) and z_dim = 1
+                self.proj = nn.Sequential(
+                    linear(z_dim, time_embed_dim),
+                    nn.SiLU(),
+                    linear(time_embed_dim, time_embed_dim),
+                )
+            elif self.z_signal == "latent":
+                # z has dim (batch_size, rep_dim, rep_dim, latent_channel)
+                # flatten the latent representation to (batch_size, rep_dim * rep_dim * latent_channel)
+                self.proj = nn.Sequential(
+                    linear(z_dim, time_embed_dim),
+                    nn.SiLU(),
+                    linear(time_embed_dim, time_embed_dim),
+                )
 
         # if we condition on true class labels (not used for TreeVAE)
         if self.num_classes is not None:
@@ -600,11 +612,16 @@ class UNetModel(nn.Module):
         z_proj = None
         if z is not None:
             assert self.proj is not None
-            z_proj = self.proj(z)
+            if self.z_signal == "cluster_id":
+                z_proj = self.proj(z)
+            elif self.z_signal == "latent":
+                # z has dim (batch_size, rep_dim, rep_dim, latent_channel)
+                z = z.view(z.size(0), -1)
+                z_proj = self.proj(z)
             assert z_proj.shape == emb.shape
             emb = emb + z_proj
 
-        # Incorporate class label information (if any) --> not used for TreeVAE, assumes y is known
+        # Incorporate class label information (if any) --> not used for TreeVAE, assumes y is unknown
         if self.num_classes is not None:
             assert y.shape == (x.shape[0],)
             emb = emb + self.label_emb(y)

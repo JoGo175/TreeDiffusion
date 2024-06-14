@@ -50,7 +50,7 @@ from utils.utils import reset_random_seeds, prepare_config
 
 ###############################################################################################################
 # SELECT THE DATASET
-dataset = "mnist"       # mnist, fmnist, cifar10 is supported
+dataset = "cifar10"       # mnist, fmnist, cifar10 is supported
 ###############################################################################################################
 
 
@@ -71,6 +71,12 @@ def train():
     parser.add_argument('--seed', type=int, help='random seed')
     parser.add_argument('--vae_chkpt_path', type=str, help='path to the pretrained TreeVAE model')
     parser.add_argument('--results_dir', type=str, help='path to the results directory')
+    
+    # conditioning arguments
+    parser.add_argument('--ddpm_type', type=str, help='type of DDPM to train')
+    parser.add_argument('--z_cond', type=bool, help='use z as conditioning')
+    parser.add_argument('--z_dim', type=int, default=64, help='dimension of latent space')
+    parser.add_argument('--z_signal', type=str, help='type of z signal')
 
     args = parser.parse_args()
     configs = prepare_config(args, project_dir)
@@ -83,6 +89,14 @@ def train():
         configs_ddpm['training']['vae_chkpt_path'] = args.vae_chkpt_path
     if args.results_dir is not None:
         configs_ddpm['training']['results_dir'] = args.results_dir
+    if args.ddpm_type is not None:
+        configs_ddpm['training']['type'] = args.ddpm_type
+    if args.z_cond is not None:
+        configs_ddpm['training']['z_cond'] = args.z_cond
+    if args.z_dim is not None:
+        configs_ddpm['training']['z_dim'] = args.z_dim
+    if args.z_signal is not None:
+        configs_ddpm['training']['z_signal'] = args.z_signal
 
     # Reproducibility
     reset_random_seeds(configs_ddpm['globals']['seed'])
@@ -109,6 +123,7 @@ def train():
         z_dim=configs_ddpm["training"]["z_dim"],
         use_scale_shift_norm=configs_ddpm["training"]["z_cond"],
         use_z=configs_ddpm["training"]["z_cond"],
+        z_signal=configs_ddpm["training"]["z_signal"],
     )
 
     # EMA (Exponential Moving Average) parameters are non-trainable
@@ -140,7 +155,7 @@ def train():
     data_tree = np.load(model_path+'/data_tree.npy', allow_pickle=True)
     vae = construct_tree_fromnpy(vae, data_tree, configs)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    vae.load_state_dict(torch.load(model_path+'/model_weights.pt', map_location=device), strict=False)
+    vae.load_state_dict(torch.load(model_path+'/model_weights.pt', map_location=device), strict=True)
     vae.to(device)
     vae.eval()
 
@@ -160,6 +175,7 @@ def train():
         conditional=False if ddpm_type == "uncond" else True,
         grad_clip_val=configs_ddpm["training"]["grad_clip"],
         z_cond=configs_ddpm["training"]["z_cond"],
+        z_signal=configs_ddpm["training"]["z_signal"],
     )
 
     # Trainer settings

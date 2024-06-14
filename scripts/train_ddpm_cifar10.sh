@@ -8,39 +8,48 @@ conda activate treevae
 dataset="cifar10"
 O_DIR="/cluster/work/vogtlab/Group/jogoncalves/logs/output.%x.%J_${dataset}.out"
 
-# list of vae_chkpt_path strings to the trained TreeVAE models
-path_1='models/experiments/cifar10/20240517-211016_29e00'
-path_2='models/experiments/cifar10/20240517-211354_a40d6'
-path_3='models/experiments/cifar10/20240517-212017_72a55'
-path_4='models/experiments/cifar10/20240517-220711_c2411'
-path_5='models/experiments/cifar10/20240517-220943_bfc4c'
-path_6='models/experiments/cifar10/20240517-221210_1848d'
-path_7='models/experiments/cifar10/20240517-230406_d8c70'
-path_8='models/experiments/cifar10/20240517-230536_c6132'
-path_9='models/experiments/cifar10/20240517-230819_0fc1e'
-path_10='models/experiments/cifar10/20240517-230934_76241'
-# create the list of vae_chkpt_path strings
-path_list=($path_1 $path_2 $path_3 $path_4 $path_5 $path_6 $path_7 $path_8 $path_9 $path_10)
-
 # directory to save the results
-base_results_dir='/cluster/work/vogtlab/Group/jogoncalves/results_uncond/cifar10/'
+base_results_dir='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb/cifar10/'
 
-# loop over seeds and vae_chkpt_path
-for seed in 1; do
-  results_dir="${base_results_dir}seed_${seed}/"
+# Fully unconditional 
+# type = “uncond”, z_cond = False, z_dim = None, z_signal = None
+
+# loop over seeds 
+for seed in 1 2 3; do
+  results_dir="${base_results_dir}fully_uncond/seed_${seed}/"
   # run the job
-  sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed"
+  sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --results_dir $results_dir --seed $seed --type uncond --z_cond False --z_dim None --z_signal None"
 done
 
 
-## list of vae_chkpt_path strings to the trained TreeVAE models
-#path_1='models/experiments/cifar10/20240229-100309_d92b3'
-#path_2='models/experiments/cifar10/20240229-101730_bf3e0'
-#path_3='models/experiments/cifar10/20240229-103928_3096f'
-#path_4='models/experiments/cifar10/20240229-103928_290d7'
-#path_5='models/experiments/cifar10/20240229-103928_5adb4'
-#path_6='models/experiments/cifar10/20240229-103928_00878'
-#path_7='models/experiments/cifar10/20240229-104852_dcbff'
-#path_8='models/experiments/cifar10/20240229-105018_846e6'
-#path_9='models/experiments/cifar10/20240229-105018_ef98c'
-#path_10='models/experiments/cifar10/20240229-105018_deb67'
+# Conditioning on Leaf Reconstructions
+# type = “form1”, z_cond = False, z_dim = None, z_signal = None
+
+# loop over seeds 
+for seed in 1 2 3; do
+  results_dir="${base_results_dir}cond_on_recons/seed_${seed}/"
+  # run the job
+  sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --results_dir $results_dir --seed $seed --type form1 --z_cond False --z_dim None --z_signal None"
+done
+
+
+# Conditioning on Leaf Reconstructions + Leaf Index
+# type = “form1”, z_cond = True, z_dim = 1, z_signal = “cluster_id”
+
+# loop over seeds 
+for seed in 1 2 3; do
+  results_dir="${base_results_dir}cond_on_recons_and_index/seed_${seed}/"
+  # run the job
+  sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --results_dir $results_dir --seed $seed --type form1 --z_cond True --z_dim 1 --z_signal cluster_id"
+done
+
+
+# Conditioning on Leaf Reconstructions + Leaf Embeddings
+# type = “form1”, z_cond = True, z_dim = 1024, z_signal = “latent”
+
+# loop over seeds
+for seed in 1 2 3; do
+  results_dir="${base_results_dir}cond_on_recons_and_emb/seed_${seed}/"
+  # run the job
+  sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --results_dir $results_dir --seed $seed --type form1 --z_cond True --z_dim 1024 --z_signal latent"
+done
