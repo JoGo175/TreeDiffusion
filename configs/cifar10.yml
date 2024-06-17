@@ -93,7 +93,9 @@ ddpm:
   training:
     # paths
     vae_chkpt_path: 'models/experiments/cifar10/20240613-111829_7bc09'      # TreeVAE checkpoint path
-    results_dir: '/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb' # Directory to store the DDPM checkpoint in
+    results_dir: '/Users/jorgegoncalves/Desktop/Repositories/Master_Thesis/results_latent_emb' # Directory to store the DDPM checkpoint in
+    # '/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb'
+    # '/Users/jorgegoncalves/Desktop/Repositories/Master_Thesis/results_latent_emb'
     chkpt_prefix: "vae"                                                     # prefix appended to the checkpoint name
     restore_path: ""                                                        # Checkpoint restore path
     chkpt_interval: 1                                                       # Number of epochs between two checkpoints
