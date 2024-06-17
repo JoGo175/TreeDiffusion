@@ -53,3 +53,14 @@ for seed in 1 2 3; do
   # run the job
   sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --results_dir $results_dir --seed $seed --ddpm_type 'form1' --z_cond True --z_dim 1024 --z_signal latent"
 done
+
+
+# Conditioning on Leaf Reconstructions + Leaf Index + Leaf Embeddings
+# type = “form1”, z_cond = True, z_dim = 1024, z_signal = “both”
+
+# loop over seeds
+for seed in 1 2 3; do
+  results_dir="${base_results_dir}cond_on_recons_and_index_and_emb/seed_${seed}/"
+  # run the job
+  sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --results_dir $results_dir --seed $seed --ddpm_type 'form1' --z_cond True --z_dim 1024 --z_signal both"
+done

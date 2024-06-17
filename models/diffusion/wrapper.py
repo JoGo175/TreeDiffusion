@@ -198,8 +198,14 @@ class DDPMWrapper(pl.LightningModule):
                     max_recon.append(recons[ind][i])
                     leaf_ind.append(ind)
 
+                # leaf index + latent embeddings as conditioning signal
+                if self.z_signal == "both":
+                    z1 = torch.stack(max_z_sample)
+                    z2 = torch.tensor(leaf_ind, dtype=torch.float).unsqueeze(1).to(x.device)
+                    z = [z1, z2]
+
                 # latent embeddings as conditioning signal
-                if self.z_signal == "latent":
+                elif self.z_signal == "latent":
                     z = torch.stack(max_z_sample)
 
                 # leaf index as conditioning signal instead of latent embeddings, z should be (batch, 1)

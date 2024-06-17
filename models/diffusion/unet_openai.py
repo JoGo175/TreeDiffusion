@@ -461,7 +461,19 @@ class UNetModel(nn.Module):
         # if we condition on latent embeddings
         self.proj = None
         if use_z:
-            if self.z_signal == "cluster_id":
+            if z_signal == "both":
+                # z = [z_latent, z_cluster_id], and cluster_id has dim (batch_size, 1), z_dim is the latent dim
+                self.proj_latent = nn.Sequential(
+                    linear(z_dim, time_embed_dim),
+                    nn.SiLU(),
+                    linear(time_embed_dim, time_embed_dim),
+                )
+                self.proj_cluster_id = nn.Sequential(
+                    linear(1, time_embed_dim),
+                    nn.SiLU(),
+                    linear(time_embed_dim, time_embed_dim),
+                )
+            elif self.z_signal == "cluster_id":
                 # z has dim (batch_size, z_dim) and z_dim = 1
                 self.proj = nn.Sequential(
                     linear(z_dim, time_embed_dim),
@@ -611,8 +623,13 @@ class UNetModel(nn.Module):
         # Incorporate latent code information (if any) --> used for TreeVAE, using the cluster id as latent code
         z_proj = None
         if z is not None:
-            assert self.proj is not None
-            if self.z_signal == "cluster_id":
+            if self.z_signal == "both":
+                z_latent = z[0].view(z[0].size(0), -1)
+                z_cluster_id = z[1]
+                z_latent_proj = self.proj_latent(z_latent)
+                z_cluster_id_proj = self.proj_cluster_id(z_cluster_id)
+                z_proj = z_latent_proj + z_cluster_id_proj
+            elif self.z_signal == "cluster_id":
                 z_proj = self.proj(z)
             elif self.z_signal == "latent":
                 # z has dim (batch_size, rep_dim, rep_dim, latent_channel)

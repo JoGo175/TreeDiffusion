@@ -75,7 +75,7 @@ def train():
     # conditioning arguments
     parser.add_argument('--ddpm_type', type=str, help='type of DDPM to train')
     parser.add_argument('--z_cond', type=bool, help='use z as conditioning')
-    parser.add_argument('--z_dim', type=int, default=64, help='dimension of latent space')
+    parser.add_argument('--z_dim', type=int, help='dimension of latent space')
     parser.add_argument('--z_signal', type=str, help='type of z signal')
 
     args = parser.parse_args()
