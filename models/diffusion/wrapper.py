@@ -173,6 +173,8 @@ class DDPMWrapper(pl.LightningModule):
         # conditioning signal and latent z from TreeVAE, cond corresponds to the reconstructions
         cond = None
         z = None
+
+        # condition on reconstructions (and z) from TreeVAE
         if self.conditional:
             x = batch[0]
             with torch.no_grad():
@@ -220,8 +222,46 @@ class DDPMWrapper(pl.LightningModule):
             if torch.rand(1)[0] < self.cfd_rate:
                 cond = torch.zeros_like(x)
                 z = torch.zeros_like(z)
+
+        # condition on z from TreeVAE
+        elif self.z_cond:
+            x = batch[0]
+            with torch.no_grad():
+                # Compute the reconstructions and the leaf embeddings from the TreeVAE
+                res = self.vae.compute_reconstruction(x)
+                nodes = res[1]
+
+                # Save the chosen leaf_embeddings, reconstructions and the respective leaf indices
+                max_z_sample = []
+                leaf_ind = []
+
+                # Iterate over the leaf nodes and select the leaf with the highest probability or sample given the leaf probs
+                for i in range(len(nodes[0]['prob'])):
+                    probs = [node['prob'][i] for node in nodes]
+                    z_sample = [node['z_sample'][i] for node in nodes]
+                    if self.max_leaf:   # use leaf with max prob
+                        ind = probs.index(max(probs))
+                    else:               # sample one leaf given the leaf probs
+                        ind = torch.multinomial(torch.stack(probs), 1).item()
+                    max_z_sample.append(z_sample[ind])
+                    leaf_ind.append(ind)
+
+                # leaf index + latent embeddings as conditioning signal
+                if self.z_signal == "both":
+                    z1 = torch.stack(max_z_sample)
+                    z2 = torch.tensor(leaf_ind, dtype=torch.float).unsqueeze(1).to(x.device)
+                    z = [z1, z2]
+
+                # latent embeddings as conditioning signal
+                elif self.z_signal == "latent":
+                    z = torch.stack(max_z_sample)
+
+                # leaf index as conditioning signal instead of latent embeddings, z should be (batch, 1)
+                elif self.z_signal == "cluster_id":
+                    z = torch.tensor(leaf_ind, dtype=torch.float).unsqueeze(1).to(x.device)
+
+        # unconditional, just a normal DDPM
         else:
-            # unconditional, just a normal DDPM
             x = batch[0]
 
         # Sample timepoints
