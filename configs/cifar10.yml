@@ -92,10 +92,10 @@ ddpm:
   # Training parameters for the DDPM part given TreeVAE model
   training:
     # paths
-    vae_chkpt_path: 'models/experiments/cifar10/20240613-131959_c1a9f'      # TreeVAE checkpoint path,
+    vae_chkpt_path: 'models/experiments/cifar10/20240613-111829_7bc09'      # TreeVAE checkpoint path,
     # 20240613-111829_7bc09 if cluster
     # 20240613-131959_c1a9f if local
-    results_dir: '/Users/jorgegoncalves/Desktop/Repositories/Master_Thesis/results_latent_emb' # Directory to store the DDPM checkpoint in
+    results_dir: '/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb' # Directory to store the DDPM checkpoint in
     # '/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb'
     # '/Users/jorgegoncalves/Desktop/Repositories/Master_Thesis/results_latent_emb'
     chkpt_prefix: "vae"                                                     # prefix appended to the checkpoint name
