@@ -42,6 +42,12 @@ def train():
     parser.add_argument('--save_path', type=str, help='path to save the results')
     parser.add_argument('--eval_mode', type=str, help='evaluation mode: sample or recons')
 
+    # conditioning arguments
+    parser.add_argument('--ddpm_type', type=str, help='type of DDPM to train')
+    parser.add_argument('--z_cond', type=bool, help='use z as conditioning')
+    parser.add_argument('--z_dim', type=int, help='dimension of latent space')
+    parser.add_argument('--z_signal', type=str, help='type of z signal')
+
     args = parser.parse_args()
     configs = prepare_config(args, project_dir)
     # Configs specific to DDPM
@@ -58,6 +64,14 @@ def train():
         configs_ddpm['evaluation']['chkpt_path'] = args.chkpt_path
     if args.save_path is not None:
         configs_ddpm['evaluation']['save_path'] = args.save_path
+    if args.ddpm_type is not None:
+        configs_ddpm['training']['type'] = args.ddpm_type
+    if args.z_cond is not None:
+        configs_ddpm['training']['z_cond'] = args.z_cond
+    if args.z_dim is not None:
+        configs_ddpm['training']['z_dim'] = args.z_dim
+    if args.z_signal is not None:
+        configs_ddpm['training']['z_signal'] = args.z_signal
 
     # Reproducibility
     reset_random_seeds(configs_ddpm['globals']['seed'])
@@ -96,6 +110,7 @@ def train():
         z_dim=configs_ddpm["evaluation"]["z_dim"],
         use_scale_shift_norm=configs_ddpm["evaluation"]["z_cond"],
         use_z=configs_ddpm["evaluation"]["z_cond"],
+        z_signal=configs_ddpm["evaluation"]["z_signal"],
     )
 
     ema_decoder = copy.deepcopy(decoder)
@@ -136,6 +151,7 @@ def train():
         temp=configs_ddpm["evaluation"]["temp"],
         guidance_weight=configs_ddpm["evaluation"]["guidance_weight"],
         z_cond=configs_ddpm["evaluation"]["z_cond"],
+        z_signal=configs_ddpm["evaluation"]["z_signal"],
         ddpm_latents=ddpm_latents,
         strict=True,
     )
