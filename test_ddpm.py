@@ -17,7 +17,7 @@ from utils.utils import reset_random_seeds, prepare_config
 
 ###############################################################################################################
 # SELECT THE DATASET
-dataset = "mnist"       # mnist, fmnist, cifar10, celeba is supported
+dataset = "cifar10"       # mnist, fmnist, cifar10, celeba is supported
 ###############################################################################################################
 
 
@@ -140,7 +140,7 @@ def train():
         online_network=online_ddpm,
         target_network=target_ddpm,
         vae=vae,
-        conditional=True,
+        conditional=False if configs_ddpm["evaluation"]["type"] == "uncond" else True,
         pred_steps=configs_ddpm["evaluation"]["n_steps"],
         eval_mode=configs_ddpm["evaluation"]["eval_mode"],
         resample_strategy=configs_ddpm["evaluation"]["resample_strategy"],

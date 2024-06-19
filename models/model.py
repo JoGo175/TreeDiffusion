@@ -788,7 +788,7 @@ class TreeVAE(nn.Module):
         return node_info_list
 
     
-    def forward_recons(self, x, max_leaf):
+    def forward_recons(self, x, max_leaf, z_signal):
         """
         Forward pass of the TreeVAE model to compute the conditioning information that is used as input to the
         Diffusion model in Diffuse-TreeVAE.
@@ -834,10 +834,95 @@ class TreeVAE(nn.Module):
             max_recon.append(recons[ind][i])
             leaf_ind.append(ind)
 
-        # latent embedding will later be used to condition the Diffusion model
-        # z = torch.stack(max_z_sample)
+        # leaf index + latent embeddings as conditioning signal
+        if z_signal == "both":
+            z1 = torch.stack(max_z_sample)
+            z2 = torch.tensor(leaf_ind, dtype=torch.float).unsqueeze(1).to(x.device)
+            z = [z1, z2]
 
-        # leaf index and reconstruction is used to condition the Diffusion model
-        z = torch.tensor(leaf_ind, dtype=torch.float).unsqueeze(1).to(x.device)
+        # latent embeddings as conditioning signal
+        elif z_signal == "latent":
+            z = torch.stack(max_z_sample)
+
+        # leaf index as conditioning signal instead of latent embeddings, z should be (batch, 1)
+        elif z_signal == "cluster_id":
+            z = torch.tensor(leaf_ind, dtype=torch.float).unsqueeze(1).to(x.device)
+
+        # reconstructions
         cond = torch.stack(max_recon)
         return cond, z
+
+    def generate_images_and_embeddings(self, n_samples, device):
+        """
+        Generate K x n_samples new images by sampling from the root and propagating through the entire tree.
+        For each sample the method generates K images, where K is the number of leaves.
+
+        Parameters
+        ----------
+        n_samples: int
+            Number of generated samples the function should output.
+        device: torch.device
+            Either cpu or gpu
+
+         Returns
+        -------
+        list
+            A list of K tensors containing the leaf-specific generations obtained by sampling from the root and
+            propagating through the entire tree, where K is the number of leaves.
+        Tensor
+            The probability of each generated sample to be assigned to each leaf with size: #samples x #leaves,
+        """
+        assert self.training is False
+        epsilon = 1e-7
+        sizes = self.latent_channels
+        rep_dim = self.representation_dim
+        list_nodes = [
+            {'node': self.tree, 'depth': 0, 'prob': torch.ones(n_samples, device=device), 'z_parent_sample': None}]
+        leaves_prob = []
+        reconstructions = []
+        node_leaves = []
+
+        # iterates over all nodes in the tree
+        while len(list_nodes) != 0:
+            current_node = list_nodes.pop(0)
+            node, depth_level, prob = current_node['node'], current_node['depth'], current_node['prob']
+            z_parent_sample = current_node['z_parent_sample']
+
+            if depth_level == 0:
+                z_mu_p, z_sigma_p = torch.zeros([n_samples, sizes[-1], rep_dim, rep_dim], device=device), \
+                    torch.ones([n_samples, sizes[-1], rep_dim, rep_dim], device=device)
+                z_p = td.Independent(td.Normal(z_mu_p, torch.sqrt(z_sigma_p)), 3)
+                z_sample = z_p.rsample()
+
+            else:
+                _, z_mu_p, z_sigma_p = node.transformation(z_parent_sample)
+                z_p = td.Independent(td.Normal(z_mu_p, torch.sqrt(z_sigma_p + epsilon)), 3)
+                z_sample = z_p.rsample()
+
+            if node.router is not None:
+                prob_child_left = node.router(z_sample).squeeze()
+                prob_node_left, prob_node_right = prob * prob_child_left, prob * (
+                        1 - prob_child_left)
+                node_left, node_right = node.left, node.right
+                list_nodes.append(
+                    {'node': node_left, 'depth': depth_level + 1, 'prob': prob_node_left, 'z_parent_sample': z_sample})
+                list_nodes.append({'node': node_right, 'depth': depth_level + 1, 'prob': prob_node_right,
+                                   'z_parent_sample': z_sample})
+
+            elif node.decoder is not None:
+                # here we are in a leaf node and we attach the corresponding generations
+                leaves_prob.append(prob)
+                dec = node.decoder
+                reconstructions.append(dec(z_sample))
+                node_leaves.append({'prob': prob, 'z_sample': z_sample})
+
+            elif node.router is None and node.decoder is None:
+                # We are in an internal node with pruned leaves and thus only have one child
+                node_left, node_right = node.left, node.right
+                child = node_left if node_left is not None else node_right
+                list_nodes.append(
+                    {'node': child, 'depth': depth_level + 1, 'prob': prob, 'z_parent_sample': z_sample})
+
+        return reconstructions, node_leaves
+
+
