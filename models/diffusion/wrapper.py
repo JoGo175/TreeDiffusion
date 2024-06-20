@@ -294,13 +294,21 @@ class DDPMWrapper(pl.LightningModule):
         return loss
 
     def predict_step(self, batch, batch_idx, dataloader_idx=None):
+
+        # set the vae to eval mode, no training
+        self.vae.eval()
+
+        # conditioning signal and latent z from TreeVAE, cond corresponds to the reconstructions
+        recons = None
+        z = None
+
         # if not conditional --> just a normal DDPM
-        if not self.conditional:
+        if not self.conditional and not self.z_cond:
             if self.guidance_weight != 0.0:
                 raise ValueError(
                     "Guidance weight cannot be non-zero when using unconditional DDPM"
                 )
-            x_t = batch
+            x_t = batch[0]
             return self(
                 x_t,
                 cond=None,
@@ -434,6 +442,9 @@ class DDPMWrapper(pl.LightningModule):
                 if isinstance(self.online_network, DDPMv2):
                     x_t_l += recons_leaf_l
 
+                if not self.conditional:
+                    recons_leaf_l = None
+
                 # sample from the DDPM given the conditioning signal and the reconstructions
                 out = self(
                     x_t_l,
@@ -517,6 +528,9 @@ class DDPMWrapper(pl.LightningModule):
                 if isinstance(self.online_network, DDPMv2):
                     x_t_l += recons_leaf_l
 
+                if not self.conditional:
+                    recons_leaf_l = None
+
                 # sample from the DDPM given the conditioning signal and the reconstructions
                 out = self(
                     x_t_l,
@@ -533,6 +547,10 @@ class DDPMWrapper(pl.LightningModule):
         # For eval_mode in ["sample", "recons"]:
         # Given the reconstructions and the conditioning signal from the TreeVAE,
         # we use the DDPM to refine the reconstructions or the new generated samples
+
+        if not self.conditional:
+            recons = None
+
         out = (
             self(
                 x_t,

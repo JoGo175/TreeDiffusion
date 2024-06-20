@@ -815,6 +815,10 @@ class TreeVAE(nn.Module):
         recons = res[0]
         nodes = res[1]
 
+        # initialize cond and z
+        cond = None
+        z = None
+
         # Save the chosen leaf_embeddings, reconstructions and the respective leaf indices
         max_z_sample = []
         max_recon = []

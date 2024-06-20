@@ -9,7 +9,7 @@ from models.diffusion.callbacks import ImageWriter
 from models.diffusion.ddpm import DDPM
 from models.diffusion.ddpm_form2 import DDPMv2
 from models.diffusion.wrapper import DDPMWrapper
-from models.diffusion.unet_openai import SuperResModel
+from models.diffusion.unet_openai import SuperResModel, UNetModel
 from models.model import TreeVAE
 from utils.data_utils import get_data, get_gen
 from utils.model_utils import construct_tree_fromnpy
@@ -90,14 +90,16 @@ def train():
     data_tree = np.load(model_path+'/data_tree.npy', allow_pickle=True)
     vae = construct_tree_fromnpy(vae, data_tree, configs)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    vae.load_state_dict(torch.load(model_path+'/model_weights.pt', map_location=device), strict=False)
+    vae.load_state_dict(torch.load(model_path+'/model_weights.pt', map_location=device), strict=True)
     vae.to(device)
     vae.eval()
 
     # UNet Denoising Model for DDPM
     attn_resolutions = __parse_str(configs_ddpm["model"]["attn_resolutions"])
     dim_mults = __parse_str(configs_ddpm["model"]["dim_mults"])
-    decoder = SuperResModel(
+    ddpm_type = configs_ddpm["training"]["type"]
+    decoder_cls = UNetModel if ddpm_type == "uncond" else SuperResModel
+    decoder = decoder_cls(
         in_channels=configs_ddpm["data"]["inp_channels"],
         model_channels=configs_ddpm["model"]["dim"],
         out_channels=configs_ddpm["data"]["inp_channels"],
@@ -107,10 +109,10 @@ def train():
         use_checkpoint=False,
         dropout=configs_ddpm["model"]["dropout"],
         num_heads=configs_ddpm["model"]["n_heads"],
-        z_dim=configs_ddpm["evaluation"]["z_dim"],
-        use_scale_shift_norm=configs_ddpm["evaluation"]["z_cond"],
-        use_z=configs_ddpm["evaluation"]["z_cond"],
-        z_signal=configs_ddpm["evaluation"]["z_signal"],
+        z_dim=configs_ddpm["training"]["z_dim"],
+        use_scale_shift_norm=configs_ddpm["training"]["z_cond"],
+        use_z=configs_ddpm["training"]["z_cond"],
+        z_signal=configs_ddpm["training"]["z_signal"],
     )
 
     ema_decoder = copy.deepcopy(decoder)
@@ -118,7 +120,7 @@ def train():
     ema_decoder.eval()
 
     # DDPM framework, aka refiner
-    ddpm_cls = DDPMv2 if configs_ddpm["evaluation"]["type"] == "form2" else DDPM
+    ddpm_cls = DDPMv2 if configs_ddpm["training"]["type"] == "form2" else DDPM
     online_ddpm = ddpm_cls(
         decoder,
         beta_1=configs_ddpm["model"]["beta1"],
@@ -140,7 +142,7 @@ def train():
         online_network=online_ddpm,
         target_network=target_ddpm,
         vae=vae,
-        conditional=False if configs_ddpm["evaluation"]["type"] == "uncond" else True,
+        conditional=False if configs_ddpm["training"]["type"] == "uncond" else True,
         pred_steps=configs_ddpm["evaluation"]["n_steps"],
         eval_mode=configs_ddpm["evaluation"]["eval_mode"],
         resample_strategy=configs_ddpm["evaluation"]["resample_strategy"],
@@ -150,8 +152,8 @@ def train():
         data_norm=configs_ddpm["data"]["norm"],
         temp=configs_ddpm["evaluation"]["temp"],
         guidance_weight=configs_ddpm["evaluation"]["guidance_weight"],
-        z_cond=configs_ddpm["evaluation"]["z_cond"],
-        z_signal=configs_ddpm["evaluation"]["z_signal"],
+        z_cond=configs_ddpm["training"]["z_cond"],
+        z_signal=configs_ddpm["training"]["z_signal"],
         ddpm_latents=ddpm_latents,
         strict=True,
     )
@@ -162,11 +164,12 @@ def train():
         "batch",
         n_steps=configs_ddpm["evaluation"]["n_steps"],
         eval_mode=configs_ddpm["evaluation"]["eval_mode"],
-        conditional=True,
+        conditional=False if configs_ddpm["training"]["type"] == "uncond" else True,
         sample_prefix=configs_ddpm["evaluation"]["sample_prefix"],
         save_mode=configs_ddpm["evaluation"]["save_mode"],
         save_vae=configs_ddpm["evaluation"]["save_vae"],
         is_norm=configs_ddpm["data"]["norm"],
+        z_cond=configs_ddpm["training"]["z_cond"],
     )
 
     test_kwargs = {}

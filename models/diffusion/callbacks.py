@@ -120,6 +120,7 @@ class ImageWriter(BasePredictionWriter):
         save_vae=False,
         save_mode="image",
         is_norm=False,
+        z_cond = False,
     ):
         super().__init__(write_interval)
         assert eval_mode in ["sample", "sample_all_leaves", "recons", "recons_all_leaves"]
@@ -132,6 +133,7 @@ class ImageWriter(BasePredictionWriter):
         self.save_vae = save_vae
         self.is_norm = is_norm
         self.save_fn = save_as_images if save_mode == "image" else save_as_np
+        self.z_cond = z_cond
 
     def write_on_batch_end(
         self,
@@ -324,11 +326,11 @@ class ImageWriter(BasePredictionWriter):
         # self.eval_mode in ["sample", "recons"] --> only save samples or reconstructions for selected leaf
         else:
             # If conditional, DDPM is conditioned on TreeVAE
-            if self.conditional:
+            if self.conditional or self.z_cond:
                 # get DDPM and VAE samples
                 ddpm_samples_dict, vae_samples = prediction
 
-                if self.save_vae:
+                if self.save_vae and self.conditional:
                     # save TreeVAE samples
                     vae_samples = vae_samples.cpu()
                     vae_save_path = os.path.join(self.output_dir, f"vae/{self.eval_mode}")
@@ -341,6 +343,8 @@ class ImageWriter(BasePredictionWriter):
                         ),
                         denorm=self.is_norm,
                     )
+
+
             # If not conditional, DDPM is not conditioned on TreeVAE
             else:
                 ddpm_samples_dict = prediction
