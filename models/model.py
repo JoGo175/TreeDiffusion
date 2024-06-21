@@ -927,6 +927,8 @@ class TreeVAE(nn.Module):
                 list_nodes.append(
                     {'node': child, 'depth': depth_level + 1, 'prob': prob, 'z_parent_sample': z_sample})
 
-        return reconstructions, node_leaves
+        p_c_z = torch.cat([prob.unsqueeze(-1) for prob in leaves_prob], dim=-1)
+
+        return reconstructions, node_leaves, p_c_z
 
 

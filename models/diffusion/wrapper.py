@@ -308,7 +308,21 @@ class DDPMWrapper(pl.LightningModule):
                 raise ValueError(
                     "Guidance weight cannot be non-zero when using unconditional DDPM"
                 )
-            x_t = batch[0]
+
+            if self.eval_mode == "sample":
+                x_t = torch.randn_like(batch[0])
+
+            if self.eval_mode == "recons":
+                img = batch[0]
+                # DDPM encoder
+                x_t = self.online_network.compute_noisy_input(
+                    img,
+                    torch.randn_like(img),
+                    torch.tensor(
+                        [self.online_network.T - 1] * img.size(0), device=img.device
+                    ),
+                )
+
             return self(
                 x_t,
                 cond=None,
@@ -335,7 +349,7 @@ class DDPMWrapper(pl.LightningModule):
             # we resample as many times as there are samples in the Test set to create new samples
             n_samples = batch[0].size(0)
             # Compute the reconstructions and the leaf embeddings from the TreeVAE
-            reconstructions, nodes = self.vae.generate_images_and_embeddings(n_samples, batch[0].device)
+            reconstructions, nodes, _ = self.vae.generate_images_and_embeddings(n_samples, batch[0].device)
 
             # Save the chosen reconstructions and the respective leaf indices
             max_z_sample = []
@@ -391,7 +405,7 @@ class DDPMWrapper(pl.LightningModule):
             # instead of using batch of pre-sampled noise as in DiffuseVAE,
             # we resample as many times as there are samples in the Test set to create new samples
             n_samples = batch[0].size(0)
-            reconstructions, p_c_z = self.vae.generate_images_and_embeddings(n_samples, batch[0].device)
+            reconstructions, nodes, p_c_z = self.vae.generate_images_and_embeddings(n_samples, batch[0].device)
 
             # store all refined reconstructions
             out_all_leaves = []
@@ -415,20 +429,17 @@ class DDPMWrapper(pl.LightningModule):
 
                 # leaf index + latent embeddings as conditioning signal
                 if self.z_signal == "both":
-                    z1 = torch.stack(max_z_sample)
-                    z2 = torch.tensor(leaf_ind, dtype=torch.float).unsqueeze(1).to(x.device)
+                    z1 = nodes[l]['z_sample']
+                    z2 = torch.tensor([l]*n_samples, dtype=torch.float).unsqueeze(1).to(batch[0].device)
                     z = [z1, z2]
 
                 # latent embeddings as conditioning signal
                 elif self.z_signal == "latent":
-                    z = torch.stack(max_z_sample)
+                    z = nodes[l]['z_sample']
 
                 # leaf index as conditioning signal instead of latent embeddings, z should be (batch, 1)
                 elif self.z_signal == "cluster_id":
-                    z = torch.tensor(leaf_ind, dtype=torch.float).unsqueeze(1).to(batch[0].device)
-
-                # z is the leaf index
-                z = torch.tensor([l]*n_samples, dtype=torch.float).unsqueeze(1).to(batch[0].device)
+                    z = torch.tensor([l]*n_samples, dtype=torch.float).unsqueeze(1).to(batch[0].device)
 
                 # DDPM encoder
                 x_t_l = self.online_network.compute_noisy_input(
