@@ -312,7 +312,7 @@ class DDPMWrapper(pl.LightningModule):
             if self.eval_mode == "sample":
                 x_t = torch.randn_like(batch[0])
 
-            if self.eval_mode == "recons":
+            elif self.eval_mode == "recons":
                 img = batch[0]
                 # DDPM encoder
                 x_t = self.online_network.compute_noisy_input(

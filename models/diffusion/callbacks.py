@@ -361,7 +361,7 @@ class ImageWriter(BasePredictionWriter):
                 self.save_fn(
                     ddpm_samples,
                     file_name=os.path.join(
-                        img_save_path, f"output_{self.sample_prefix }_{rank}_{batch_idx}"
+                        img_save_path, f"output_{self.sample_prefix}_{rank}_{batch_idx}"
                     ),
                     denorm=self.is_norm,
                 )

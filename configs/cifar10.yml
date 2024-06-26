@@ -95,7 +95,7 @@ ddpm:
     vae_chkpt_path: 'models/experiments/cifar10/20240613-111829_7bc09'      # TreeVAE checkpoint path,
     # 20240613-111829_7bc09 if cluster
     # 20240613-131959_c1a9f if local
-    results_dir: '/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb/cond_on_recons_test' # Directory to store the DDPM checkpoint in
+    results_dir: '/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb/fully_uncond_test' # Directory to store the DDPM checkpoint in
     # '/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb'
     # '/Users/jorgegoncalves/Desktop/Repositories/Master_Thesis/results_latent_emb/cond_on_recons_and_index_and_emb_test'
     chkpt_prefix: "vae"                                                     # prefix appended to the checkpoint name
@@ -124,12 +124,12 @@ ddpm:
   # Parameters for evaluation of the reconstructions and generations
   evaluation:
     # paths and saving
-    chkpt_path: '/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb/cifar10/cond_on_recons_and_index_and_emb/seed_1/checkpoints/ddpmv2-vae-epoch=999-loss=0.0136.ckpt' # DiffuseVAE checkpoint path
-    save_path: '/cluster/home/jogoncalves/jogoncalves/results_latent_emb/cond_on_recons_and_index_and_emb/'                                                   # Path to write samples to
+    chkpt_path: '/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb/cifar10/fully_uncond2/seed_1/checkpoints/ddpmv2-vae-epoch=999-loss=0.0160.ckpt' # DiffuseVAE checkpoint path
+    save_path: '/cluster/home/jogoncalves/jogoncalves/results_latent_emb/fully_uncond_test/'                                                   # Path to write samples to
     save_vae: True                        # Whether to save VAE
     save_mode: 'image'                    # Whether to save samples as .png or .npy. One of ['image', 'numpy']
     sample_prefix: ""                     # Prefix used in naming when saving samples to disk
-    eval_mode: 'recons_all_leaves'        # Evaluation mode. One of ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
+    eval_mode: 'recons'        # Evaluation mode. One of ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
 
     # Model-specific evaluation parameters
     guidance_weight: 0.0  # Guidance weight during sampling if using Classifier free guidance
