@@ -10,14 +10,14 @@ O_DIR="/cluster/work/vogtlab/Group/jogoncalves/logs/output.%x.%J_${dataset}.out"
 
 
 # directory to save the results
-base_results_dir='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb/cifar10/'
+base_results_dir='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/'
 
 # Fully unconditional
 # type = “uncond”, z_cond = False, z_dim = None, z_signal = None
 
 # loop over seeds
 for seed in 1 2 3; do
-  results_dir="${base_results_dir}fully_uncond2/seed_${seed}/"
+  results_dir="${base_results_dir}fully_uncond/seed_${seed}/"
   # run the job
   sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --results_dir $results_dir --seed $seed --ddpm_type 'uncond' --z_cond False"
 done
@@ -29,52 +29,51 @@ done
 
 # loop over seeds
 for seed in 1 2 3; do
-  results_dir="${base_results_dir}cond_on_recons2/seed_${seed}/"
+  results_dir="${base_results_dir}cond_on_recons/seed_${seed}/"
   # run the job
   sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --results_dir $results_dir --seed $seed --ddpm_type 'form1' --z_cond False"
 done
-#
-#
-## Conditioning on Leaf Reconstructions + Leaf Index
-## type = “form1”, z_cond = True, z_dim = 1, z_signal = “cluster_id”
-#
-## loop over seeds
-#for seed in 1 2 3; do
-#  results_dir="${base_results_dir}cond_on_recons_and_index/seed_${seed}/"
-#  # run the job
-#  sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --results_dir $results_dir --seed $seed --ddpm_type 'form1' --z_cond True --z_dim 1 --z_signal cluster_id"
-#done
-#
-#
-## Conditioning on Leaf Reconstructions + Leaf Embeddings
-## type = “form1”, z_cond = True, z_dim = 1024, z_signal = “latent”
-#
-## loop over seeds
-#for seed in 1 2 3; do
-#  results_dir="${base_results_dir}cond_on_recons_and_emb/seed_${seed}/"
-#  # run the job
-#  sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --results_dir $results_dir --seed $seed --ddpm_type 'form1' --z_cond True --z_dim 1024 --z_signal latent"
-#done
-#
-#
-## Conditioning on Leaf Reconstructions + Leaf Index + Leaf Embeddings
-## type = “form1”, z_cond = True, z_dim = 1024, z_signal = “both”
-#
-## loop over seeds
-#for seed in 1 2 3; do
-#  results_dir="${base_results_dir}cond_on_recons_and_index_and_emb/seed_${seed}/"
-#  # run the job
-#  sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --results_dir $results_dir --seed $seed --ddpm_type 'form1' --z_cond True --z_dim 1024 --z_signal both"
-#done
-#
-#
-#
-## Conditioning on Leaf Index + Leaf Embeddings
-## type = “uncond”, z_cond = True, z_dim = 1024, z_signal = “both”
-#
-## loop over seeds
-#for seed in 1 2 3; do
-#  results_dir="${base_results_dir}cond_on_index_and_emb/seed_${seed}/"
-#  # run the job
-#  sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --results_dir $results_dir --seed $seed --ddpm_type 'uncond' --z_cond True --z_dim 1024 --z_signal both"
-#done
+
+
+# Conditioning on Leaf Reconstructions + Leaf Index
+# type = “form1”, z_cond = True, z_dim = 1, z_signal = “cluster_id”
+
+# loop over seeds
+for seed in 1 2 3; do
+  results_dir="${base_results_dir}cond_on_recons_and_index/seed_${seed}/"
+  # run the job
+  sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --results_dir $results_dir --seed $seed --ddpm_type 'form1' --z_cond True --z_dim 1 --z_signal cluster_id"
+done
+
+
+# Conditioning on Leaf Reconstructions + Leaf Embeddings
+# type = “form1”, z_cond = True, z_dim = 1024, z_signal = “latent”
+
+# loop over seeds
+for seed in 1 2 3; do
+  results_dir="${base_results_dir}cond_on_recons_and_emb/seed_${seed}/"
+  # run the job
+  sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --results_dir $results_dir --seed $seed --ddpm_type 'form1' --z_cond True --z_dim 1024 --z_signal latent"
+done
+
+
+# Conditioning on Leaf Reconstructions + Leaf Index + Leaf Embeddings
+# type = “form1”, z_cond = True, z_dim = 1024, z_signal = “both”
+
+# loop over seeds
+for seed in 1 2 3; do
+  results_dir="${base_results_dir}cond_on_recons_and_index_and_emb/seed_${seed}/"
+  # run the job
+  sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --results_dir $results_dir --seed $seed --ddpm_type 'form1' --z_cond True --z_dim 1024 --z_signal both"
+done
+
+
+# Conditioning on Leaf Index + Leaf Embeddings
+# type = “uncond”, z_cond = True, z_dim = 1024, z_signal = “both”
+
+# loop over seeds
+for seed in 1 2 3; do
+  results_dir="${base_results_dir}cond_on_index_and_emb/seed_${seed}/"
+  # run the job
+  sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --results_dir $results_dir --seed $seed --ddpm_type 'uncond' --z_cond True --z_dim 1024 --z_signal both"
+done
