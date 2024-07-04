@@ -124,7 +124,7 @@ ddpm:
   # Parameters for evaluation of the reconstructions and generations
   evaluation:
     # paths and saving
-    chkpt_path: '/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb/cifar10/fully_uncond2/seed_1/checkpoints/ddpmv2-vae-epoch=999-loss=0.0160.ckpt' # DiffuseVAE checkpoint path
+    chkpt_path: '/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb/cifar10/fully_uncond/seed_1/checkpoints/ddpmv2-vae-epoch=999-loss=0.0160.ckpt' # DiffuseVAE checkpoint path
     save_path: '/cluster/home/jogoncalves/jogoncalves/results_latent_emb/fully_uncond_test/'                                                   # Path to write samples to
     save_vae: True                        # Whether to save VAE
     save_mode: 'image'                    # Whether to save samples as .png or .npy. One of ['image', 'numpy']

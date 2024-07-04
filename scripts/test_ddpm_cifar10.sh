@@ -19,9 +19,9 @@ vae_chkpt_path='/cluster/work/vogtlab/Group/jogoncalves/treevae/models/experimen
 # Fully unconditional
 # type = “uncond”, z_cond = False, z_dim = None, z_signal = None
 
-ddpm_path_1='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/fully_uncond/seed_1/checkpoints/ddpmv2-vae-epoch=999-loss=0.0160.ckpt'
-ddpm_path_2='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/fully_uncond/seed_2/checkpoints/ddpmv2-vae-epoch=999-loss=0.0192.ckpt'
-ddpm_path_3='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/fully_uncond/seed_3/checkpoints/ddpmv2-vae-epoch=999-loss=0.0221.ckpt'
+ddpm_path_1='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/fully_uncond/seed_1/checkpoints/ddpmv2-vae-epoch=4999-loss=0.0160.ckpt'
+ddpm_path_2='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/fully_uncond/seed_2/checkpoints/ddpmv2-vae-epoch=4999-loss=0.0217.ckpt'
+ddpm_path_3='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/fully_uncond/seed_3/checkpoints/ddpmv2-vae-epoch=4999-loss=0.0201.ckpt'
 ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3)
 
 # loop over seeds and vae_chkpt_path
@@ -39,9 +39,9 @@ done
 # Conditioning on Leaf Reconstructions
 # type = “form1”, z_cond = False, z_dim = None, z_signal = None
 
-ddpm_path_1='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_recons/seed_1/checkpoints/ddpmv2-vae-epoch=999-loss=0.0150.ckpt'
-ddpm_path_2='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_recons/seed_2/checkpoints/ddpmv2-vae-epoch=999-loss=0.0138.ckpt'
-ddpm_path_3='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_recons/seed_3/checkpoints/ddpmv2-vae-epoch=999-loss=0.0202.ckpt'
+ddpm_path_1='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_recons/seed_1/checkpoints/ddpmv2-vae-epoch=4430-loss=0.0199.ckpt'
+ddpm_path_2='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_recons/seed_2/checkpoints/ddpmv2-vae-epoch=4448-loss=0.0143.ckpt'
+ddpm_path_3='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_recons/seed_3/checkpoints/ddpmv2-vae-epoch=4386-loss=0.0141.ckpt'
 ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3)
 
 # loop over seeds and vae_chkpt_path
@@ -59,9 +59,9 @@ done
 # Conditioning on Leaf Reconstructions + Leaf Index
 # type = “form1”, z_cond = True, z_dim = 1, z_signal = “cluster_id”
 
-ddpm_path_1='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_recons_and_index/seed_1/checkpoints/ddpmv2-vae-epoch=999-loss=0.0151.ckpt'
-ddpm_path_2='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_recons_and_index/seed_2/checkpoints/ddpmv2-vae-epoch=999-loss=0.0169.ckpt'
-ddpm_path_3='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_recons_and_index/seed_3/checkpoints/ddpmv2-vae-epoch=999-loss=0.0201.ckpt'
+ddpm_path_1='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_recons_and_index/seed_1/checkpoints/ddpmv2-vae-epoch=4329-loss=0.0158.ckpt'
+ddpm_path_2='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_recons_and_index/seed_2/checkpoints/ddpmv2-vae-epoch=4303-loss=0.0125.ckpt'
+ddpm_path_3='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_recons_and_index/seed_3/checkpoints/ddpmv2-vae-epoch=4380-loss=0.0186.ckpt'
 ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3)
 
 # loop over seeds and vae_chkpt_path
@@ -79,9 +79,9 @@ done
 # Conditioning on Leaf Reconstructions + Leaf Embeddings
 # type = “form1”, z_cond = True, z_dim = 1024, z_signal = “latent”
 
-ddpm_path_1='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_recons_and_emb/seed_1/checkpoints/ddpmv2-vae-epoch=999-loss=0.0136.ckpt'
-ddpm_path_2='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_recons_and_emb/seed_2/checkpoints/ddpmv2-vae-epoch=999-loss=0.0137.ckpt'
-ddpm_path_3='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_recons_and_emb/seed_3/checkpoints/ddpmv2-vae-epoch=999-loss=0.0200.ckpt'
+ddpm_path_1='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_recons_and_emb/seed_1/checkpoints/ddpmv2-vae-epoch=4999-loss=0.0162.ckpt'
+ddpm_path_2='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_recons_and_emb/seed_2/checkpoints/ddpmv2-vae-epoch=4999-loss=0.0130.ckpt'
+ddpm_path_3='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_recons_and_emb/seed_3/checkpoints/ddpmv2-vae-epoch=4999-loss=0.0170.ckpt'
 ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3)
 
 # loop over seeds and vae_chkpt_path
@@ -100,9 +100,9 @@ done
 # Conditioning on Leaf Reconstructions + Leaf Index + Leaf Embeddings
 # type = “form1”, z_cond = True, z_dim = 1024, z_signal = “both”
 
-ddpm_path_1='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_recons_and_index_and_emb/seed_1/checkpoints/ddpmv2-vae-epoch=999-loss=0.0136.ckpt'
-ddpm_path_2='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_recons_and_index_and_emb/seed_2/checkpoints/ddpmv2-vae-epoch=999-loss=0.0136.ckpt'
-ddpm_path_3='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_recons_and_index_and_emb/seed_3/checkpoints/ddpmv2-vae-epoch=999-loss=0.0151.ckpt'
+ddpm_path_1='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_recons_and_index_and_emb/seed_1/checkpoints/ddpmv2-vae-epoch=4999-loss=0.0161.ckpt'
+ddpm_path_2='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_recons_and_index_and_emb/seed_2/checkpoints/ddpmv2-vae-epoch=4999-loss=0.0131.ckpt'
+ddpm_path_3='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_recons_and_index_and_emb/seed_3/checkpoints/ddpmv2-vae-epoch=4999-loss=0.0170.ckpt'
 ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3)
 
 # loop over seeds and vae_chkpt_path
@@ -119,9 +119,9 @@ done
 # Conditioning on Leaf Index + Leaf Embeddings
 # type = “uncond”, z_cond = True, z_dim = 1024, z_signal = “both”
 
-ddpm_path_1='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_index_and_emb/seed_1/checkpoints/ddpmv2-vae-epoch=999-loss=0.0152.ckpt'
-ddpm_path_2='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_index_and_emb/seed_2/checkpoints/ddpmv2-vae-epoch=999-loss=0.0139.ckpt'
-ddpm_path_3='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_index_and_emb/seed_3/checkpoints/ddpmv2-vae-epoch=999-loss=0.0202.ckpt'
+ddpm_path_1='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_index_and_emb/seed_1/checkpoints/ddpmv2-vae-epoch=4999-loss=0.0132.ckpt'
+ddpm_path_2='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_index_and_emb/seed_2/checkpoints/ddpmv2-vae-epoch=4999-loss=0.0120.ckpt'
+ddpm_path_3='/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb_5k/cifar10/cond_on_index_and_emb/seed_3/checkpoints/ddpmv2-vae-epoch=4999-loss=0.0113.ckpt'
 ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3)
 
 # loop over seeds and vae_chkpt_path
