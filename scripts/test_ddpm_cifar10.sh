@@ -68,7 +68,7 @@ ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3)
 for seed in 1 2 3; do
   results_dir="${base_results_dir}cond_on_recons_and_index/seed_${seed}/"
   # loop over eval_mode = ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
-  for eval_mode in 'sample_all_leaves' 'recons_all_leaves'; do
+  for eval_mode in 'sample' 'recons' 'sample_all_leaves' 'recons_all_leaves'; do
     # run the job
     sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=1 -o $O_DIR --wrap="python test_ddpm.py --config_name $dataset --vae_chkpt_path $vae_chkpt_path --chkpt_path ${ddpm_path_list[$seed-1]} --results_dir $results_dir --save_path $results_dir --seed $seed --eval_mode $eval_mode --ddpm_type 'form1' --z_cond True --z_dim 1 --z_signal cluster_id"
   done
@@ -88,7 +88,7 @@ ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3)
 for seed in 1 2 3; do
   results_dir="${base_results_dir}cond_on_recons_and_emb/seed_${seed}/"
   # loop over eval_mode = ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
-  for eval_mode in 'sample_all_leaves' 'recons_all_leaves'; do
+  for eval_mode in 'sample' 'recons' 'sample_all_leaves' 'recons_all_leaves'; do
     # run the job
     sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=1 -o $O_DIR --wrap="python test_ddpm.py --config_name $dataset --vae_chkpt_path $vae_chkpt_path --chkpt_path ${ddpm_path_list[$seed-1]} --results_dir $results_dir --save_path $results_dir --seed $seed --eval_mode $eval_mode --ddpm_type 'form1' --z_cond True --z_dim 1024 --z_signal latent"
   done
@@ -109,7 +109,7 @@ ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3)
 for seed in 1 2 3; do
   results_dir="${base_results_dir}cond_on_recons_and_index_and_emb/seed_${seed}/"
   # loop over eval_mode = ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
-  for eval_mode in 'sample_all_leaves' 'recons_all_leaves'; do
+  for eval_mode in 'sample' 'recons' 'sample_all_leaves' 'recons_all_leaves'; do
     # run the job
     sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=1 -o $O_DIR --wrap="python test_ddpm.py --config_name $dataset --vae_chkpt_path $vae_chkpt_path --chkpt_path ${ddpm_path_list[$seed-1]} --results_dir $results_dir --save_path $results_dir --seed $seed --eval_mode $eval_mode --ddpm_type 'form1' --z_cond True --z_dim 1024 --z_signal both"
   done
@@ -128,7 +128,7 @@ ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3)
 for seed in 1 2 3; do
   results_dir="${base_results_dir}cond_on_index_and_emb/seed_${seed}/"
   # loop over eval_mode = ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
-  for eval_mode in 'sample_all_leaves' 'recons_all_leaves'; do
+  for eval_mode in 'sample' 'recons' 'sample_all_leaves' 'recons_all_leaves'; do
     # run the job
     sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=1 -o $O_DIR --wrap="python test_ddpm.py --config_name $dataset --vae_chkpt_path $vae_chkpt_path --chkpt_path ${ddpm_path_list[$seed-1]} --results_dir $results_dir --save_path $results_dir --seed $seed --eval_mode $eval_mode --ddpm_type 'uncond' --z_cond True --z_dim 1024 --z_signal both"
   done
