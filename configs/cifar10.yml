@@ -38,17 +38,12 @@ training:
   num_clusters_tree: 10                             # Maximum number of effective clusters to grow the tree to
   dropout_router: 0.0                               # Dropout rate for the router networks
   res_connections: True                             # Whether to use residual connections in the bottom-up and transformation networks
-  dim_mod_conv: True                                # # Whether to change dimensionality using Conv2d & ConvTranspose2d or Downsample & Upsample
+  dim_mod_conv: True                                # Whether to change dimensionality using Conv2d & ConvTranspose2d or Downsample & Upsample
 
   # Augmentation parameters for contrastive learning
   augment: True                                           # Whether to use augmentation for contrastive learning
   augmentation_method: 'InfoNCE,instancewise_full'        # Augmentation method. One of ['simple', 'InfoNCE,instancewise_full']
   aug_decisions_weight: 100                               # Weight for the contrastive loss
-
-  # Augmentation parameters for contrastive learning
-  #augment: False                      # Whether to use augmentation for contrastive learning
-  #augmentation_method: 'simple'       # Augmentation method. One of ['simple', 'InfoNCE,instancewise_full']
-  #aug_decisions_weight: 1             # Weight for the contrastive loss
 
   # Evaluation parameters
   compute_ll: False           # Whether to compute test log-likelihood

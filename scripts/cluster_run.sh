@@ -5,21 +5,34 @@ eval "$(conda shell.bash hook)"
 export CUBLAS_WORKSPACE_CONFIG=":4096:8"
 source ~/.bashrc
 conda activate treevae
-dataset="cifar10"
+dataset="mnist"
 O_DIR="/cluster/work/vogtlab/Group/jogoncalves/logs/output.%x.%J_${dataset}.out"
 
 
-# loop over latent_channels in [64, 64, 64, 64, 64, 64, 64], [8, 16, 32, 64, 128, 256, 512], [512 256 128 64 32 16 8]
-for latent_channels in "64,64,64,64,64,64,64" "8,16,32,64,128,256,512" "512,256,128,64,32,16,8"; do
-  # loop over bottom_up_channels in [128, 128, 128, 128, 128, 128, 128], [16, 32, 64, 128, 256, 512, 1024], [1024, 512, 256, 128, 64, 32, 16]
-  for bottom_up_channels in "128,128,128,128,128,128,128" "16,32,64,128,256,512,1024" "1024,512,256,128,64,32,16"; do
+# loop over kl_start
+for kl_start in 0.0 0.5; do     # use 0.01 instead of 0.0 for CIFAR10!
+  # loop over spectral_norm = False
+  for res_connections in True False; do
     # loop over seeds
     for seed in 1 2 3 4 5 6 7 8 9 10; do
       # run the job
-      sbatch --time=36:00:00 --mem-per-cpu=10G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python main.py --save_model True --config_name $dataset --latent_channels $latent_channels --bottom_up_channels $bottom_up_channels --seed $seed"
+      sbatch --time=36:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python main.py --save_model True --config_name $dataset --kl_start $kl_start --res_connections $res_connections --seed $seed"
     done
   done
 done
+
+
+# # loop over latent_channels in [64, 64, 64, 64, 64, 64, 64], [8, 16, 32, 64, 128, 256, 512], [512 256 128 64 32 16 8]
+# for latent_channels in "64,64,64,64,64,64,64" "8,16,32,64,128,256,512" "512,256,128,64,32,16,8"; do
+#   # loop over bottom_up_channels in [128, 128, 128, 128, 128, 128, 128], [16, 32, 64, 128, 256, 512, 1024], [1024, 512, 256, 128, 64, 32, 16]
+#   for bottom_up_channels in "128,128,128,128,128,128,128" "16,32,64,128,256,512,1024" "1024,512,256,128,64,32,16"; do
+#     # loop over seeds
+#     for seed in 1 2 3 4 5 6 7 8 9 10; do
+#       # run the job
+#       sbatch --time=36:00:00 --mem-per-cpu=10G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python main.py --save_model True --config_name $dataset --latent_channels $latent_channels --bottom_up_channels $bottom_up_channels --seed $seed"
+#     done
+#   done
+# done
 
 
 
