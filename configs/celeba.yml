@@ -3,7 +3,7 @@ run_name: 'celeba_cnn'
 data:
   data_name: 'celeba'       # Dataset name
   num_clusters_data: 1      # Number of clusters/classes in the dataset
-  path: 'datasets/celeba'   # Path to the dataset
+  path: 'data/celeba'   # Path to the dataset
 
 # TreeVAE specific parameters --------------------------------------------------------------------------------
 training:

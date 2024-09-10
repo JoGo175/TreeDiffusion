@@ -5,12 +5,12 @@ eval "$(conda shell.bash hook)"
 export CUBLAS_WORKSPACE_CONFIG=":4096:8"
 source ~/.bashrc
 conda activate treevae
-dataset="mnist"
+dataset="celeba"
 O_DIR="/cluster/work/vogtlab/Group/jogoncalves/logs/output.%x.%J_${dataset}.out"
 
 
 # loop over kl_start
-for kl_start in 0.0 0.5; do     # use 0.01 instead of 0.0 for CIFAR10!
+for kl_start in 0.01 0.5; do     # use 0.01 instead of 0.0 for CIFAR10!
   # loop over spectral_norm = False
   for res_connections in True False; do
     # loop over seeds
