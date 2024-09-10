@@ -267,9 +267,9 @@ def get_data(configs):
 			transform = transform_eval 
 
 
-		full_trainset = torchvision.datasets.CelebA(root=data_path, split='train', target_type='attr', target_transform=lambda y: 0, download=True, transform=transform)
-		full_trainset_eval = torchvision.datasets.CelebA(root=data_path, split='train', target_type='attr', target_transform=lambda y: 0, download=True, transform=transform_eval)
-		full_testset = torchvision.datasets.CelebA(root=data_path, split='test', target_type='attr', target_transform=lambda y: 0, download=True, transform=transform_eval)
+		full_trainset = torchvision.datasets.CelebA(root=data_path, split='train', target_type='attr', target_transform=lambda y: 0, download=False, transform=transform)
+		full_trainset_eval = torchvision.datasets.CelebA(root=data_path, split='train', target_type='attr', target_transform=lambda y: 0, download=False, transform=transform_eval)
+		full_testset = torchvision.datasets.CelebA(root=data_path, split='test', target_type='attr', target_transform=lambda y: 0, download=False, transform=transform_eval)
 
 		indx_train = np.arange(len(full_trainset))
 		indx_test = np.arange(len(full_testset))

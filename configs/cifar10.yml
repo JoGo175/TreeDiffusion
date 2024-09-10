@@ -54,7 +54,7 @@ globals:
   wandb_logging: 'offline'    # Whether to log to wandb. One of ['offline', 'online', 'disabled']
   eager_mode: True            # Whether to use eager mode
   seed: 42                    # Random seed for reproducibility
-  save_model: False           # Whether to save the trained model to disk
+  save_model: True           # Whether to save the trained model to disk
   config_name: 'cifar10'      # Name of the config file
 
 
