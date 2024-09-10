@@ -289,7 +289,12 @@ class TreeVAE(nn.Module):
                     emb_contr.append(emb_c)
 
         # create a list of nodes of the tree that need to be processed, self.tree is the root of the tree
-        list_nodes = [{'node': self.tree, 'depth': 0, 'prob': torch.ones(x.size(0), device=device), 'z_parent_sample': None}]
+        list_nodes = [{'node': self.tree, 'depth': 0, 'prob': torch.ones(x.size(0), device=device), 'z_parent_sample': None, 'id': 0, 'parent': None}]
+        # list of nodes to be outputted, should include 'node_id', 'depth', 'prob', 'z_sample', 'parent_id'
+        node_info_return = []
+        id_ind = 0
+        leaf_ind = 0
+
         # initializate KL losses
         kl_nodes_tot = torch.zeros(len(x), device=device)
         kl_decisions_tot = torch.zeros(len(x), device=device)
@@ -330,6 +335,14 @@ class TreeVAE(nn.Module):
             z = td.Independent(td.Normal(z_mu_q, torch.sqrt(z_sigma_q + epsilon)), 3)
             z_sample = z.rsample()
 
+            # store the node information for output
+            leaf_info = None
+            if node.router is None and node.decoder is not None:
+                leaf_info = leaf_ind
+                leaf_ind += 1
+            node_info_return.append({'node_id': current_node['id'], 'depth': depth_level, 'prob': prob,
+                                     'z_sample': z_sample, 'parent_id': current_node['parent'], 'leaf_id': leaf_info})
+
             # compute KL node between z, z_p, both are distributions for (channel, height, width)
             # need multivariate gaussian KL
             kl_node = prob * td.kl_divergence(z, z_p)
@@ -364,10 +377,12 @@ class TreeVAE(nn.Module):
                 # we are not in a leaf, so we have to add the left and right child to the list
                 prob_node_left, prob_node_right = prob * prob_child_left_q, prob * (1 - prob_child_left_q)
                 node_left, node_right = node.left, node.right
-                list_nodes.append(
-                    {'node': node_left, 'depth': depth_level + 1, 'prob': prob_node_left, 'z_parent_sample': z_sample})
+                id_ind += 1
+                list_nodes.append({'node': node_left, 'depth': depth_level + 1, 'prob': prob_node_left,
+                                   'z_parent_sample': z_sample, 'id': id_ind, 'parent': current_node['id']})
+                id_ind += 1
                 list_nodes.append({'node': node_right, 'depth': depth_level + 1, 'prob': prob_node_right,
-                                'z_parent_sample': z_sample})
+                                'z_parent_sample': z_sample, 'id': id_ind, 'parent': current_node['id']})
 
             # if there is a decoder then we are in one of the leaf nodes
             elif node.decoder is not None:
@@ -382,8 +397,9 @@ class TreeVAE(nn.Module):
             elif node.router is None and node.decoder is None:
                 node_left, node_right = node.left, node.right
                 child = node_left if node_left is not None else node_right
-                list_nodes.append(
-                    {'node': child, 'depth': depth_level + 1, 'prob': prob, 'z_parent_sample': z_sample})
+                id_ind += 1
+                list_nodes.append({'node': child, 'depth': depth_level + 1, 'prob': prob, 'z_parent_sample': z_sample,
+                                'id': id_ind, 'parent': current_node['id']})
 
         kl_nodes_loss = torch.clamp(torch.mean(kl_nodes_tot), min=-10, max=1e10)
         kl_decisions_loss = torch.mean(kl_decisions_tot)
@@ -403,6 +419,8 @@ class TreeVAE(nn.Module):
             'aug_decisions': self.aug_decisions_weight * aug_decisions_loss,
             'p_c_z': p_c_z,
             'node_leaves': node_leaves,
+            'reconstructions': reconstructions,
+            'node_info': node_info_return
         }
 
         if self.return_elbo:

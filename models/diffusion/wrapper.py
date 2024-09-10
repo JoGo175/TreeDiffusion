@@ -179,9 +179,10 @@ class DDPMWrapper(pl.LightningModule):
             x = batch[0]
             with torch.no_grad():
                 # Compute the reconstructions and the leaf embeddings from the TreeVAE
-                res = self.vae.compute_reconstruction(x)
-                recons = res[0]
-                nodes = res[1]
+                res = self.vae.forward(x)
+                recons = res['reconstructions']
+                nodes = res['node_leaves']
+                node_info = res['node_info']
 
                 # Save the chosen leaf_embeddings, reconstructions and the respective leaf indices
                 max_z_sample = []
@@ -213,6 +214,9 @@ class DDPMWrapper(pl.LightningModule):
                 # leaf index as conditioning signal instead of latent embeddings, z should be (batch, 1)
                 elif self.z_signal == "cluster_id":
                     z = torch.tensor(leaf_ind, dtype=torch.float).unsqueeze(1).to(x.device)
+
+                elif self.z_signal == "path":
+                    z = self.get_path_info(node_info, leaf_ind)
 
                 if self.conditional:
                     # reconstructions
@@ -255,6 +259,26 @@ class DDPMWrapper(pl.LightningModule):
         lr_sched.step()
         self.log("loss", loss, prog_bar=True)
         return loss
+
+    def get_path_info(self, node_info_list, selected_leaf_indices):
+        def traverse_to_root(path_info, start_node, node_list, sample_index=None):
+            if start_node['parent_id'] is None:
+                return path_info.append((torch.tensor(start_node['node_id'], dtype=torch.float).to(self.device),
+                                         start_node['z_sample'][sample_index]))
+            else:
+                path_info.append((torch.tensor(start_node['node_id'], dtype=torch.float).to(self.device),
+                                  start_node['z_sample'][sample_index]))
+                return traverse_to_root(path_info, node_list[start_node['parent_id']], node_list, sample_index)
+
+        output = []
+        for l, leaf_index in enumerate(selected_leaf_indices):
+            for node_info in node_info_list:
+                if node_info['leaf_id'] == leaf_index:
+                    path_info = []
+                    traverse_to_root(path_info, node_info, node_info_list, l)
+                    output.append(path_info)
+                    break
+        return output
 
     def predict_step(self, batch, batch_idx, dataloader_idx=None):
 

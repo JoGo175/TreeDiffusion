@@ -461,7 +461,7 @@ class UNetModel(nn.Module):
         # if we condition on latent embeddings
         self.proj = None
         if use_z:
-            if z_signal == "both":
+            if z_signal == "both" or z_signal == "path":
                 # z = [z_latent, z_cluster_id], and cluster_id has dim (batch_size, 1), z_dim is the latent dim
                 self.proj_latent = nn.Sequential(
                     linear(z_dim, time_embed_dim),
@@ -635,6 +635,21 @@ class UNetModel(nn.Module):
                 # z has dim (batch_size, rep_dim, rep_dim, latent_channel)
                 z = z.view(z.size(0), -1)
                 z_proj = self.proj(z)
+            elif self.z_signal == "path":
+                # z is a list of length batch_size,
+                # each element is a is a list with variable length, elements are tuples (node_id, node_z_sample)
+                # add self.proj_latent(node_z_sample) + self.proj_cluster_id(node_id) for each node_z_sample, node_id
+                # output should have shape (batch_size, time_embed_dim)
+
+                # iterate over batch
+                z_proj = []
+                for z_sample in z:
+                    z_proj.append(
+                        sum([self.proj_latent(zz[1].view(1, -1))
+                             + self.proj_cluster_id(zz[0].view(1)).view(1, -1) for zz in z_sample]))
+                z_proj = th.stack(z_proj).squeeze()
+
+
             assert z_proj.shape == emb.shape
             emb = emb + z_proj
 

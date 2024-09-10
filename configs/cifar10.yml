@@ -87,10 +87,11 @@ ddpm:
   # Training parameters for the DDPM part given TreeVAE model
   training:
     # paths
-    vae_chkpt_path: 'models/experiments/cifar10/20240613-111829_7bc09'      # TreeVAE checkpoint path,
+    vae_chkpt_path: 'models/experiments/cifar10/20240613-131959_c1a9f'      # TreeVAE checkpoint path,
     # 20240613-111829_7bc09 if cluster
     # 20240613-131959_c1a9f if local
-    results_dir: '/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb/fully_uncond_test' # Directory to store the DDPM checkpoint in
+    results_dir: '/Users/jorgegoncalves/Desktop/Repositories/Master_Thesis/results_latent_emb/cond_on_recons_and_index_and_emb_test'
+    # '/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb/fully_uncond_test' # Directory to store the DDPM checkpoint in
     # '/cluster/work/vogtlab/Group/jogoncalves/results_latent_emb'
     # '/Users/jorgegoncalves/Desktop/Repositories/Master_Thesis/results_latent_emb/cond_on_recons_and_index_and_emb_test'
     chkpt_prefix: "vae"                                                     # prefix appended to the checkpoint name
@@ -100,10 +101,10 @@ ddpm:
     # Model-specific training parameters
     use_ema: True         # Whether to use EMA (Improves sample quality)
     ema_decay: 0.9999     # EMA decay rate
-    z_cond: False         # Whether to condition UNet on vae latent
-    z_dim: None           # Dimensionality of the vae latent --> 1 for leaf index
-    z_signal: None        # Conditioning signal for the UNet. One of ['both', 'latent', 'cluster_id']
-    type: 'uncond'        # DiffuseVAE formulation type, One of ['form1', 'form2', 'uncond'].
+    z_cond: True         # Whether to condition UNet on vae latent
+    z_dim: 1024           # Dimensionality of the vae latent --> 1 for leaf index
+    z_signal: 'both'        # Conditioning signal for the UNet. One of ['both', 'latent', 'cluster_id']
+    type: 'form1'        # DiffuseVAE formulation type, One of ['form1', 'form2', 'uncond'].
     # type:`uncond` and z_cond: False is baseline DDPM
     cfd_rate: 0.0         # Conditioning signal dropout rate as in Classifier-free guidance
 
