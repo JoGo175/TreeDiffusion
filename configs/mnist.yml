@@ -78,7 +78,7 @@ ddpm:
     attn_resolutions: "16,"   # Attention resolutions for the UNet
     n_residual: 2             # Number of residual blocks per level in UNet between the resolutions
     dim_mults: "1,2,2,2"      # Multiplier for Nb of channels for each level in UNet
-    dropout: 0.3              # Dropout rate
+    dropout: 0.1              # Dropout rate
     n_heads: 8                # Number of attention heads
     beta1: 0.0001
     beta2: 0.02
