@@ -32,7 +32,7 @@ base_results_dir='/cluster/work/vogtlab/Group/jogoncalves/results_ICLR/cifar10/'
 # loop over seeds
 for seed in 1 2 3 4 5 6 7 8 9 10; do
   results_dir="${base_results_dir}fully_uncond/"
-  chkpt_prefix = "vae_seed${seed}"
+  chkpt_prefix="vae_seed${seed}"
   # run the job
   sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --chkpt_prefix $chkpt_prefix --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'uncond' --z_cond False"
 done
