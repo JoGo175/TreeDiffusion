@@ -30,9 +30,10 @@ base_results_dir='/cluster/work/vogtlab/Group/jogoncalves/results_ICLR/mnist/'
 
 # loop over seeds
 for seed in 1 2 3 4 5 6 7 8 9 10; do
-  results_dir="${base_results_dir}fully_uncond/seed_${seed}/"
+  results_dir="${base_results_dir}fully_uncond/"
+  chkpt_prefix = "vae_seed${seed}"
   # run the job
-  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'uncond' --z_cond False"
+  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --chkpt_prefix $chkpt_prefix --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'uncond' --z_cond False"
 done
 
 
@@ -42,9 +43,10 @@ done
 
 # loop over seeds
 for seed in 1 2 3 4 5 6 7 8 9 10; do
-  results_dir="${base_results_dir}cond_on_recons/seed_${seed}/"
+  results_dir="${base_results_dir}cond_on_recons/"
+  chkpt_prefix="vae_seed${seed}"
   # run the job
-  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'form1' --z_cond False"
+  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --chkpt_prefix $chkpt_prefix --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'form1' --z_cond False"
 done
 
 
@@ -53,9 +55,10 @@ done
 
 # loop over seeds
 for seed in 1 2 3 4 5 6 7 8 9 10; do
-  results_dir="${base_results_dir}cond_on_recons_and_index/seed_${seed}/"
+  results_dir="${base_results_dir}cond_on_recons_and_index/"
+  chkpt_prefix="vae_seed${seed}"
   # run the job
-  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'form1' --z_cond True --z_dim 1 --z_signal cluster_id"
+  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --chkpt_prefix $chkpt_prefix --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'form1' --z_cond True --z_dim 1 --z_signal cluster_id"
 done
 
 
@@ -64,9 +67,10 @@ done
 
 # loop over seeds
 for seed in 1 2 3 4 5 6 7 8 9 10; do
-  results_dir="${base_results_dir}cond_on_recons_and_emb/seed_${seed}/"
+  results_dir="${base_results_dir}cond_on_recons_and_emb/"
+  chkpt_prefix="vae_seed${seed}"
   # run the job
-  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'form1' --z_cond True --z_dim 1024 --z_signal latent"
+  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --chkpt_prefix $chkpt_prefix --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'form1' --z_cond True --z_dim 1024 --z_signal latent"
 done
 
 
@@ -75,9 +79,10 @@ done
 
 # loop over seeds
 for seed in 1 2 3 4 5 6 7 8 9 10; do
-  results_dir="${base_results_dir}cond_on_recons_and_index_and_emb/seed_${seed}/"
+  results_dir="${base_results_dir}cond_on_recons_and_index_and_emb/"
+  chkpt_prefix="vae_seed${seed}"
   # run the job
-  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'form1' --z_cond True --z_dim 1024 --z_signal both"
+  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --chkpt_prefix $chkpt_prefix --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'form1' --z_cond True --z_dim 1024 --z_signal both"
 done
 
 
@@ -86,9 +91,10 @@ done
 
 # loop over seeds
 for seed in 1 2 3 4 5 6 7 8 9 10; do
-  results_dir="${base_results_dir}cond_on_index_and_emb/seed_${seed}/"
+  results_dir="${base_results_dir}cond_on_index_and_emb/"
+  chkpt_prefix="vae_seed${seed}"
   # run the job
-  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'uncond' --z_cond True --z_dim 1024 --z_signal both"
+  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --chkpt_prefix $chkpt_prefix --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'uncond' --z_cond True --z_dim 1024 --z_signal both"
 done
 
 
@@ -97,9 +103,10 @@ done
 
 # loop over seeds
 for seed in 1 2 3 4 5 6 7 8 9 10; do
-  results_dir="${base_results_dir}cond_on_recons_and_path/seed_${seed}/"
+  results_dir="${base_results_dir}cond_on_recons_and_path/"
+  chkpt_prefix="vae_seed${seed}"
   # run the job
-  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'form1' --z_cond True --z_dim 1024 --z_signal path"
+  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --chkpt_prefix $chkpt_prefix --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'form1' --z_cond True --z_dim 1024 --z_signal path"
 done
 
 
@@ -108,7 +115,8 @@ done
 
 # loop over seeds
 for seed in 1 2 3 4 5 6 7 8 9 10; do
-  results_dir="${base_results_dir}cond_on_path/seed_${seed}/"
+  results_dir="${base_results_dir}cond_on_path/"
+  chkpt_prefix="vae_seed${seed}"
   # run the job
-  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'uncond' --z_cond True --z_dim 1024 --z_signal path"
+  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --chkpt_prefix $chkpt_prefix --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'uncond' --z_cond True --z_dim 1024 --z_signal path"
 done

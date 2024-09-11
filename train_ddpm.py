@@ -72,6 +72,7 @@ def train():
     parser.add_argument('--seed', type=int, help='random seed')
     parser.add_argument('--vae_chkpt_path', type=str, help='path to the pretrained TreeVAE model')
     parser.add_argument('--results_dir', type=str, help='path to the results directory')
+    parser.add_argument('--chkpt_prefix', type=str, help='prefix for the checkpoint file')
     
     # conditioning arguments
     parser.add_argument('--ddpm_type', type=str, help='type of DDPM to train')
@@ -90,6 +91,8 @@ def train():
         configs_ddpm['training']['vae_chkpt_path'] = args.vae_chkpt_path
     if args.results_dir is not None:
         configs_ddpm['training']['results_dir'] = args.results_dir
+    if args.chkpt_prefix is not None:
+        configs_ddpm['training']['chkpt_prefix'] = args.chkpt_prefix
     if args.ddpm_type is not None:
         configs_ddpm['training']['type'] = args.ddpm_type
     if args.z_cond is not None:
