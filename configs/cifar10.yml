@@ -109,7 +109,7 @@ ddpm:
     cfd_rate: 0.0         # Conditioning signal dropout rate as in Classifier-free guidance
 
     # General training parameters
-    batch_size: 256       # Batch size
+    batch_size: 128       # Batch size
     epochs: 1000          # Max number of epochs
     n_anneal_steps: 5000  # number of warmup steps
     loss: "l2"            # Diffusion loss type. Among ['l2', 'l1']

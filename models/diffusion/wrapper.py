@@ -231,6 +231,9 @@ class DDPMWrapper(pl.LightningModule):
         else:
             x = batch[0]
 
+        # Clear unused memory
+        torch.cuda.empty_cache()
+
         # Sample timepoints
         t = torch.randint(
             0, self.online_network.T, size=(x.size(0),), device=self.device
