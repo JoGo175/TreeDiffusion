@@ -37,6 +37,7 @@ from models.diffusion.ddpm_form2 import DDPMv2
 from utils.diffusion_utils import space_timesteps
 import pytorch_lightning as pl
 import numpy as np
+import gc
 
 
 class DDPMWrapper(pl.LightningModule):
@@ -198,8 +199,9 @@ class DDPMWrapper(pl.LightningModule):
                     else:               # sample one leaf given the leaf probs
                         ind = torch.multinomial(torch.stack(probs), 1).item()
                     max_z_sample.append(z_sample[ind])
-                    max_recon.append(recons[ind][i])
                     leaf_ind.append(ind)
+                    if self.conditional:
+                        max_recon.append(recons[ind][i])
 
                 # leaf index + latent embeddings as conditioning signal
                 if self.z_signal == "both":
@@ -232,6 +234,7 @@ class DDPMWrapper(pl.LightningModule):
             x = batch[0]
 
         # Clear unused memory
+        _ = gc.collect()
         torch.cuda.empty_cache()
 
         # Sample timepoints

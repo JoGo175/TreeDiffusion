@@ -649,7 +649,6 @@ class UNetModel(nn.Module):
                              + self.proj_cluster_id(zz[0].view(1)).view(1, -1) for zz in z_sample]))
                 z_proj = th.stack(z_proj).squeeze()
 
-
             assert z_proj.shape == emb.shape
             emb = emb + z_proj
 
