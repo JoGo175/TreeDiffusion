@@ -87,7 +87,7 @@ ddpm:
   # Training parameters for the DDPM part given TreeVAE model
   training:
     # paths
-    vae_chkpt_path: 'models/experiments/mnist/20240228-114539_b2acb'        # TreeVAE checkpoint path
+    vae_chkpt_path: 'models/experiments/mnist/20240906-142239_b81c6'        # TreeVAE checkpoint path
     results_dir: '/cluster/work/vogtlab/Group/jogoncalves/results/mnist/'   # Directory to store the DDPM checkpoint in
     chkpt_prefix: "vae"                                                     # prefix appended to the checkpoint name
     restore_path: ""                                                        # Checkpoint restore path

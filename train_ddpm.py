@@ -51,7 +51,7 @@ from utils.utils import reset_random_seeds, prepare_config
 
 ###############################################################################################################
 # SELECT THE DATASET
-dataset = "cifar10"       # mnist, fmnist, cifar10 is supported
+dataset = "celeba"       # mnist, fmnist, cifar10, celeba is supported
 ###############################################################################################################
 
 
