@@ -37,7 +37,7 @@ training:
   prune: True                                       # Whether to prune the tree after each grow steps
   num_clusters_tree: 10                             # Maximum number of effective clusters to grow the tree to
   dropout_router: 0.0                               # Dropout rate for the router networks
-  res_connections: True                            # Whether to use residual connections in the bottom-up and transformation networks
+  res_connections: False                            # Whether to use residual connections in the bottom-up and transformation networks
   dim_mod_conv: True                                # Whether to change dimensionality using Conv2d & ConvTranspose2d or Downsample & Upsample
 
   # Augmentation parameters for contrastive learning
@@ -87,7 +87,7 @@ ddpm:
   # Training parameters for the DDPM part given TreeVAE model
   training:
     # paths
-    vae_chkpt_path: 'models/experiments/mnist/20240228-114539_b2acb'        # TreeVAE checkpoint path
+    vae_chkpt_path: 'models/experiments/mnist/20240906-142239_b81c6'        # TreeVAE checkpoint path
     results_dir: '/cluster/work/vogtlab/Group/jogoncalves/results/mnist/'   # Directory to store the DDPM checkpoint in
     chkpt_prefix: "vae"                                                     # prefix appended to the checkpoint name
     restore_path: ""                                                        # Checkpoint restore path

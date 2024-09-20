@@ -38,7 +38,7 @@ training:
   prune: True                                       # Whether to prune the tree after each grow steps
   num_clusters_tree: 10                             # Maximum number of effective clusters to grow the tree to
   dropout_router: 0.0                               # Dropout rate for the router networks
-  res_connections: True                             # Whether to use residual connections in the bottom-up and transformation networks
+  res_connections: False                             # Whether to use residual connections in the bottom-up and transformation networks
   dim_mod_conv: True                                # Whether to change dimensionality using Conv2d & ConvTranspose2d or Downsample & Upsample
 
   # Augmentation parameters for contrastive learning
@@ -76,11 +76,11 @@ ddpm:
 
   # UNet specific params. Check the DDPM implementation for details on these
   model:
-    dim: 64                   # UNet base dimension
-    attn_resolutions: "16,"   # Attention resolutions for the UNet
+    dim: 128                  # UNet base dimension
+    attn_resolutions: "16,8" # Attention resolutions for the UNet
     n_residual: 2             # Number of residual blocks per level in UNet between the resolutions
-    dim_mults: "1,2,2,2"      # Multiplier for Nb of channels for each level in UNet
-    dropout: 0.3              # Dropout rate
+    dim_mults: "1,2,2,2, 4"    # Multiplier for Nb of channels for each level in UNet
+    dropout: 0.1              # Dropout rate
     n_heads: 8                # Number of attention heads
     beta1: 0.0001
     beta2: 0.02
@@ -89,7 +89,7 @@ ddpm:
   # Training parameters for the DDPM part given TreeVAE model
   training:
     # paths
-    vae_chkpt_path: 'models/experiments/celeba/20240205-073257_4e686'       # TreeVAE checkpoint path
+    vae_chkpt_path: 'models/experiments/celeba/20240918-032531_103db'       # TreeVAE checkpoint path
     results_dir: '/cluster/work/vogtlab/Group/jogoncalves/results/celeba/'  # Directory to store the DDPM checkpoint in
     chkpt_prefix: "vae"                                                     # prefix appended to the checkpoint name
     restore_path: ""                                                        # Checkpoint restore path
@@ -99,13 +99,14 @@ ddpm:
     use_ema: True       # Whether to use EMA (Improves sample quality)
     ema_decay: 0.9999   # EMA decay rate
     z_cond: True        # Whether to condition UNet on vae latent
-    z_dim: 1            # Dimensionality of the vae latent --> 1 for leaf index
+    z_dim: 1024         # Dimensionality of the vae latent --> 1 for leaf index
+    z_signal: 'both'    # Conditioning signal for the UNet. One of ['both', 'latent', 'cluster_id']
     type: 'form1'       # DiffuseVAE formulation type, One of ['form1', 'form2', 'uncond']. `uncond` is baseline DDPM
     cfd_rate: 0.0       # Conditioning signal dropout rate as in Classifier-free guidance
 
     # General training parameters
-    batch_size: 128       # Batch size
-    epochs: 1000          # Max number of epochs
+    batch_size: 32       # Batch size
+    epochs: 250          # Max number of epochs
     n_anneal_steps: 5000  # number of warmup steps
     loss: "l2"            # Diffusion loss type. Among ['l2', 'l1']
     optimizer: "Adam"     # Optimizer
