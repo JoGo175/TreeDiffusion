@@ -233,9 +233,15 @@ def compute_FID_scores(trainset, testset, model, device, configs):
         os.makedirs("FID/fid_stats_precomputed")
 
     # precompute or load fid scores for train and test
-    data_stats_train = get_precomputed_fid_scores_path(trainset.dataset.data, configs['data']['data_name'],
+    if configs['data']['data_name'] in ["mnist", "fmnist", "cifar10"]:
+        data_stats_train = get_precomputed_fid_scores_path(trainset.dataset.data, configs['data']['data_name'],
                                                        batch_size=50, subset="train", device=device)
-    data_stats_test = get_precomputed_fid_scores_path(testset.dataset.data, configs['data']['data_name'],
+        data_stats_test = get_precomputed_fid_scores_path(testset.dataset.data, configs['data']['data_name'],
+                                                      batch_size=50, subset="test", device=device)
+    elif configs['data']['data_name'] in ["celeba", "cubicc"]:
+        data_stats_train = get_precomputed_fid_scores_path(trainset.dataset.images, configs['data']['data_name'],
+                                                       batch_size=50, subset="train", device=device)
+        data_stats_test = get_precomputed_fid_scores_path(testset.dataset.images, configs['data']['data_name'],
                                                       batch_size=50, subset="test", device=device)
 
     # Generations FID -----------------------------------------------------------

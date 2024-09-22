@@ -371,7 +371,7 @@ def get_precomputed_fid_scores_path(dataset, data_name, subset, batch_size=50, d
     -- dims        : Dimensionality of activations returned by Inception
     """
 
-    assert data_name in ['mnist', 'fmnist', 'cifar10', 'celeba']
+    assert data_name in ['mnist', 'fmnist', 'cifar10', 'celeba', 'cubicc']
 
     # change data_name to match the name used in the precomputed stats for MNIST and FashionMNIST
     if data_name == 'mnist':

@@ -55,8 +55,8 @@ def main():
     parser.add_argument('--wandb_logging', type=str, help='online, disabled, offline enables logging in wandb')
 
     # Specify config name
-    parser.add_argument('--config_name', default='celeba', type=str,
-                        choices=['mnist', 'fmnist', 'news20', 'omniglot', 'cifar10', 'cifar100', 'celeba'],
+    parser.add_argument('--config_name', default='cubicc', type=str,
+                        choices=['mnist', 'fmnist', 'news20', 'omniglot', 'cifar10', 'cifar100', 'celeba', 'cubicc'],
                         help='the override file name for config.yml')
 
     args = parser.parse_args()

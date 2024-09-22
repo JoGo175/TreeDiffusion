@@ -5,6 +5,7 @@ import os
 import torch
 import torchvision
 import torchvision.transforms as T
+import torchvision.transforms.functional as F
 import numpy as np
 from torch.utils.data import TensorDataset, DataLoader, Subset, ConcatDataset
 from PIL import Image
@@ -191,7 +192,6 @@ def get_data(configs):
 		reset_random_seeds(configs['globals']['seed'])
 		aug_strength = 0.5
 
-
 		transform_eval = T.Compose([
 						T.ToTensor(),
 			])
@@ -280,6 +280,52 @@ def get_data(configs):
 		trainset.dataset.targets = torch.zeros(trainset.dataset.attr.shape[0], dtype=torch.int8)
 		trainset_eval.dataset.targets = torch.zeros(trainset.dataset.attr.shape[0], dtype=torch.int8)
 		testset.dataset.targets = torch.zeros(trainset.dataset.attr.shape[0], dtype=torch.int8)
+
+
+	elif data_name == 'cubicc':
+		reset_random_seeds(configs['globals']['seed'])
+		aug_strength = 0.5
+
+		# Define evaluation transformations
+		transform_eval = T.Compose([
+			T.ToTensor(),
+		])
+
+		# Apply augmentations similar to CIFAR-10
+		if augment is True:
+			aug_transforms = T.Compose([
+				T.RandomResizedCrop(64, interpolation=Image.BICUBIC, scale=(0.2, 1.0)),
+				T.RandomHorizontalFlip(),
+				T.RandomApply([T.ColorJitter(0.8 * aug_strength, 0.8 * aug_strength, 0.8 * aug_strength, 0.2 * aug_strength)], p=0.8),
+				T.RandomGrayscale(p=0.2),
+				T.ToTensor(),
+			])
+			# Use augmentation method
+			if augmentation_method == ['simple']:
+				transform = aug_transforms
+			else:
+				transform = ContrastiveTransformations(aug_transforms, n_views=2)
+		else:
+			transform = transform_eval
+
+		# Load the CUBICC dataset with the provided function
+		full_trainset = CUBICCDataset(datadir=os.path.join(data_path, 'CUBICC'), split='train', transform=transform)
+		full_trainset_eval = CUBICCDataset(datadir=os.path.join(data_path, 'CUBICC'), split='train', transform=transform_eval)
+		full_testset = CUBICCDataset(datadir=os.path.join(data_path, 'CUBICC'), split='test', transform=transform_eval)
+
+		# get indices for train and test set
+		indx_train = np.arange(len(full_trainset))
+		indx_test = np.arange(len(full_testset))
+
+		# create subset object for trainset, trainset_eval and testset
+		trainset = Subset(full_trainset, indx_train)
+		trainset_eval = Subset(full_trainset_eval, indx_train)
+		testset = Subset(full_testset, indx_test)
+
+		# Set the targets to label
+		trainset.dataset.targets = torch.tensor(trainset.dataset.labels)
+		trainset_eval.dataset.targets = torch.tensor(trainset_eval.dataset.labels)
+		testset.dataset.targets = torch.tensor(testset.dataset.labels)
 
 	else:
 		raise NotImplementedError('This dataset is not supported!')
@@ -421,3 +467,45 @@ class CIFAR100Coarse(torchvision.datasets.CIFAR100):
                         ['maple_tree', 'oak_tree', 'palm_tree', 'pine_tree', 'willow_tree'],
                         ['bicycle', 'bus', 'motorcycle', 'pickup_truck', 'train'],
                         ['lawn_mower', 'rocket', 'streetcar', 'tank', 'tractor']]
+
+
+
+class CUBICCDataset(torch.utils.data.Dataset):
+	def __init__(self, datadir, split='train', transform=None):
+		self.images = torch.load(os.path.join(datadir, 'images.pt'))
+		self.captions = torch.load(os.path.join(datadir, 'captions.pt'))
+		self.labels = torch.load(os.path.join(datadir, 'labels.pt'))
+		self.labels_traintest = torch.load(os.path.join(datadir, 'train_test_labelling.pt'))  # NOT USED NOR EXPOSED
+		self.labels_original = torch.load(os.path.join(datadir, 'original_labels.pt'))  # NOT USED NOR EXPOSED
+
+		# Define splits
+		self.train_split = np.load(os.path.join(datadir, 'train_split.npy'))
+		self.validation_split = np.load(os.path.join(datadir, 'validation_split.npy'))
+		self.test_split = np.load(os.path.join(datadir, 'test_split.npy'))
+
+		# Store the transformation
+		self.transform = transform
+
+		# Select the correct data split (train or test+validation)
+		if split == 'train':
+			self.indices = self.train_split
+		elif split == 'test':
+			self.indices = np.concatenate((self.test_split, self.validation_split))
+		else:
+			raise ValueError("Invalid split! Use 'train' or 'test'.")
+
+	def __getitem__(self, idx):
+		real_idx = self.indices[idx]
+		image, caption = self.images[real_idx], self.captions[real_idx]
+		label = self.labels[real_idx]
+
+		# Apply transformation if available
+		if self.transform:
+			# Convert Tensor back to PIL Image for transforms that need it
+			if isinstance(image, torch.Tensor):
+				image = F.to_pil_image(image)  # Convert Tensor to PIL Image for transformations
+			image = self.transform(image)
+		return image, label
+
+	def __len__(self):
+		return len(self.indices)
