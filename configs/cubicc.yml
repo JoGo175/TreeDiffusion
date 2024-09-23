@@ -87,7 +87,7 @@ ddpm:
   # Training parameters for the DDPM part given TreeVAE model
   training:
     # paths
-    vae_chkpt_path: 'models/experiments/cubicc/20240613-131959_c1a9f'      # TreeVAE checkpoint path,
+    vae_chkpt_path: 'models/experiments/cubicc/20240923-013355_8ddcc'      # TreeVAE checkpoint path,
     # 20240613-111829_7bc09 if cluster
     # 20240613-131959_c1a9f if local
     results_dir: '/Users/jorgegoncalves/Desktop/Repositories/Master_Thesis/results_latent_emb/cond_on_recons_and_index_and_emb_test'
@@ -110,7 +110,7 @@ ddpm:
 
     # General training parameters
     batch_size: 128       # Batch size
-    epochs: 1000          # Max number of epochs
+    epochs: 500          # Max number of epochs
     n_anneal_steps: 5000  # number of warmup steps
     loss: "l2"            # Diffusion loss type. Among ['l2', 'l1']
     optimizer: "Adam"     # Optimizer
