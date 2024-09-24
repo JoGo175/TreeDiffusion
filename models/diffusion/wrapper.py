@@ -295,6 +295,7 @@ class DDPMWrapper(pl.LightningModule):
         recons = None
         z = None
 
+        # -----------------------------------------------------------------------------------------------
         # if not conditional --> just a normal DDPM
         if not self.conditional and not self.z_cond:
             if self.guidance_weight != 0.0:
@@ -305,6 +306,7 @@ class DDPMWrapper(pl.LightningModule):
             if self.eval_mode == "sample":
                 x_t = torch.randn_like(batch[0])
 
+            # for DDPM, recons mode is the same as sample mode because we don't have any conditioning signal
             elif self.eval_mode == "recons":
                 img = batch[0]
                 # DDPM encoder
@@ -325,18 +327,11 @@ class DDPMWrapper(pl.LightningModule):
                 ddpm_latents=None,
             )
 
+        # -----------------------------------------------------------------------------------------------
+        # conditional --> use the reconstructions from the TreeVAE as conditioning signal
+
         # sample mode --> generate new samples, only uses one leaf
         if self.eval_mode == "sample":
-            # From DiffuseVAE:
-            # x_t, z = batch
-            # recons = self.vae(z)
-            # recons = 2 * recons - 1
-            # Initial temperature scaling
-            # x_t = x_t * self.temp
-            # Formulation-2 initial latent
-            # if isinstance(self.online_network, DDPMv2):
-            #     x_t = recons + self.temp * torch.randn_like(recons)
-
             # Sample from the TreeVAE
             # instead of using batch of pre-sampled noise as in DiffuseVAE,
             # we resample as many times as there are samples in the Test set to create new samples
@@ -353,12 +348,10 @@ class DDPMWrapper(pl.LightningModule):
             for i in range(len(nodes[0]['prob'])):
                 probs = [node['prob'][i] for node in nodes]
                 z_sample = [node['z_sample'][i] for node in nodes]
-
                 if self.max_leaf:
                     ind = probs.index(max(probs))
                 else:
                     ind = torch.multinomial(torch.stack(probs), 1).item()
-
                 max_z_sample.append(z_sample[ind])
                 max_recon.append(reconstructions[ind][i])
                 leaf_ind.append(ind)
