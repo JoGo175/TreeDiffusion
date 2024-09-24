@@ -18,7 +18,7 @@ from utils.utils import reset_random_seeds, prepare_config
 
 ###############################################################################################################
 # SELECT THE DATASET
-dataset = "cifar10"       # mnist, fmnist, cifar10, celeba is supported
+dataset = "cifar10"       # mnist, fmnist, cifar10, celeba, cubicc is supported
 ###############################################################################################################
 
 
@@ -34,7 +34,7 @@ def train():
     # Get config and setup
     parser = argparse.ArgumentParser()
     parser.add_argument('--config_name', default=f'{dataset}', type=str,
-                        choices=['mnist', 'fmnist', 'news20', 'omniglot', 'cifar10', 'cifar100', 'celeba'],
+                        choices=['mnist', 'fmnist', 'news20', 'omniglot', 'cifar10', 'cifar100', 'celeba', 'cubicc'],
                         help='the override file name for config.yml')
     parser.add_argument('--seed', type=int, help='random seed')
     parser.add_argument('--vae_chkpt_path', type=str, help='path to the pretrained TreeVAE model')
