@@ -77,7 +77,7 @@ ddpm:
     dim: 128                  # UNet base dimension for channels
     attn_resolutions: "16, 8"   # Attention resolutions for the UNet
     n_residual: 2             # Number of residual blocks per level in UNet between the resolutions
-    dim_mults: "1,2,2,2"      # Multiplier for Nb of channels for each level in UNet
+    dim_mults: "1,2,2,2,4"      # Multiplier for Nb of channels for each level in UNet
     dropout: 0.1              # Dropout rate
     n_heads: 8                # Number of attention heads
     beta1: 0.0001
@@ -109,7 +109,7 @@ ddpm:
     cfd_rate: 0.0         # Conditioning signal dropout rate as in Classifier-free guidance
 
     # General training parameters
-    batch_size: 128       # Batch size
+    batch_size: 32       # Batch size
     epochs: 500          # Max number of epochs
     n_anneal_steps: 5000  # number of warmup steps
     loss: "l2"            # Diffusion loss type. Among ['l2', 'l1']
