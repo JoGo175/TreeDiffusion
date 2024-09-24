@@ -550,7 +550,11 @@ class TreeVAE(nn.Module):
             encoders.append(d)
 
         # create a list of nodes of the tree that need to be processed
-        list_nodes = [{'node': self.tree, 'depth': 0, 'prob': torch.ones(x.size(0), device=device), 'z_parent_sample': None}]
+        list_nodes = [{'node': self.tree, 'depth': 0, 'prob': torch.ones(x.size(0), device=device), 'z_parent_sample': None, 'id': 0, 'parent': None}]
+        # list of nodes to be outputted, should include 'node_id', 'depth', 'prob', 'z_sample', 'parent_id'
+        node_info_return = []
+        id_ind = 0
+        leaf_ind = 0
 
         # initialize KL losses
         leaves_prob = []
@@ -578,6 +582,14 @@ class TreeVAE(nn.Module):
             z = td.Independent(td.Normal(z_mu_q, torch.sqrt(z_sigma_q + epsilon)), 3)
             z_sample = z.rsample()
 
+            # store the node information for output
+            leaf_info = None
+            if node.router is None and node.decoder is not None:
+                leaf_info = leaf_ind
+                leaf_ind += 1
+            node_info_return.append({'node_id': current_node['id'], 'depth': depth_level, 'prob': prob,
+                                     'z_sample': z_sample, 'parent_id': current_node['parent'], 'leaf_id': leaf_info})
+
             # if we are in the internal nodes (not leaves)
             if node.router is not None:
 
@@ -587,10 +599,12 @@ class TreeVAE(nn.Module):
                 prob_node_left, prob_node_right = prob * prob_child_left_q, prob * (1 - prob_child_left_q)
 
                 node_left, node_right = node.left, node.right
-                list_nodes.append(
-                    {'node': node_left, 'depth': depth_level + 1, 'prob': prob_node_left, 'z_parent_sample': z_sample})
+                id_ind += 1
+                list_nodes.append({'node': node_left, 'depth': depth_level + 1, 'prob': prob_node_left,
+                                   'z_parent_sample': z_sample, 'id': id_ind, 'parent': current_node['id']})
+                id_ind += 1
                 list_nodes.append({'node': node_right, 'depth': depth_level + 1, 'prob': prob_node_right,
-                                'z_parent_sample': z_sample})
+                                   'z_parent_sample': z_sample, 'id': id_ind, 'parent': current_node['id']})
 
             elif node.decoder is not None:
                 # if we are in a leaf we need to store the prob of reaching that leaf and compute reconstructions
@@ -604,10 +618,11 @@ class TreeVAE(nn.Module):
                 # We are in an internal node with pruned leaves and thus only have one child
                 node_left, node_right = node.left, node.right
                 child = node_left if node_left is not None else node_right
-                list_nodes.append(
-                    {'node': child, 'depth': depth_level + 1, 'prob': prob, 'z_parent_sample': z_sample})
+                id_ind += 1
+                list_nodes.append({'node': child, 'depth': depth_level + 1, 'prob': prob, 'z_parent_sample': z_sample,
+                                   'id': id_ind, 'parent': current_node['id']})
 
-        return reconstructions, node_leaves
+        return reconstructions, node_leaves, node_info_return
 
     def generate_images(self, n_samples, device):
         """
@@ -784,6 +799,7 @@ class TreeVAE(nn.Module):
             node_info = {'prob': prob, 'z_sample': z_sample}
             node_info_list.append(node_info)
 
+
             if node.router is not None:
                 prob_child_left_q = node.routers_q(d).squeeze()
 
@@ -832,6 +848,7 @@ class TreeVAE(nn.Module):
         res = self.compute_reconstruction(x)
         recons = res[0]
         nodes = res[1]
+
 
         # initialize cond and z
         cond = None
@@ -899,10 +916,13 @@ class TreeVAE(nn.Module):
         sizes = self.latent_channels
         rep_dim = self.representation_dim
         list_nodes = [
-            {'node': self.tree, 'depth': 0, 'prob': torch.ones(n_samples, device=device), 'z_parent_sample': None}]
+            {'node': self.tree, 'depth': 0, 'prob': torch.ones(n_samples, device=device), 'z_parent_sample': None, 'id': 0, 'parent': None}]
         leaves_prob = []
         reconstructions = []
         node_leaves = []
+        node_info_return = []
+        id_ind = 0
+        leaf_ind = 0
 
         # iterates over all nodes in the tree
         while len(list_nodes) != 0:
@@ -921,15 +941,26 @@ class TreeVAE(nn.Module):
                 z_p = td.Independent(td.Normal(z_mu_p, torch.sqrt(z_sigma_p + epsilon)), 3)
                 z_sample = z_p.rsample()
 
+            # store the node information for output
+            leaf_info = None
+            if node.router is None and node.decoder is not None:
+                leaf_info = leaf_ind
+                leaf_ind += 1
+            node_info_return.append({'node_id': current_node['id'], 'depth': depth_level, 'prob': prob,
+                                     'z_sample': z_sample, 'parent_id': current_node['parent'],
+                                     'leaf_id': leaf_info})
+
             if node.router is not None:
                 prob_child_left = node.router(z_sample).squeeze()
                 prob_node_left, prob_node_right = prob * prob_child_left, prob * (
                         1 - prob_child_left)
                 node_left, node_right = node.left, node.right
-                list_nodes.append(
-                    {'node': node_left, 'depth': depth_level + 1, 'prob': prob_node_left, 'z_parent_sample': z_sample})
+                id_ind += 1
+                list_nodes.append({'node': node_left, 'depth': depth_level + 1, 'prob': prob_node_left,
+                                   'z_parent_sample': z_sample, 'id': id_ind, 'parent': current_node['id']})
+                id_ind += 1
                 list_nodes.append({'node': node_right, 'depth': depth_level + 1, 'prob': prob_node_right,
-                                   'z_parent_sample': z_sample})
+                                   'z_parent_sample': z_sample, 'id': id_ind, 'parent': current_node['id']})
 
             elif node.decoder is not None:
                 # here we are in a leaf node and we attach the corresponding generations
@@ -942,11 +973,12 @@ class TreeVAE(nn.Module):
                 # We are in an internal node with pruned leaves and thus only have one child
                 node_left, node_right = node.left, node.right
                 child = node_left if node_left is not None else node_right
-                list_nodes.append(
-                    {'node': child, 'depth': depth_level + 1, 'prob': prob, 'z_parent_sample': z_sample})
+                id_ind += 1
+                list_nodes.append({'node': child, 'depth': depth_level + 1, 'prob': prob, 'z_parent_sample': z_sample,
+                                   'id': id_ind, 'parent': current_node['id']})
 
         p_c_z = torch.cat([prob.unsqueeze(-1) for prob in leaves_prob], dim=-1)
 
-        return reconstructions, node_leaves, p_c_z
+        return reconstructions, node_leaves, p_c_z, node_info_return
 
 
