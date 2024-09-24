@@ -29,16 +29,16 @@ base_results_dir='/cluster/work/vogtlab/Group/jogoncalves/results_ICLR/cifar10/'
 # Fully unconditional
 # type = “uncond”, z_cond = False, z_dim = None, z_signal = None
 
-ddpm_path_1="${base_results_dir}fully_uncond/checkpoints/ddpmv2-vae_seed1-epoch=999-loss=0.0128"
-ddpm_path_2="${base_results_dir}fully_uncond/checkpoints/ddpmv2-vae_seed2-epoch=999-loss=0.0193"
-ddpm_path_3="${base_results_dir}fully_uncond/checkpoints/ddpmv2-vae_seed3-epoch=999-loss=0.0196"
-ddpm_path_4="${base_results_dir}fully_uncond/checkpoints/ddpmv2-vae_seed4-epoch=999-loss=0.0138"
-ddpm_path_5="${base_results_dir}fully_uncond/checkpoints/ddpmv2-vae_seed5-epoch=999-loss=0.0127"
-ddpm_path_6="${base_results_dir}fully_uncond/checkpoints/ddpmv2-vae_seed6-epoch=999-loss=0.0184"
-ddpm_path_7="${base_results_dir}fully_uncond/checkpoints/ddpmv2-vae_seed7-epoch=999-loss=0.0174"
-ddpm_path_8="${base_results_dir}fully_uncond/checkpoints/ddpmv2-vae_seed8-epoch=999-loss=0.0168"
-ddpm_path_9="${base_results_dir}fully_uncond/checkpoints/ddpmv2-vae_seed9-epoch=999-loss=0.0150"
-ddpm_path_10="${base_results_dir}fully_uncond/checkpoints/ddpmv2-vae_seed10-epoch=999-loss=0.0137"
+ddpm_path_1="${base_results_dir}fully_uncond/checkpoints/ddpmv2-vae_seed1-epoch=999-loss=0.0128.ckpt"
+ddpm_path_2="${base_results_dir}fully_uncond/checkpoints/ddpmv2-vae_seed2-epoch=999-loss=0.0193.ckpt"
+ddpm_path_3="${base_results_dir}fully_uncond/checkpoints/ddpmv2-vae_seed3-epoch=999-loss=0.0196.ckpt"
+ddpm_path_4="${base_results_dir}fully_uncond/checkpoints/ddpmv2-vae_seed4-epoch=999-loss=0.0138.ckpt"
+ddpm_path_5="${base_results_dir}fully_uncond/checkpoints/ddpmv2-vae_seed5-epoch=999-loss=0.0127.ckpt"
+ddpm_path_6="${base_results_dir}fully_uncond/checkpoints/ddpmv2-vae_seed6-epoch=999-loss=0.0184.ckpt"
+ddpm_path_7="${base_results_dir}fully_uncond/checkpoints/ddpmv2-vae_seed7-epoch=999-loss=0.0174.ckpt"
+ddpm_path_8="${base_results_dir}fully_uncond/checkpoints/ddpmv2-vae_seed8-epoch=999-loss=0.0168.ckpt"
+ddpm_path_9="${base_results_dir}fully_uncond/checkpoints/ddpmv2-vae_seed9-epoch=999-loss=0.0150.ckpt"
+ddpm_path_10="${base_results_dir}fully_uncond/checkpoints/ddpmv2-vae_seed10-epoch=999-loss=0.0137.ckpt"
 ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3 $ddpm_path_4 $ddpm_path_5 $ddpm_path_6 $ddpm_path_7 $ddpm_path_8 $ddpm_path_9 $ddpm_path_10)
 
 # loop over seeds and vae_chkpt_path
@@ -57,16 +57,16 @@ done
 # Conditioning on Leaf Reconstructions
 # type = “form1”, z_cond = False, z_dim = None, z_signal = None
 
-ddpm_path_1="${base_results_dir}cond_on_recons/checkpoints/ddpmv2-vae_seed1-epoch=999-loss=0.0119"
-ddpm_path_2="${base_results_dir}cond_on_recons/checkpoints/ddpmv2-vae_seed2-epoch=999-loss=0.0138"
-ddpm_path_3="${base_results_dir}cond_on_recons/checkpoints/ddpmv2-vae_seed3-epoch=999-loss=0.0121"
-ddpm_path_4="${base_results_dir}cond_on_recons/checkpoints/ddpmv2-vae_seed4-epoch=999-loss=0.0140"
-ddpm_path_5="${base_results_dir}cond_on_recons/checkpoints/ddpmv2-vae_seed5-epoch=999-loss=0.0174"
-ddpm_path_6="${base_results_dir}cond_on_recons/checkpoints/ddpmv2-vae_seed6-epoch=999-loss=0.0150"
-ddpm_path_7="${base_results_dir}cond_on_recons/checkpoints/ddpmv2-vae_seed7-epoch=999-loss=0.0110"
-ddpm_path_8="${base_results_dir}cond_on_recons/checkpoints/ddpmv2-vae_seed8-epoch=999-loss=0.0123"
-ddpm_path_9="${base_results_dir}cond_on_recons/checkpoints/ddpmv2-vae_seed9-epoch=999-loss=0.0116"
-ddpm_path_10="${base_results_dir}cond_on_recons/checkpoints/ddpmv2-vae_seed10-epoch=999-loss=0.0132"
+ddpm_path_1="${base_results_dir}cond_on_recons/checkpoints/ddpmv2-vae_seed1-epoch=999-loss=0.0119.ckpt"
+ddpm_path_2="${base_results_dir}cond_on_recons/checkpoints/ddpmv2-vae_seed2-epoch=999-loss=0.0138.ckpt"
+ddpm_path_3="${base_results_dir}cond_on_recons/checkpoints/ddpmv2-vae_seed3-epoch=999-loss=0.0121.ckpt"
+ddpm_path_4="${base_results_dir}cond_on_recons/checkpoints/ddpmv2-vae_seed4-epoch=999-loss=0.0140.ckpt"
+ddpm_path_5="${base_results_dir}cond_on_recons/checkpoints/ddpmv2-vae_seed5-epoch=999-loss=0.0174.ckpt"
+ddpm_path_6="${base_results_dir}cond_on_recons/checkpoints/ddpmv2-vae_seed6-epoch=999-loss=0.0150.ckpt"
+ddpm_path_7="${base_results_dir}cond_on_recons/checkpoints/ddpmv2-vae_seed7-epoch=999-loss=0.0110.ckpt"
+ddpm_path_8="${base_results_dir}cond_on_recons/checkpoints/ddpmv2-vae_seed8-epoch=999-loss=0.0123.ckpt"
+ddpm_path_9="${base_results_dir}cond_on_recons/checkpoints/ddpmv2-vae_seed9-epoch=999-loss=0.0116.ckpt"
+ddpm_path_10="${base_results_dir}cond_on_recons/checkpoints/ddpmv2-vae_seed10-epoch=999-loss=0.0132.ckpt"
 ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3 $ddpm_path_4 $ddpm_path_5 $ddpm_path_6 $ddpm_path_7 $ddpm_path_8 $ddpm_path_9 $ddpm_path_10)
 
 # loop over seeds and vae_chkpt_path
@@ -85,16 +85,16 @@ done
 # Conditioning on Leaf Reconstructions + Leaf Index
 # type = “form1”, z_cond = True, z_dim = 1, z_signal = “cluster_id”
 
-ddpm_path_1="${base_results_dir}cond_on_recons_and_index/checkpoints/ddpmv2-vae_seed1-epoch=999-loss=0.0117"
-ddpm_path_2="${base_results_dir}cond_on_recons_and_index/checkpoints/ddpmv2-vae_seed2-epoch=999-loss=0.0136"
-ddpm_path_3="${base_results_dir}cond_on_recons_and_index/checkpoints/ddpmv2-vae_seed3-epoch=999-loss=0.0121"
-ddpm_path_4="${base_results_dir}cond_on_recons_and_index/checkpoints/ddpmv2-vae_seed4-epoch=999-loss=0.0079"
-ddpm_path_5="${base_results_dir}cond_on_recons_and_index/checkpoints/ddpmv2-vae_seed5-epoch=999-loss=0.0172"
-ddpm_path_6="${base_results_dir}cond_on_recons_and_index/checkpoints/ddpmv2-vae_seed6-epoch=999-loss=0.0137"
-ddpm_path_7="${base_results_dir}cond_on_recons_and_index/checkpoints/ddpmv2-vae_seed7-epoch=999-loss=0.0118"
-ddpm_path_8="${base_results_dir}cond_on_recons_and_index/checkpoints/ddpmv2-vae_seed8-epoch=999-loss=0.0165"
-ddpm_path_9="${base_results_dir}cond_on_recons_and_index/checkpoints/ddpmv2-vae_seed9-epoch=999-loss=0.0090"
-ddpm_path_10="${base_results_dir}cond_on_recons_and_index/checkpoints/ddpmv2-vae_seed10-epoch=999-loss=0.0081"
+ddpm_path_1="${base_results_dir}cond_on_recons_and_index/checkpoints/ddpmv2-vae_seed1-epoch=999-loss=0.0117.ckpt"
+ddpm_path_2="${base_results_dir}cond_on_recons_and_index/checkpoints/ddpmv2-vae_seed2-epoch=999-loss=0.0136.ckpt"
+ddpm_path_3="${base_results_dir}cond_on_recons_and_index/checkpoints/ddpmv2-vae_seed3-epoch=999-loss=0.0121.ckpt"
+ddpm_path_4="${base_results_dir}cond_on_recons_and_index/checkpoints/ddpmv2-vae_seed4-epoch=999-loss=0.0079.ckpt"
+ddpm_path_5="${base_results_dir}cond_on_recons_and_index/checkpoints/ddpmv2-vae_seed5-epoch=999-loss=0.0172.ckpt"
+ddpm_path_6="${base_results_dir}cond_on_recons_and_index/checkpoints/ddpmv2-vae_seed6-epoch=999-loss=0.0137.ckpt"
+ddpm_path_7="${base_results_dir}cond_on_recons_and_index/checkpoints/ddpmv2-vae_seed7-epoch=999-loss=0.0118.ckpt"
+ddpm_path_8="${base_results_dir}cond_on_recons_and_index/checkpoints/ddpmv2-vae_seed8-epoch=999-loss=0.0165.ckpt"
+ddpm_path_9="${base_results_dir}cond_on_recons_and_index/checkpoints/ddpmv2-vae_seed9-epoch=999-loss=0.0090.ckpt"
+ddpm_path_10="${base_results_dir}cond_on_recons_and_index/checkpoints/ddpmv2-vae_seed10-epoch=999-loss=0.0081.ckpt"
 ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3 $ddpm_path_4 $ddpm_path_5 $ddpm_path_6 $ddpm_path_7 $ddpm_path_8 $ddpm_path_9 $ddpm_path_10)
 
 # loop over seeds and vae_chkpt_path
@@ -113,16 +113,16 @@ done
 # Conditioning on Leaf Reconstructions + Leaf Embeddings
 # type = “form1”, z_cond = True, z_dim = 1024, z_signal = “latent”
 
-ddpm_path_1="${base_results_dir}cond_on_recons_and_emb/checkpoints/ddpmv2-vae_seed1-epoch=999-loss=0.0117"
-ddpm_path_2="${base_results_dir}cond_on_recons_and_emb/checkpoints/ddpmv2-vae_seed2-epoch=999-loss=0.0136"
-ddpm_path_3="${base_results_dir}cond_on_recons_and_emb/checkpoints/ddpmv2-vae_seed3-epoch=999-loss=0.0121"
-ddpm_path_4="${base_results_dir}cond_on_recons_and_emb/checkpoints/ddpmv2-vae_seed4-epoch=999-loss=0.0079"
-ddpm_path_5="${base_results_dir}cond_on_recons_and_emb/checkpoints/ddpmv2-vae_seed5-epoch=999-loss=0.0172"
-ddpm_path_6="${base_results_dir}cond_on_recons_and_emb/checkpoints/ddpmv2-vae_seed6-epoch=999-loss=0.0137"
-ddpm_path_7="${base_results_dir}cond_on_recons_and_emb/checkpoints/ddpmv2-vae_seed7-epoch=999-loss=0.0118"
-ddpm_path_8="${base_results_dir}cond_on_recons_and_emb/checkpoints/ddpmv2-vae_seed8-epoch=999-loss=0.0165"
-ddpm_path_9="${base_results_dir}cond_on_recons_and_emb/checkpoints/ddpmv2-vae_seed9-epoch=999-loss=0.0090"
-ddpm_path_10="${base_results_dir}cond_on_recons_and_emb/checkpoints/ddpmv2-vae_seed10-epoch=999-loss=0.0081"
+ddpm_path_1="${base_results_dir}cond_on_recons_and_emb/checkpoints/ddpmv2-vae_seed1-epoch=999-loss=0.0130.ckpt"
+ddpm_path_2="${base_results_dir}cond_on_recons_and_emb/checkpoints/ddpmv2-vae_seed2-epoch=999-loss=0.0194.ckpt"
+ddpm_path_3="${base_results_dir}cond_on_recons_and_emb/checkpoints/ddpmv2-vae_seed3-epoch=999-loss=0.0093.ckpt"
+ddpm_path_4="${base_results_dir}cond_on_recons_and_emb/checkpoints/ddpmv2-vae_seed4-epoch=999-loss=0.0183.ckpt"
+ddpm_path_5="${base_results_dir}cond_on_recons_and_emb/checkpoints/ddpmv2-vae_seed5-epoch=999-loss=0.0202.ckpt"
+ddpm_path_6="${base_results_dir}cond_on_recons_and_emb/checkpoints/ddpmv2-vae_seed6-epoch=999-loss=0.0104.ckpt"
+ddpm_path_7="${base_results_dir}cond_on_recons_and_emb/checkpoints/ddpmv2-vae_seed7-epoch=999-loss=0.0139.ckpt"
+ddpm_path_8="${base_results_dir}cond_on_recons_and_emb/checkpoints/ddpmv2-vae_seed8-epoch=999-loss=0.0112.ckpt"
+ddpm_path_9="${base_results_dir}cond_on_recons_and_emb/checkpoints/ddpmv2-vae_seed9-epoch=999-loss=0.0089.ckpt"
+ddpm_path_10="${base_results_dir}cond_on_recons_and_emb/checkpoints/ddpmv2-vae_seed10-epoch=999-loss=0.0082.ckpt"
 ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3 $ddpm_path_4 $ddpm_path_5 $ddpm_path_6 $ddpm_path_7 $ddpm_path_8 $ddpm_path_9 $ddpm_path_10)
 
 # loop over seeds and vae_chkpt_path
@@ -142,16 +142,16 @@ done
 # Conditioning on Leaf Reconstructions + Leaf Index + Leaf Embeddings
 # type = “form1”, z_cond = True, z_dim = 1024, z_signal = “both”
 
-ddpm_path_1="${base_results_dir}cond_on_recons_and_index_and_emb/checkpoints/ddpmv2-vae_seed1-epoch=999-loss=0.0128"
-ddpm_path_2="${base_results_dir}cond_on_recons_and_index_and_emb/checkpoints/ddpmv2-vae_seed2-epoch=999-loss=0.0139"
-ddpm_path_3="${base_results_dir}cond_on_recons_and_index_and_emb/checkpoints/ddpmv2-vae_seed3-epoch=999-loss=0.0094"
-ddpm_path_4="${base_results_dir}cond_on_recons_and_index_and_emb/checkpoints/ddpmv2-vae_seed4-epoch=999-loss=0.0079"
-ddpm_path_5="${base_results_dir}cond_on_recons_and_index_and_emb/checkpoints/ddpmv2-vae_seed5-epoch=999-loss=0.0152"
-ddpm_path_6="${base_results_dir}cond_on_recons_and_index_and_emb/checkpoints/ddpmv2-vae_seed6-epoch=999-loss=0.0135"
-ddpm_path_7="${base_results_dir}cond_on_recons_and_index_and_emb/checkpoints/ddpmv2-vae_seed7-epoch=999-loss=0.0106"
-ddpm_path_8="${base_results_dir}cond_on_recons_and_index_and_emb/checkpoints/ddpmv2-vae_seed8-epoch=999-loss=0.0069"
-ddpm_path_9="${base_results_dir}cond_on_recons_and_index_and_emb/checkpoints/ddpmv2-vae_seed9-epoch=999-loss=0.0095"
-ddpm_path_10="${base_results_dir}cond_on_recons_and_index_and_emb/checkpoints/ddpmv2-vae_seed10-epoch=999-loss=0.0103"
+ddpm_path_1="${base_results_dir}cond_on_recons_and_index_and_emb/checkpoints/ddpmv2-vae_seed1-epoch=999-loss=0.0128.ckpt"
+ddpm_path_2="${base_results_dir}cond_on_recons_and_index_and_emb/checkpoints/ddpmv2-vae_seed2-epoch=999-loss=0.0139.ckpt"
+ddpm_path_3="${base_results_dir}cond_on_recons_and_index_and_emb/checkpoints/ddpmv2-vae_seed3-epoch=999-loss=0.0094.ckpt"
+ddpm_path_4="${base_results_dir}cond_on_recons_and_index_and_emb/checkpoints/ddpmv2-vae_seed4-epoch=999-loss=0.0079.ckpt"
+ddpm_path_5="${base_results_dir}cond_on_recons_and_index_and_emb/checkpoints/ddpmv2-vae_seed5-epoch=999-loss=0.0152.ckpt"
+ddpm_path_6="${base_results_dir}cond_on_recons_and_index_and_emb/checkpoints/ddpmv2-vae_seed6-epoch=999-loss=0.0135.ckpt"
+ddpm_path_7="${base_results_dir}cond_on_recons_and_index_and_emb/checkpoints/ddpmv2-vae_seed7-epoch=999-loss=0.0106.ckpt"
+ddpm_path_8="${base_results_dir}cond_on_recons_and_index_and_emb/checkpoints/ddpmv2-vae_seed8-epoch=999-loss=0.0069.ckpt"
+ddpm_path_9="${base_results_dir}cond_on_recons_and_index_and_emb/checkpoints/ddpmv2-vae_seed9-epoch=999-loss=0.0095.ckpt"
+ddpm_path_10="${base_results_dir}cond_on_recons_and_index_and_emb/checkpoints/ddpmv2-vae_seed10-epoch=999-loss=0.0103.ckpt"
 ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3 $ddpm_path_4 $ddpm_path_5 $ddpm_path_6 $ddpm_path_7 $ddpm_path_8 $ddpm_path_9 $ddpm_path_10)
 
 # loop over seeds and vae_chkpt_path
@@ -169,16 +169,16 @@ done
 # Conditioning on Leaf Index + Leaf Embeddings
 # type = “uncond”, z_cond = True, z_dim = 1024, z_signal = “both”
 
-ddpm_path_1="${base_results_dir}cond_on_index_and_emb/checkpoints/ddpmv2-vae_seed1-epoch=999-loss=0.0118"
-ddpm_path_2="${base_results_dir}cond_on_index_and_emb/checkpoints/ddpmv2-vae_seed2-epoch=999-loss=0.0140"
-ddpm_path_3="${base_results_dir}cond_on_index_and_emb/checkpoints/ddpmv2-vae_seed3-epoch=999-loss=0.0139"
-ddpm_path_4="${base_results_dir}cond_on_index_and_emb/checkpoints/ddpmv2-vae_seed4-epoch=999-loss=0.0079"
-ddpm_path_5="${base_results_dir}cond_on_index_and_emb/checkpoints/ddpmv2-vae_seed5-epoch=999-loss=0.0195"
-ddpm_path_6="${base_results_dir}cond_on_index_and_emb/checkpoints/ddpmv2-vae_seed6-epoch=999-loss=0.0138"
-ddpm_path_7="${base_results_dir}cond_on_index_and_emb/checkpoints/ddpmv2-vae_seed7-epoch=999-loss=0.0108"
-ddpm_path_8="${base_results_dir}cond_on_index_and_emb/checkpoints/ddpmv2-vae_seed8-epoch=999-loss=0.0165"
-ddpm_path_9="${base_results_dir}cond_on_index_and_emb/checkpoints/ddpmv2-vae_seed9-epoch=999-loss=0.0095"
-ddpm_path_10="${base_results_dir}cond_on_index_and_emb/checkpoints/ddpmv2-vae_seed10-epoch=999-loss=0.0132"
+ddpm_path_1="${base_results_dir}cond_on_index_and_emb/checkpoints/ddpmv2-vae_seed1-epoch=999-loss=0.0118.ckpt"
+ddpm_path_2="${base_results_dir}cond_on_index_and_emb/checkpoints/ddpmv2-vae_seed2-epoch=999-loss=0.0140.ckpt"
+ddpm_path_3="${base_results_dir}cond_on_index_and_emb/checkpoints/ddpmv2-vae_seed3-epoch=999-loss=0.0139.ckpt"
+ddpm_path_4="${base_results_dir}cond_on_index_and_emb/checkpoints/ddpmv2-vae_seed4-epoch=999-loss=0.0079.ckpt"
+ddpm_path_5="${base_results_dir}cond_on_index_and_emb/checkpoints/ddpmv2-vae_seed5-epoch=999-loss=0.0195.ckpt"
+ddpm_path_6="${base_results_dir}cond_on_index_and_emb/checkpoints/ddpmv2-vae_seed6-epoch=999-loss=0.0138.ckpt"
+ddpm_path_7="${base_results_dir}cond_on_index_and_emb/checkpoints/ddpmv2-vae_seed7-epoch=999-loss=0.0108.ckpt"
+ddpm_path_8="${base_results_dir}cond_on_index_and_emb/checkpoints/ddpmv2-vae_seed8-epoch=999-loss=0.0165.ckpt"
+ddpm_path_9="${base_results_dir}cond_on_index_and_emb/checkpoints/ddpmv2-vae_seed9-epoch=999-loss=0.0095.ckpt"
+ddpm_path_10="${base_results_dir}cond_on_index_and_emb/checkpoints/ddpmv2-vae_seed10-epoch=999-loss=0.0132.ckpt"
 ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3 $ddpm_path_4 $ddpm_path_5 $ddpm_path_6 $ddpm_path_7 $ddpm_path_8 $ddpm_path_9 $ddpm_path_10)
 
 # loop over seeds and vae_chkpt_path
@@ -196,46 +196,52 @@ done
 # Conditioning on Leaf Reconstructions + Path
 # type = ?form1?, z_cond = True, z_dim = 1024, z_signal = ?path?
 
-ddpm_path_1="${base_results_dir}cond_on_recons_and_path/checkpoints/ddpmv2-vae_seed1-epoch=999-loss=0.0144"
-ddpm_path_2="${base_results_dir}cond_on_recons_and_path/checkpoints/ddpmv2-vae_seed2-epoch=999-loss=0.0140"
-ddpm_path_3="${base_results_dir}cond_on_recons_and_path/checkpoints/ddpmv2-vae_seed3-epoch=999-loss=0.0140"
-ddpm_path_4="${base_results_dir}cond_on_recons_and_path/checkpoints/ddpmv2-vae_seed4-epoch=999-loss=0.0082"
-ddpm_path_5="${base_results_dir}cond_on_recons_and_path/checkpoints/ddpmv2-vae_seed5-epoch=999-loss=0.0198"
-ddpm_path_6="${base_results_dir}cond_on_recons_and_path/checkpoints/ddpmv2-vae_seed6-epoch=999-loss=0.0139"
-ddpm_path_7="${base_results_dir}cond_on_recons_and_path/checkpoints/ddpmv2-vae_seed7-epoch=986-loss=0.0133"
-ddpm_path_8="${base_results_dir}cond_on_recons_and_path/checkpoints/ddpmv2-vae_seed8-epoch=999-loss=0.0166"
-ddpm_path_9="${base_results_dir}cond_on_recons_and_path/checkpoints/ddpmv2-vae_seed9-epoch=999-loss=0.0097"
-ddpm_path_10="${base_results_dir}cond_on_recons_and_path/checkpoints/ddpmv2-vae_seed10-epoch=999-loss=0.0132"
+ddpm_path_1="${base_results_dir}cond_on_recons_and_path/checkpoints/ddpmv2-vae_seed1-epoch=999-loss=0.0144.ckpt"
+ddpm_path_2="${base_results_dir}cond_on_recons_and_path/checkpoints/ddpmv2-vae_seed2-epoch=999-loss=0.0140.ckpt"
+ddpm_path_3="${base_results_dir}cond_on_recons_and_path/checkpoints/ddpmv2-vae_seed3-epoch=999-loss=0.0140.ckpt"
+ddpm_path_4="${base_results_dir}cond_on_recons_and_path/checkpoints/ddpmv2-vae_seed4-epoch=999-loss=0.0082.ckpt"
+ddpm_path_5="${base_results_dir}cond_on_recons_and_path/checkpoints/ddpmv2-vae_seed5-epoch=999-loss=0.0198.ckpt"
+ddpm_path_6="${base_results_dir}cond_on_recons_and_path/checkpoints/ddpmv2-vae_seed6-epoch=999-loss=0.0139.ckpt"
+ddpm_path_7="${base_results_dir}cond_on_recons_and_path/checkpoints/ddpmv2-vae_seed7-epoch=986-loss=0.0133.ckpt"
+ddpm_path_8="${base_results_dir}cond_on_recons_and_path/checkpoints/ddpmv2-vae_seed8-epoch=999-loss=0.0166.ckpt"
+ddpm_path_9="${base_results_dir}cond_on_recons_and_path/checkpoints/ddpmv2-vae_seed9-epoch=999-loss=0.0097.ckpt"
+ddpm_path_10="${base_results_dir}cond_on_recons_and_path/checkpoints/ddpmv2-vae_seed10-epoch=999-loss=0.0132.ckpt"
 ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3 $ddpm_path_4 $ddpm_path_5 $ddpm_path_6 $ddpm_path_7 $ddpm_path_8 $ddpm_path_9 $ddpm_path_10)
 
 # loop over seeds
 for seed in 1 2 3 4 5 6 7 8 9 10; do
   results_dir="${base_results_dir}cond_on_recons_and_path/seed_${seed}/"
-  # run the job
-  sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=1 -o $O_DIR \
-    --wrap="python test_ddpm.py --config_name $dataset --vae_chkpt_path ${vae_path_list[$seed-1]} --chkpt_path ${ddpm_path_list[$seed-1]} --results_dir $results_dir --save_path $results_dir --seed $seed --eval_mode $eval_mode --ddpm_type 'form1' --z_cond True --z_dim 1024 --z_signal path"
+  # loop over eval_mode = ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
+  for eval_mode in 'sample' 'recons'; do
+    # run the job
+    sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=1 -o $O_DIR \
+      --wrap="python test_ddpm.py --config_name $dataset --vae_chkpt_path ${vae_path_list[$seed-1]} --chkpt_path ${ddpm_path_list[$seed-1]} --results_dir $results_dir --save_path $results_dir --seed $seed --eval_mode $eval_mode --ddpm_type 'form1' --z_cond True --z_dim 1024 --z_signal path"
+  done
 done
 
 
 # Conditioning on Path
 # type = ?uncond?, z_cond = True, z_dim = 1024, z_signal = ?path?
 
-ddpm_path_1="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed1-epoch=999-loss=0.0146"
-ddpm_path_2="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed2-epoch=999-loss=0.0142"
-ddpm_path_3="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed3-epoch=999-loss=0.0143"
-ddpm_path_4="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed4-epoch=999-loss=0.0083"
-ddpm_path_5="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed5-epoch=994-loss=0.0160"
-ddpm_path_6="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed6-epoch=999-loss=0.0142"
-ddpm_path_7="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed7-epoch=999-loss=0.0113"
-ddpm_path_8="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed8-epoch=999-loss=0.0168"
-ddpm_path_9="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed9-epoch=999-loss=0.0094"
-ddpm_path_10="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed10-epoch=999-loss=0.0135"
+ddpm_path_1="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed1-epoch=999-loss=0.0146.ckpt"
+ddpm_path_2="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed2-epoch=999-loss=0.0142.ckpt"
+ddpm_path_3="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed3-epoch=999-loss=0.0143.ckpt"
+ddpm_path_4="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed4-epoch=999-loss=0.0083.ckpt"
+ddpm_path_5="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed5-epoch=994-loss=0.0160.ckpt"
+ddpm_path_6="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed6-epoch=999-loss=0.0142.ckpt"
+ddpm_path_7="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed7-epoch=999-loss=0.0113.ckpt"
+ddpm_path_8="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed8-epoch=999-loss=0.0168.ckpt"
+ddpm_path_9="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed9-epoch=999-loss=0.0094.ckpt"
+ddpm_path_10="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed10-epoch=999-loss=0.0135.ckpt"
 ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3 $ddpm_path_4 $ddpm_path_5 $ddpm_path_6 $ddpm_path_7 $ddpm_path_8 $ddpm_path_9 $ddpm_path_10)
 
 # loop over seeds
 for seed in 1 2 3 4 5 6 7 8 9 10; do
   results_dir="${base_results_dir}cond_on_path/seed_${seed}/"
-  # run the job
-  sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=1 -o $O_DIR \
-    --wrap="python test_ddpm.py --config_name $dataset --vae_chkpt_path ${vae_path_list[$seed-1]} --chkpt_path ${ddpm_path_list[$seed-1]} --results_dir $results_dir --save_path $results_dir --seed $seed --eval_mode $eval_mode --ddpm_type 'uncond' --z_cond True --z_dim 1024 --z_signal path"
+  # loop over eval_mode = ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
+  for eval_mode in 'sample' 'recons'; do
+    # run the job
+    sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=1 -o $O_DIR \
+      --wrap="python test_ddpm.py --config_name $dataset --vae_chkpt_path ${vae_path_list[$seed-1]} --chkpt_path ${ddpm_path_list[$seed-1]} --results_dir $results_dir --save_path $results_dir --seed $seed --eval_mode $eval_mode --ddpm_type 'uncond' --z_cond True --z_dim 1024 --z_signal path"
+  done
 done
