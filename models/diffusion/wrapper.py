@@ -292,7 +292,7 @@ class DDPMWrapper(pl.LightningModule):
         self.vae.eval()
 
         # conditioning signal and latent z from TreeVAE, cond corresponds to the reconstructions
-        recons = None
+        cond = None
         z = None
 
         # -----------------------------------------------------------------------------------------------
@@ -337,53 +337,16 @@ class DDPMWrapper(pl.LightningModule):
             # we resample as many times as there are samples in the Test set to create new samples
             n_samples = batch[0].size(0)
             # Compute the reconstructions and the leaf embeddings from the TreeVAE
-            reconstructions, nodes, _ = self.vae.generate_images_and_embeddings(n_samples, batch[0].device)
+            recons, nodes, _, node_info = self.vae.generate_images_and_embeddings(n_samples, batch[0].device)
+            cond, z = self.compute_reconstructions_and_leaf_embeddings(recons, nodes, node_info, self.max_leaf,
+                                                                       self.z_signal, self.conditional, batch[0].device)
 
-            # Save the chosen reconstructions and the respective leaf indices
-            max_z_sample = []
-            max_recon = []
-            leaf_ind = []
+            # Sample DDPM latent noise
+            x_t = torch.randn_like(batch[0])
 
-            # Iterate over the leaf nodes and select the leaf with the highest probability or sample given the leaf probs
-            for i in range(len(nodes[0]['prob'])):
-                probs = [node['prob'][i] for node in nodes]
-                z_sample = [node['z_sample'][i] for node in nodes]
-                if self.max_leaf:
-                    ind = probs.index(max(probs))
-                else:
-                    ind = torch.multinomial(torch.stack(probs), 1).item()
-                max_z_sample.append(z_sample[ind])
-                max_recon.append(reconstructions[ind][i])
-                leaf_ind.append(ind)
-
-            # leaf index + latent embeddings as conditioning signal
-            if self.z_signal == "both":
-                z1 = torch.stack(max_z_sample)
-                z2 = torch.tensor(leaf_ind, dtype=torch.float).unsqueeze(1).to(batch[0].device)
-                z = [z1, z2]
-
-            # latent embeddings as conditioning signal
-            elif self.z_signal == "latent":
-                z = torch.stack(max_z_sample)
-
-            # leaf index as conditioning signal instead of latent embeddings, z should be (batch, 1)
-            elif self.z_signal == "cluster_id":
-                z = torch.tensor(leaf_ind, dtype=torch.float).unsqueeze(1).to(batch[0].device)
-
-            # recons is the conditioning signal
-            recons = torch.stack(max_recon)
-
-            # DDPM encoder
-            x_t = self.online_network.compute_noisy_input(
-                recons,
-                torch.randn_like(recons),
-                torch.tensor(
-                    [self.online_network.T - 1] * recons.size(0), device=recons.device
-                ),
-            )
             # second formulation for conditioning the forward process, see DiffuseVAE paper
             if isinstance(self.online_network, DDPMv2):
-                x_t += recons
+                x_t += cond
 
         # sample all leaves mode --> generate new samples for each leaf node
         elif self.eval_mode == "sample_all_leaves":
@@ -391,7 +354,7 @@ class DDPMWrapper(pl.LightningModule):
             # instead of using batch of pre-sampled noise as in DiffuseVAE,
             # we resample as many times as there are samples in the Test set to create new samples
             n_samples = batch[0].size(0)
-            reconstructions, nodes, p_c_z = self.vae.generate_images_and_embeddings(n_samples, batch[0].device)
+            reconstructions, nodes, p_c_z, node_info = self.vae.generate_images_and_embeddings(n_samples, batch[0].device)
 
             # store all refined reconstructions
             out_all_leaves = []
@@ -457,9 +420,13 @@ class DDPMWrapper(pl.LightningModule):
 
         # recons mode --> refine the data reconstructions from the TreeVAE
         elif self.eval_mode == "recons":
-            # Compute the reconstructions and the leaf embeddings from the TreeVAE
+
             img = batch[0]
-            recons, z = self.vae.forward_recons(img, self.max_leaf, self.z_signal)
+
+            # Compute the reconstructions and the leaf embeddings from the TreeVAE
+            recons, nodes, node_info = self.vae.compute_reconstruction(img)
+            cond, z = self.compute_reconstructions_and_leaf_embeddings(recons, nodes, node_info, self.max_leaf,
+                                                                       self.z_signal, self.conditional, img.device)
 
             # DDPM encoder
             x_t = self.online_network.compute_noisy_input(
@@ -471,7 +438,7 @@ class DDPMWrapper(pl.LightningModule):
             )
             # second formulation for conditioning the forward process, see DiffuseVAE paper
             if isinstance(self.online_network, DDPMv2):
-                x_t += recons
+                x_t += cond
 
         # recons all leaves mode --> refine the data reconstructions from the TreeVAE for each leaf node
         elif self.eval_mode == "recons_all_leaves":
@@ -544,22 +511,88 @@ class DDPMWrapper(pl.LightningModule):
         # For eval_mode in ["sample", "recons"]:
         # Given the reconstructions and the conditioning signal from the TreeVAE,
         # we use the DDPM to refine the reconstructions or the new generated samples
-
-        if not self.conditional:
-            recons = None
-
         out = (
             self(
                 x_t,
-                cond=recons,
+                cond=cond,
                 z=z if self.z_cond else None,
                 n_steps=self.pred_steps,
                 checkpoints=self.pred_checkpoints,
                 ddpm_latents=self.ddpm_latents,
             ),
-            recons,
+            cond,
         )
         return out
+
+    import torch
+
+    def compute_reconstructions_and_leaf_embeddings(self, recons, nodes, node_info, max_leaf=False, z_signal="both",
+                                                    conditional=False, device='cpu'):
+        """
+        Function to compute reconstructions and leaf embeddings from the TreeVAE model.
+
+        Args:
+            recons (Tensor): Tensor containing the reconstructions from the TreeVAE.
+            nodes (list of dicts): List containing information for the leaf nodes, including probabilities and latent embeddings.
+            node_info (dict): Information about ALL the nodes
+            max_leaf (bool): Flag indicating whether to select the leaf with the maximum probability. Default is False.
+            z_signal (str): Determines the conditioning signal to use. Options are "latent", "both", "cluster_id", or "path". Default is "both".
+            conditional (bool): Flag indicating if the model is conditional. Default is False.
+            device (str): The device (e.g., 'cpu' or 'cuda') on which to perform the calculations. Default is 'cpu'.
+
+        Returns:
+            z (Tensor or list): The latent embeddings and/or leaf indices used as conditioning signal.
+            recons (Tensor): The selected reconstructions based on leaf embeddings.
+            leaf_ind (list): The list of leaf indices chosen for the batch.
+        """
+
+        # Initialize cond and z
+        z = None
+
+        # Save the chosen leaf_embeddings, reconstructions, and the respective leaf indices
+        max_z_sample = []
+        max_recon = []
+        leaf_ind = []
+
+        # Iterate over the leaf nodes and select the leaf with the highest probability or sample given the leaf probs
+        for i in range(len(nodes[0]['prob'])):
+            probs = [node['prob'][i] for node in nodes]
+            z_sample = [node['z_sample'][i] for node in nodes]
+
+            if max_leaf:
+                # Select the leaf with the highest probability
+                ind = probs.index(max(probs))
+            else:
+                # Sample one leaf given the leaf probabilities
+                ind = torch.multinomial(torch.stack(probs), 1).item()
+
+            max_z_sample.append(z_sample[ind])
+            max_recon.append(recons[ind][i])
+            leaf_ind.append(ind)
+
+        # Select the appropriate conditioning signal
+        if z_signal == "both": # leaf index + latent embeddings
+            z1 = torch.stack(max_z_sample)
+            z2 = torch.tensor(leaf_ind, dtype=torch.float).unsqueeze(1).to(device)
+            z = [z1, z2]
+
+        elif z_signal == "latent": # latent embeddings
+            z = torch.stack(max_z_sample)
+
+        elif z_signal == "cluster_id": # leaf index
+            z = torch.tensor(leaf_ind, dtype=torch.float).unsqueeze(1).to(device)
+
+        elif z_signal == "path": # full path
+            z = self.get_path_info(node_info, leaf_ind)
+
+        # Select the final reconstructions if we condition on them too
+        if conditional:
+            cond = torch.stack(max_recon)
+        else:
+            cond = None
+
+        return cond, z
+
 
     def configure_optimizers(self):
         # Define the optimizer
