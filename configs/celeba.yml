@@ -106,7 +106,7 @@ ddpm:
 
     # General training parameters
     batch_size: 32       # Batch size
-    epochs: 250          # Max number of epochs
+    epochs: 200          # Max number of epochs
     n_anneal_steps: 5000  # number of warmup steps
     loss: "l2"            # Diffusion loss type. Among ['l2', 'l1']
     optimizer: "Adam"     # Optimizer
@@ -122,11 +122,6 @@ ddpm:
     save_mode: 'image'                    # Whether to save samples as .png or .npy. One of ['image', 'numpy']
     sample_prefix: ""                     # Prefix used in naming when saving samples to disk
     eval_mode: 'sample_all_leaves'        # Evaluation mode. One of ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
-
-    # Model-specific evaluation parameters
-    z_cond: True          # Whether to condition UNet on vae latent
-    z_dim: 1              # Dimensionality of the vae latent --> 1 for leaf index
-    type: 'form1'         # DiffuseVAE type. One of ['form1', 'form2', 'uncond']. `uncond` is baseline DDPM
     guidance_weight: 0.0  # Guidance weight during sampling if using Classifier free guidance
 
     # General evaluation parameters for sampling
