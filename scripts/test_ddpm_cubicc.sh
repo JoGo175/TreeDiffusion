@@ -42,7 +42,7 @@ ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3 $ddpm_path_4 $ddpm_path_5
 
 # loop over seeds
 for seed in 1 2 3 4 5 6 7 8 9 10; do
-  results_dir="${base_results_dir}cond_on_path/seed_${seed}/"
+  results_dir="${base_results_dir}cond_on_path/ddim/seed_${seed}/"
   # loop over eval_mode = ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
   for eval_mode in 'sample' 'recons'; do
     # run the job
