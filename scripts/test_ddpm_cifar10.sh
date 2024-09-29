@@ -43,7 +43,7 @@ ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3 $ddpm_path_4 $ddpm_path_5
 
 # loop over seeds and vae_chkpt_path
 for seed in 1 2 3 4 5 6 7 8 9 10; do
-  results_dir="${base_results_dir}fully_uncond/seed_${seed}/"
+  results_dir="${base_results_dir}fully_uncond/ddim_unif_100s/seed_${seed}/"
   # loop over eval_mode = ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
   for eval_mode in 'sample' 'recons'; do
     # run the job
@@ -71,7 +71,7 @@ ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3 $ddpm_path_4 $ddpm_path_5
 
 # loop over seeds and vae_chkpt_path
 for seed in 1 2 3 4 5 6 7 8 9 10; do
-  results_dir="${base_results_dir}cond_on_recons/seed_${seed}/"
+  results_dir="${base_results_dir}cond_on_recons/ddim_unif_100s/seed_${seed}/"
   # loop over eval_mode = ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
   for eval_mode in 'sample' 'recons'; do
     # run the job
@@ -99,7 +99,7 @@ ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3 $ddpm_path_4 $ddpm_path_5
 
 # loop over seeds and vae_chkpt_path
 for seed in 1 2 3 4 5 6 7 8 9 10; do
-  results_dir="${base_results_dir}cond_on_recons_and_index/seed_${seed}/"
+  results_dir="${base_results_dir}cond_on_recons_and_index/ddim_unif_100s/seed_${seed}/"
   # loop over eval_mode = ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
   for eval_mode in 'sample' 'recons'; do
     # run the job
@@ -127,7 +127,7 @@ ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3 $ddpm_path_4 $ddpm_path_5
 
 # loop over seeds and vae_chkpt_path
 for seed in 1 2 3 4 5 6 7 8 9 10; do
-  results_dir="${base_results_dir}cond_on_recons_and_emb/seed_${seed}/"
+  results_dir="${base_results_dir}cond_on_recons_and_emb/ddim_unif_100s/seed_${seed}/"
   # loop over eval_mode = ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
   for eval_mode in 'sample' 'recons'; do
     # run the job
@@ -156,7 +156,7 @@ ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3 $ddpm_path_4 $ddpm_path_5
 
 # loop over seeds and vae_chkpt_path
 for seed in 1 2 3 4 5 6 7 8 9 10; do
-  results_dir="${base_results_dir}cond_on_recons_and_index_and_emb/seed_${seed}/"
+  results_dir="${base_results_dir}cond_on_recons_and_index_and_emb/ddim_unif_100s/seed_${seed}/"
   # loop over eval_mode = ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
   for eval_mode in 'sample' 'recons'; do
     # run the job
@@ -183,7 +183,7 @@ ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3 $ddpm_path_4 $ddpm_path_5
 
 # loop over seeds and vae_chkpt_path
 for seed in 1 2 3 4 5 6 7 8 9 10; do
-  results_dir="${base_results_dir}cond_on_index_and_emb/seed_${seed}/"
+  results_dir="${base_results_dir}cond_on_index_and_emb/ddim_unif_100s/seed_${seed}/"
   # loop over eval_mode = ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
   for eval_mode in 'sample' 'recons'; do
     # run the job
@@ -210,7 +210,7 @@ ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3 $ddpm_path_4 $ddpm_path_5
 
 # loop over seeds
 for seed in 1 2 3 4 5 6 7 8 9 10; do
-  results_dir="${base_results_dir}cond_on_recons_and_path/seed_${seed}/"
+  results_dir="${base_results_dir}cond_on_recons_and_path/ddim_unif_100s/seed_${seed}/"
   # loop over eval_mode = ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
   for eval_mode in 'sample' 'recons'; do
     # run the job
@@ -237,7 +237,7 @@ ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3 $ddpm_path_4 $ddpm_path_5
 
 # loop over seeds
 for seed in 1 2 3 4 5 6 7 8 9 10; do
-  results_dir="${base_results_dir}cond_on_path/seed_${seed}/"
+  results_dir="${base_results_dir}cond_on_path/ddim_unif_100s/seed_${seed}/"
   # loop over eval_mode = ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
   for eval_mode in 'sample' 'recons'; do
     # run the job

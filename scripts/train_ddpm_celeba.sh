@@ -26,96 +26,96 @@ path_list=($path_1 $path_2 $path_3 $path_4 $path_5 $path_6 $path_7 $path_8 $path
 # directory to save the results
 base_results_dir='/cluster/work/vogtlab/Group/jogoncalves/results_ICLR/celeba/'
 
-# Fully unconditional
-# type = “uncond”, z_cond = False, z_dim = None, z_signal = None
-
-# loop over seeds
-for seed in 1; do
-  results_dir="${base_results_dir}fully_uncond/"
-  chkpt_prefix="vae_seed${seed}"
-  # run the job
-  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:rtx4090:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --chkpt_prefix $chkpt_prefix --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'uncond' --z_cond False"
-done
-
-
-
-# Conditioning on Leaf Reconstructions
-# type = “form1”, z_cond = False, z_dim = None, z_signal = None
-
-# loop over seeds
-for seed in 1; do
-  results_dir="${base_results_dir}cond_on_recons/"
-  chkpt_prefix="vae_seed${seed}"
-  # run the job
-  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:rtx4090:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --chkpt_prefix $chkpt_prefix --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'form1' --z_cond False"
-done
-
-
-# Conditioning on Leaf Reconstructions + Leaf Index
-# type = “form1”, z_cond = True, z_dim = 1, z_signal = “cluster_id”
-
-# loop over seeds
-for seed in 1; do
-  results_dir="${base_results_dir}cond_on_recons_and_index/"
-  chkpt_prefix="vae_seed${seed}"
-  # run the job
-  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:rtx4090:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --chkpt_prefix $chkpt_prefix --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'form1' --z_cond True --z_dim 1 --z_signal cluster_id"
-done
-
-
-# Conditioning on Leaf Reconstructions + Leaf Embeddings
-# type = “form1”, z_cond = True, z_dim = 1024, z_signal = “latent”
-
-# loop over seeds
-for seed in 1; do
-  results_dir="${base_results_dir}cond_on_recons_and_emb/"
-  chkpt_prefix="vae_seed${seed}"
-  # run the job
-  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:rtx4090:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --chkpt_prefix $chkpt_prefix --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'form1' --z_cond True --z_dim 1024 --z_signal latent"
-done
-
-
-# Conditioning on Leaf Reconstructions + Leaf Index + Leaf Embeddings
-# type = “form1”, z_cond = True, z_dim = 1024, z_signal = “both”
-
-# loop over seeds
-for seed in 1; do
-  results_dir="${base_results_dir}cond_on_recons_and_index_and_emb/"
-  chkpt_prefix="vae_seed${seed}"
-  # run the job
-  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:rtx4090:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --chkpt_prefix $chkpt_prefix --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'form1' --z_cond True --z_dim 1024 --z_signal both"
-done
-
-
-# Conditioning on Leaf Index + Leaf Embeddings
-# type = “uncond”, z_cond = True, z_dim = 1024, z_signal = “both”
-
-# loop over seeds
-for seed in 1; do
-  results_dir="${base_results_dir}cond_on_index_and_emb/"
-  chkpt_prefix="vae_seed${seed}"
-  # run the job
-  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:rtx4090:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --chkpt_prefix $chkpt_prefix --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'uncond' --z_cond True --z_dim 1024 --z_signal both"
-done
-
-
-# Conditioning on Leaf Reconstructions + Path
-# type = “form1”, z_cond = True, z_dim = 1024, z_signal = “path”
-
-# loop over seeds
-for seed in 1; do
-  results_dir="${base_results_dir}cond_on_recons_and_path/"
-  chkpt_prefix="vae_seed${seed}"
-  # run the job
-  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:rtx4090:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --chkpt_prefix $chkpt_prefix --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'form1' --z_cond True --z_dim 1024 --z_signal path"
-done
+## Fully unconditional
+## type = “uncond”, z_cond = False, z_dim = None, z_signal = None
+#
+## loop over seeds
+#for seed in 1; do
+#  results_dir="${base_results_dir}fully_uncond/"
+#  chkpt_prefix="vae_seed${seed}"
+#  # run the job
+#  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:rtx4090:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --chkpt_prefix $chkpt_prefix --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'uncond' --z_cond False"
+#done
+#
+#
+#
+## Conditioning on Leaf Reconstructions
+## type = “form1”, z_cond = False, z_dim = None, z_signal = None
+#
+## loop over seeds
+#for seed in 1; do
+#  results_dir="${base_results_dir}cond_on_recons/"
+#  chkpt_prefix="vae_seed${seed}"
+#  # run the job
+#  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:rtx4090:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --chkpt_prefix $chkpt_prefix --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'form1' --z_cond False"
+#done
+#
+#
+## Conditioning on Leaf Reconstructions + Leaf Index
+## type = “form1”, z_cond = True, z_dim = 1, z_signal = “cluster_id”
+#
+## loop over seeds
+#for seed in 1; do
+#  results_dir="${base_results_dir}cond_on_recons_and_index/"
+#  chkpt_prefix="vae_seed${seed}"
+#  # run the job
+#  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:rtx4090:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --chkpt_prefix $chkpt_prefix --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'form1' --z_cond True --z_dim 1 --z_signal cluster_id"
+#done
+#
+#
+## Conditioning on Leaf Reconstructions + Leaf Embeddings
+## type = “form1”, z_cond = True, z_dim = 1024, z_signal = “latent”
+#
+## loop over seeds
+#for seed in 1; do
+#  results_dir="${base_results_dir}cond_on_recons_and_emb/"
+#  chkpt_prefix="vae_seed${seed}"
+#  # run the job
+#  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:rtx4090:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --chkpt_prefix $chkpt_prefix --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'form1' --z_cond True --z_dim 1024 --z_signal latent"
+#done
+#
+#
+## Conditioning on Leaf Reconstructions + Leaf Index + Leaf Embeddings
+## type = “form1”, z_cond = True, z_dim = 1024, z_signal = “both”
+#
+## loop over seeds
+#for seed in 1; do
+#  results_dir="${base_results_dir}cond_on_recons_and_index_and_emb/"
+#  chkpt_prefix="vae_seed${seed}"
+#  # run the job
+#  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:rtx4090:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --chkpt_prefix $chkpt_prefix --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'form1' --z_cond True --z_dim 1024 --z_signal both"
+#done
+#
+#
+## Conditioning on Leaf Index + Leaf Embeddings
+## type = “uncond”, z_cond = True, z_dim = 1024, z_signal = “both”
+#
+## loop over seeds
+#for seed in 1; do
+#  results_dir="${base_results_dir}cond_on_index_and_emb/"
+#  chkpt_prefix="vae_seed${seed}"
+#  # run the job
+#  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:rtx4090:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --chkpt_prefix $chkpt_prefix --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'uncond' --z_cond True --z_dim 1024 --z_signal both"
+#done
+#
+#
+## Conditioning on Leaf Reconstructions + Path
+## type = “form1”, z_cond = True, z_dim = 1024, z_signal = “path”
+#
+## loop over seeds
+#for seed in 1; do
+#  results_dir="${base_results_dir}cond_on_recons_and_path/"
+#  chkpt_prefix="vae_seed${seed}"
+#  # run the job
+#  sbatch --time=168:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:rtx4090:1 -A vogtlab --tmp=20G --cpus-per-task=2 -o $O_DIR --wrap="python train_ddpm.py --config_name $dataset --chkpt_prefix $chkpt_prefix --vae_chkpt_path ${path_list[$seed-1]} --results_dir $results_dir --seed $seed --ddpm_type 'form1' --z_cond True --z_dim 1024 --z_signal path"
+#done
 
 
 # Conditioning on Path
 # type = “uncond”, z_cond = True, z_dim = 1024, z_signal = “path”
 
 # loop over seeds
-for seed in 1; do
+for seed in 1 2 3 4 5 6 7 8 9 10; do
   results_dir="${base_results_dir}cond_on_path/"
   chkpt_prefix="vae_seed${seed}"
   # run the job

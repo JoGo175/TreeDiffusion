@@ -106,7 +106,7 @@ ddpm:
 
     # General training parameters
     batch_size: 32       # Batch size
-    epochs: 250          # Max number of epochs
+    epochs: 200          # Max number of epochs
     n_anneal_steps: 5000  # number of warmup steps
     loss: "l2"            # Diffusion loss type. Among ['l2', 'l1']
     optimizer: "Adam"     # Optimizer
