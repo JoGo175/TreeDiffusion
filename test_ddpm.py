@@ -18,7 +18,7 @@ from utils.utils import reset_random_seeds, prepare_config
 
 ###############################################################################################################
 # SELECT THE DATASET
-dataset = "cifar10"       # mnist, fmnist, cifar10, celeba, cubicc is supported
+dataset = "cubicc"       # mnist, fmnist, cifar10, celeba, cubicc is supported
 ###############################################################################################################
 
 
@@ -133,7 +133,7 @@ def train():
         ema_decoder,
         beta_1=configs_ddpm["model"]["beta1"],
         beta_2=configs_ddpm["model"]["beta2"],
-        T=configs_ddpm["model"]["n_timesteps"],
+        T=configs_ddpm["model"]["n_timesteps"],y
         var_type=configs_ddpm["evaluation"]["variance"],
     )
 
