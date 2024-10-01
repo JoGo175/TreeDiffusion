@@ -20,7 +20,7 @@ path_8='models/experiments/fmnist/20240906-152742_bc919'
 path_9='models/experiments/fmnist/20240906-153548_b01b6'
 path_10='models/experiments/fmnist/20240906-153655_e8a5c'
 # create the list of vae_chkpt_path strings
-path_list=($path_1 $path_2 $path_3 $path_4 $path_5 $path_6 $path_7 $path_8 $path_9 $path_10)
+vae_path_list=($path_1 $path_2 $path_3 $path_4 $path_5 $path_6 $path_7 $path_8 $path_9 $path_10)
 
 # directory to save the results
 base_results_dir='/cluster/work/vogtlab/Group/jogoncalves/results_ICLR/fmnist/'
