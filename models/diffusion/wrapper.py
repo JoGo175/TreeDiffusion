@@ -390,6 +390,9 @@ class DDPMWrapper(pl.LightningModule):
                 elif self.z_signal == "cluster_id":
                     z = torch.tensor([l]*n_samples, dtype=torch.float).unsqueeze(1).to(batch[0].device)
 
+                elif self.z_signal == "path":  # full path
+                    z = self.get_path_info(node_info, [l]*n_samples)
+
                 # DDPM encoder
                 x_t_l = self.online_network.compute_noisy_input(
                     recons_leaf_l,
@@ -415,7 +418,7 @@ class DDPMWrapper(pl.LightningModule):
                     ddpm_latents=self.ddpm_latents,
                 )
                 # save the samples for each leaf
-                out_all_leaves.append(out[str(self.online_network.T)])
+                out_all_leaves.append(next(iter(out.values())))
             return out_all_leaves, (reconstructions, p_c_z)
 
         # recons mode --> refine the data reconstructions from the TreeVAE
@@ -444,7 +447,7 @@ class DDPMWrapper(pl.LightningModule):
         elif self.eval_mode == "recons_all_leaves":
             # Compute the reconstructions and the leaf embeddings from the TreeVAE
             img = batch[0]
-            recons = self.vae.compute_reconstruction(img)
+            recons, nodes, node_info = self.vae.compute_reconstruction(img)
 
             # store all refined reconstructions
             out_all_leaves = []
@@ -480,6 +483,9 @@ class DDPMWrapper(pl.LightningModule):
                 elif self.z_signal == "cluster_id":
                     z = torch.tensor([l]*img.size(0), dtype=torch.float).unsqueeze(1).to(img.device)
 
+                elif self.z_signal == "path":  # full path
+                    z = self.get_path_info(node_info, [l]*img.size(0))
+
                 # DDPM encoder
                 x_t_l = self.online_network.compute_noisy_input(
                     img,
@@ -505,7 +511,7 @@ class DDPMWrapper(pl.LightningModule):
                     ddpm_latents=self.ddpm_latents,
                 )
                 # save the samples for each leaf
-                out_all_leaves.append(out[str(self.online_network.T)])
+                out_all_leaves.append(next(iter(out.values())))
             return out_all_leaves, recons
 
         # For eval_mode in ["sample", "recons"]:
