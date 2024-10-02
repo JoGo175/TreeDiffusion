@@ -18,11 +18,11 @@ from utils.utils import reset_random_seeds, prepare_config
 from FID.fid_score import calculate_fid, get_precomputed_fid_scores_path, save_fid_stats_as_dict
 from utils.training_utils import compute_leaves, validate_one_epoch, Custom_Metrics, predict, move_to
 import gc
-import tqdm
+from tqdm import tqdm
 
 ###############################################################################################################
 # SELECT THE DATASET
-dataset = "cubicc"       # mnist, fmnist, cifar10, celeba, cubicc is supported
+dataset = "celeba"       # mnist, fmnist, cifar10, celeba, cubicc is supported
 ###############################################################################################################
 
 
@@ -83,25 +83,26 @@ def train():
 
     # Dataset
     trainset, trainset_eval, testset = get_data(configs_ddpm)
+    gen_tain_eval = get_gen(trainset, configs_ddpm, validation=True, shuffle=False)
     gen_test = get_gen(testset, configs_ddpm, validation=True, shuffle=False)
 
     # setup device, mps is for M1 or M2 macs
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # device = "mps"
 
-    base_path = '/cluster/work/vogtlab/Group/jogoncalves/treevae/'
+    base_path = './'
 
-    path_1 = 'models/experiments/cubicc/20240923-013355_8ddcc'
-    path_2 = 'models/experiments/cubicc/20240923-013355_276bd'
-    path_3 = 'models/experiments/cubicc/20240923-013355_2538a'
-    path_4 = 'models/experiments/cubicc/20240923-013355_6236b'
-    path_5 = 'models/experiments/cubicc/20240923-013355_fc06f'
-    path_6 = 'models/experiments/cubicc/20240923-013355_434df'
-    path_7 = 'models/experiments/cubicc/20240923-013355_61ff6'
-    path_8 = 'models/experiments/cubicc/20240923-013355_ac769'
-    path_9 = 'models/experiments/cubicc/20240923-013340_34724'
-    path_10 = 'models/experiments/cubicc/20240923-013340_0e296'
-    vae_path_list = [path_1, path_2, path_3, path_4, path_5, path_6, path_7, path_8, path_9, path_10]
+    path_1 = 'models/experiments/celeba/20240918-032531_103db'
+    path_2 = 'models/experiments/celeba/20240918-032554_0d008'
+    path_3 = 'models/experiments/celeba/20240918-032615_143b9'
+    path_4 = 'models/experiments/celeba/20240918-032635_0206c'
+    path_5 = 'models/experiments/celeba/20240918-032751_46c3e'
+    path_6 = 'models/experiments/celeba/20240918-032749_c73e9'
+    path_7 = 'models/experiments/celeba/20240918-032937_80cf8'
+    path_8 = 'models/experiments/celeba/20240918-032915_b4bde'
+    path_9 = 'models/experiments/celeba/20240918-033153_8f6e7'
+    path_10 = 'models/experiments/celeba/20240918-033153_3d955'
+    vae_path_list = [path_8, path_9, path_10]
 
     # lists to store FID scores for each seed
     train_FID_generations_vae = []
@@ -118,7 +119,9 @@ def train():
         model = construct_tree_fromnpy(model, data_tree, configs)
 
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        model.load_state_dict(torch.load(checkpoint_path + '/model_weights.pt', map_location=device), strict=False)
+        device = "mps"
+
+        model.load_state_dict(torch.load(checkpoint_path + '/model_weights.pt', map_location=device), strict=True)
         model.to(device)
         model.eval()
 
@@ -183,7 +186,7 @@ def train():
             for inputs, labels in tqdm(data_loader):
                 inputs_gpu, labels_gpu = inputs.to(device), labels.to(device)
                 with torch.no_grad():
-                    reconstructions, node_leaves = model.compute_reconstruction(inputs_gpu)
+                    reconstructions, node_leaves, _ = model.compute_reconstruction(inputs_gpu)
                 reconstructions = move_to(reconstructions, 'cpu')
                 node_leaves = move_to(node_leaves, 'cpu')
                 _ = gc.collect()
