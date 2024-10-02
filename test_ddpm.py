@@ -133,7 +133,7 @@ def train():
         ema_decoder,
         beta_1=configs_ddpm["model"]["beta1"],
         beta_2=configs_ddpm["model"]["beta2"],
-        T=configs_ddpm["model"]["n_timesteps"],y
+        T=configs_ddpm["model"]["n_timesteps"],
         var_type=configs_ddpm["evaluation"]["variance"],
     )
 
