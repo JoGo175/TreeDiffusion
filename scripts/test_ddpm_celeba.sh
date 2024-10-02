@@ -28,16 +28,16 @@ base_results_dir='/cluster/work/vogtlab/Group/jogoncalves/results_ICLR/celeba/'
 # Conditioning on Path
 # type = ?uncond?, z_cond = True, z_dim = 1024, z_signal = ?path?
 
-ddpm_path_1="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed1-epoch=999-loss=0.0146.ckpt"
-ddpm_path_2="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed2-epoch=999-loss=0.0142.ckpt"
-ddpm_path_3="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed3-epoch=999-loss=0.0143.ckpt"
-ddpm_path_4="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed4-epoch=999-loss=0.0083.ckpt"
-ddpm_path_5="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed5-epoch=994-loss=0.0160.ckpt"
-ddpm_path_6="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed6-epoch=999-loss=0.0142.ckpt"
-ddpm_path_7="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed7-epoch=999-loss=0.0113.ckpt"
-ddpm_path_8="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed8-epoch=999-loss=0.0168.ckpt"
-ddpm_path_9="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed9-epoch=999-loss=0.0094.ckpt"
-ddpm_path_10="${base_results_dir}cond_on_path/checkpoints/ddpmv2-vae_seed10-epoch=999-loss=0.0135.ckpt"
+ddpm_path_1="${base_results_dir}cond_on_path/checkpoints/model_1.ckpt"
+ddpm_path_2="${base_results_dir}cond_on_path/checkpoints/model_2.ckpt"
+ddpm_path_3="${base_results_dir}cond_on_path/checkpoints/model_3.ckpt"
+ddpm_path_4="${base_results_dir}cond_on_path/checkpoints/model_4.ckpt"
+ddpm_path_5="${base_results_dir}cond_on_path/checkpoints/model_5.ckpt"
+ddpm_path_6="${base_results_dir}cond_on_path/checkpoints/model_6.ckpt"
+ddpm_path_7="${base_results_dir}cond_on_path/checkpoints/model_7.ckpt"
+ddpm_path_8="${base_results_dir}cond_on_path/checkpoints/model_8.ckpt"
+ddpm_path_9="${base_results_dir}cond_on_path/checkpoints/model_9.ckpt"
+ddpm_path_10="${base_results_dir}cond_on_path/checkpoints/model_10.ckpt"
 ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3 $ddpm_path_4 $ddpm_path_5 $ddpm_path_6 $ddpm_path_7 $ddpm_path_8 $ddpm_path_9 $ddpm_path_10)
 
 # loop over seeds

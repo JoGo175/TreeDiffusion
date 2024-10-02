@@ -86,6 +86,7 @@ def train():
     gen_tain_eval = get_gen(trainset, configs_ddpm, validation=True, shuffle=False)
     gen_test = get_gen(testset, configs_ddpm, validation=True, shuffle=False)
 
+
     # setup device, mps is for M1 or M2 macs
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # device = "mps"
@@ -102,7 +103,7 @@ def train():
     path_8 = 'models/experiments/celeba/20240918-032915_b4bde'
     path_9 = 'models/experiments/celeba/20240918-033153_8f6e7'
     path_10 = 'models/experiments/celeba/20240918-033153_3d955'
-    vae_path_list = [path_8, path_9, path_10]
+    vae_path_list = [path_1, path_2, path_3, path_4, path_5, path_6, path_7, path_8, path_9, path_10]
 
     # lists to store FID scores for each seed
     train_FID_generations_vae = []
@@ -133,6 +134,7 @@ def train():
         # Generations FID -----------------------------------------------------------
 
         # generate 10k samples from the model
+        torch.cuda.empty_cache()
         n_imgs = 10000
         with torch.no_grad():
             generations, p_c_z = model.generate_images(n_imgs, device)

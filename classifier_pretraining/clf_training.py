@@ -16,7 +16,7 @@ print("Current Working Directory:", os.getcwd())
 
 from utils.data_utils import get_data, get_gen
 
-dataset = 'mnist'
+dataset = 'cubicc'
 
 
 # Configurations
@@ -26,7 +26,7 @@ configs = {
         "num_clusters_data": 10,
     },
     "training": {
-        "batch_size": 256,
+        "batch_size": 32,
         "augment": False,
         "augmentation_method": 'simple',
         "aug_decisions_weight": 1,
@@ -59,13 +59,13 @@ def main():
     y_train = trainset_eval.dataset.targets.clone().detach()[trainset_eval.indices].numpy()
     y_test = testset.dataset.targets.clone().detach()[testset.indices].numpy()
 
-    print("\nTrainset shape:", trainset.dataset.data.shape)
+    #print("\nTrainset shape:", trainset.dataset.data.shape)
     print("Number of samples in trainset:", len(gen_train.dataset))
 
-    print("\nTrainset eval shape:", trainset_eval.dataset.data.shape)
+    #print("\nTrainset eval shape:", trainset_eval.dataset.data.shape)
     print("Number of samples in trainset eval:", len(gen_train_eval.dataset))
 
-    print("\nTestset shape:", testset.dataset.data.shape)
+    #print("\nTestset shape:", testset.dataset.data.shape)
     print("Number of samples in testset:", len(gen_test.dataset))
 
     print(50 * "-")

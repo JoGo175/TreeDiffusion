@@ -20,10 +20,11 @@ from models.model import TreeVAE
 #mode = 'vae_samples'
 
 
+
 def vae_recons():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config_name', type=str,
-                        choices=['mnist', 'fmnist', 'news20', 'omniglot', 'cifar10', 'cifar100', 'celeba'],
+                        choices=['mnist', 'fmnist', 'news20', 'omniglot', 'cifar10', 'cifar100', 'celeba', 'cubicc'],
                         help='the override file name for config.yml', default='cifar10')
     parser.add_argument('--seed', type=int, help='random seed', default=42)
     parser.add_argument('--mode', type=str, help='evaluation mode: vae_recons or vae_samples')
@@ -39,12 +40,29 @@ def vae_recons():
     dataset = args.config_name
     ex_name = args.model_name
 
+    # mode = 'vae_samples'
+    #
+    # dataset = 'mnist'
+    #
+    # # Set model_name based on the dataset
+    # if dataset == "mnist":
+    #     ex_name = "/20240906-142239_b81c6"
+    # elif dataset == "fmnist":
+    #     ex_name = "/20240906-144022_3c565"
+    # elif dataset == "cifar10":
+    #     ex_name = "/20240906-175406_3bd31"
+    # elif dataset == "cubicc":
+    #     ex_name = "/20240923-013355_8ddcc"
+
     path = 'models/experiments/'
     checkpoint_path = path+dataset+ex_name
 
     with open(checkpoint_path + "/config.yaml", 'r') as stream:
         configs = yaml.load(stream,Loader=yaml.Loader)
     print(configs)
+
+    if dataset == "cubicc":
+        configs['training']['batch_size'] = 32
 
     _, _, testset = get_data(configs)
     gen_test = get_gen(testset, configs, validation=True, shuffle=False)
@@ -65,7 +83,7 @@ def vae_recons():
     # get test set reconstructions
     if mode == 'vae_recons':
         # setup dirs
-        vae_save_path = f"../results_all_leaves/{dataset}/seed_1/vae"
+        vae_save_path = f"../results_ICLR/{dataset}/cond_on_path/ddim/seed_1/vae"
         img_save_path = os.path.join(vae_save_path, "recons_all_leaves")
 
         # loop over gen_test
@@ -98,13 +116,13 @@ def vae_recons():
     # get new generations
     elif mode == 'vae_samples':
         # setup dirs
-        vae_save_path = f"../results_all_leaves/{dataset}/seed_1/vae"
+        vae_save_path = f"../results_ICLR/{dataset}/cond_on_path/ddim/seed_1/vae"
         img_save_path = os.path.join(vae_save_path, "sample_all_leaves")
 
         # loop over gen_test --> not really used, only to get again 10k
         for j, (x, y) in enumerate(gen_test):
-            n_samples = x[0].size(0)
-            reconstructions, p_c_z = model.generate_images(n_samples, x[0].device)
+            n_samples = x.shape[0]
+            reconstructions, p_c_z = model.generate_images(n_samples, device)
             num_leaves = len(reconstructions)
 
             # loop over each class and save every TreeVAE reconstruction of this class separately
@@ -114,9 +132,9 @@ def vae_recons():
                 os.makedirs(class_save_pass, exist_ok=True)
                 # save every image of this class separately
                 for i in range(n_samples):
-                    prob = p_c_z[c][i].cpu().numpy()
+                    prob = p_c_z[i][c].cpu().detach()
                     fig, axs = plt.subplots(1, 1, figsize=(2, 2))
-                    axs.imshow(display_image(reconstructions[c][i]), cmap=plt.get_cmap('gray'))
+                    axs.imshow(display_image(reconstructions[c][i].cpu().detach()), cmap=plt.get_cmap('gray'))
                     axs.set_title(f"L{c}: " + f"p=%.2f" % torch.round(prob, decimals=2))
                     axs.axis('off')
                     # save image
