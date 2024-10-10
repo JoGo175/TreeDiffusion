@@ -15,10 +15,12 @@ from models.model import TreeVAE
 from utils.data_utils import get_data, get_gen
 from utils.model_utils import construct_tree_fromnpy
 from utils.utils import reset_random_seeds, prepare_config
+import itertools
+from torch.utils.data import Subset
 
 ###############################################################################################################
 # SELECT THE DATASET
-dataset = "cubicc"       # mnist, fmnist, cifar10, celeba, cubicc is supported
+dataset = "cifar10"       # mnist, fmnist, cifar10, celeba, cubicc is supported
 ###############################################################################################################
 
 
@@ -79,7 +81,25 @@ def train():
 
     # Dataset
     trainset, trainset_eval, testset = get_data(configs_ddpm)
+
+
+    # if we are sampling instead of reconstructing, we do not use the gen_test data itself,
+    # only use the sequentiality of the dataloader, but need the appropriate sample length
+    if configs_ddpm["evaluation"]["eval_mode"] in ["sample", "sample_all_leaves"]:
+        # need to "stretch" the dataloader to size of n_samples
+        n_samples = configs_ddpm["evaluation"]["n_samples"]
+        current_len = len(testset)
+
+        if current_len > n_samples:  # Truncate if too large
+            testset = Subset(testset.dataset, testset.indices[:n_samples])
+
+        elif current_len < n_samples:  # Stretch if too small
+            extended_indices = list(itertools.islice(itertools.cycle(testset.indices), n_samples))
+            testset = Subset(testset.dataset, extended_indices)
+
     gen_test = get_gen(testset, configs_ddpm, validation=True, shuffle=False)
+
+
 
     # Pre-sampled latents for DDPM if available
     ddpm_latent_path = configs_ddpm["data"]["ddpm_latent_path"]

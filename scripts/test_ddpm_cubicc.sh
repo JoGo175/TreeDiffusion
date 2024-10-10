@@ -26,15 +26,15 @@ vae_path_list=($path_1 $path_2 $path_3 $path_4 $path_5 $path_6 $path_7 $path_8 $
 base_results_dir='/cluster/work/vogtlab/Group/jogoncalves/results_ICLR/cubicc/'
 
 
-# Fully unconditional
+# Cond on Recons
 # type = “form1”, z_cond = False, z_dim = None, z_signal = None
 
-ddpm_path_1="${base_results_dir}cond_on_recons/checkpoints/ddpmv2-vae_seed1-epoch=999-loss=0.0173.ckpt"
+ddpm_path_1="${base_results_dir}cond_on_recons/checkpoints/ddpmv2-new_vae_seed1-epoch=499-loss=0.0067.ckpt"
 ddpm_path_list=($ddpm_path_1)
 
 # loop over seeds and vae_chkpt_path
 for seed in 1; do
-  results_dir="${base_results_dir}cond_on_recons/ddim/seed_${seed}/"
+  results_dir="${base_results_dir}cond_on_recons/ddim/new_seed_${seed}/"
   # loop over eval_mode = ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
   for eval_mode in 'sample_all_leaves' 'sample' 'recons'; do
     # run the job

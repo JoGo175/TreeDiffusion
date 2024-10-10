@@ -150,7 +150,7 @@ class ImageWriter(BasePredictionWriter):
         # save reconstructions for all leaves + original for each sample in dataset
         if self.eval_mode == "recons_all_leaves":
             # If conditional, DDPM is conditioned on TreeVAE
-            if self.conditional:
+            if self.conditional or self.z_cond:
                 # get DDPM and VAE samples
                 ddpm_samples, vae_samples = prediction
 
@@ -330,7 +330,7 @@ class ImageWriter(BasePredictionWriter):
                 # get DDPM and VAE samples
                 ddpm_samples_dict, vae_samples = prediction
 
-                if self.save_vae and self.conditional:
+                if self.save_vae:
                     # save TreeVAE samples
                     vae_samples = vae_samples.cpu()
                     vae_save_path = os.path.join(self.output_dir, f"vae/{self.eval_mode}")

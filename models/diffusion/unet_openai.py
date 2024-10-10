@@ -641,16 +641,58 @@ class UNetModel(nn.Module):
                 # add self.proj_latent(node_z_sample) + self.proj_cluster_id(node_id) for each node_z_sample, node_id
                 # output should have shape (batch_size, time_embed_dim)
 
-                # iterate over batch
-                z_proj = []
-                for z_sample in z:
-                    z_proj.append(
-                        sum([self.proj_latent(zz[1].view(1, -1))
-                             + self.proj_cluster_id(zz[0].view(1)).view(1, -1) for zz in z_sample]))
-                z_proj = th.stack(z_proj).squeeze()
+                # Preprocess z into latent and cluster ID tensors for batch processing
+                latent_tensors_list = []
+                cluster_id_tensors_list = []
+                indices = []
+
+                # Iterate over the batch of z_samples
+                for i, z_sample in enumerate(z):
+                    # Collect all z[1] and z[0] for batch processing
+                    latent_tensors = [zz[1].view(1, -1) for zz in z_sample]
+                    cluster_id_tensors = [zz[0].view(1, -1) for zz in z_sample]
+
+                    # Stack the tensors for batch processing
+                    latent_tensor_stack = th.cat(latent_tensors, dim=0)  # Shape: (max_length, latent_dim)
+                    cluster_id_tensor_stack = th.cat(cluster_id_tensors, dim=0)  # Shape: (max_length, cluster_id_dim)
+
+                    # Append to the list of tensors for batch processing
+                    latent_tensors_list.append(latent_tensor_stack)
+                    cluster_id_tensors_list.append(cluster_id_tensor_stack)
+
+                    # Create index tensor for batch processing
+                    indices.append(th.full((latent_tensor_stack.shape[0],), i, dtype=th.long))
+
+                # Proceed with batch processing using proj_latent and proj_cluster_id
+                latent_tensor_stack = th.cat(latent_tensors_list, dim=0)
+                cluster_id_tensor_stack = th.cat(cluster_id_tensors_list, dim=0)
+
+                # save batch indices
+                index_tensor = th.cat(indices, dim=0).to(latent_tensor_stack.device)
+                num_original_tensors = index_tensor[-1] + 1
+
+                # Apply projections
+                latent_proj = self.proj_latent(latent_tensor_stack)  # Apply proj_latent to entire batch
+                cluster_id_proj = self.proj_cluster_id(cluster_id_tensor_stack)  # Apply proj_cluster_id to entire batch
+
+                # Aggregate latent_proj
+                latent_aggregated = th.zeros(num_original_tensors, latent_proj.shape[1], device=latent_proj.device)
+                latent_aggregated = latent_aggregated.scatter_add(0,
+                                                                  index_tensor.unsqueeze(1).expand(-1, latent_proj.shape[1]),
+                                                                  latent_proj)
+
+                # Aggregate cluster_id_proj
+                cluster_id_aggregated = th.zeros(num_original_tensors, cluster_id_proj.shape[1], device=cluster_id_proj.device)
+                cluster_id_aggregated = cluster_id_aggregated.scatter_add(0,
+                                                                          index_tensor.unsqueeze(1).expand(-1, cluster_id_proj.shape[1]),
+                                                                          cluster_id_proj)
+
+                # Finally, stack z_proj and squeeze only if necessary
+                z_proj = latent_aggregated + cluster_id_aggregated
 
             assert z_proj.shape == emb.shape
             emb = emb + z_proj
+
 
         # Incorporate class label information (if any) --> not used for TreeVAE, assumes y is unknown
         if self.num_classes is not None:

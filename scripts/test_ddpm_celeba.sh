@@ -41,10 +41,10 @@ ddpm_path_10="${base_results_dir}cond_on_path/checkpoints/model_10.ckpt"
 ddpm_path_list=($ddpm_path_1 $ddpm_path_2 $ddpm_path_3 $ddpm_path_4 $ddpm_path_5 $ddpm_path_6 $ddpm_path_7 $ddpm_path_8 $ddpm_path_9 $ddpm_path_10)
 
 # loop over seeds
-for seed in 1 2 3 4 5 6 7 8 9 10; do
+for seed in 1; do
   results_dir="${base_results_dir}cond_on_path/ddim/seed_${seed}/"
   # loop over eval_mode = ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
-  for eval_mode in 'sample' 'recons'; do
+  for eval_mode in 'sample_all_leaves'; do
     # run the job
     sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:1 -A vogtlab --tmp=20G --cpus-per-task=1 -o $O_DIR \
       --wrap="python test_ddpm.py --config_name $dataset --vae_chkpt_path ${vae_path_list[$seed-1]} --chkpt_path ${ddpm_path_list[$seed-1]} --results_dir $results_dir --save_path $results_dir --seed $seed --eval_mode $eval_mode --ddpm_type 'uncond' --z_cond True --z_dim 1024 --z_signal path"
