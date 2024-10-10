@@ -38,6 +38,7 @@ from utils.diffusion_utils import space_timesteps
 import pytorch_lightning as pl
 import numpy as np
 import gc
+import concurrent.futures
 
 
 class DDPMWrapper(pl.LightningModule):
@@ -185,44 +186,10 @@ class DDPMWrapper(pl.LightningModule):
                 nodes = res['node_leaves']
                 node_info = res['node_info']
 
-                # Save the chosen leaf_embeddings, reconstructions and the respective leaf indices
-                max_z_sample = []
-                max_recon = []
-                leaf_ind = []
-
-                # Iterate over the leaf nodes and select the leaf with the highest probability or sample given the leaf probs
-                for i in range(len(nodes[0]['prob'])):
-                    probs = [node['prob'][i] for node in nodes]
-                    z_sample = [node['z_sample'][i] for node in nodes]
-                    if self.max_leaf:   # use leaf with max prob
-                        ind = probs.index(max(probs))
-                    else:               # sample one leaf given the leaf probs
-                        ind = torch.multinomial(torch.stack(probs), 1).item()
-                    max_z_sample.append(z_sample[ind])
-                    leaf_ind.append(ind)
-                    if self.conditional:
-                        max_recon.append(recons[ind][i])
-
-                # leaf index + latent embeddings as conditioning signal
-                if self.z_signal == "both":
-                    z1 = torch.stack(max_z_sample)
-                    z2 = torch.tensor(leaf_ind, dtype=torch.float).unsqueeze(1).to(x.device)
-                    z = [z1, z2]
-
-                # latent embeddings as conditioning signal
-                elif self.z_signal == "latent":
-                    z = torch.stack(max_z_sample)
-
-                # leaf index as conditioning signal instead of latent embeddings, z should be (batch, 1)
-                elif self.z_signal == "cluster_id":
-                    z = torch.tensor(leaf_ind, dtype=torch.float).unsqueeze(1).to(x.device)
-
-                elif self.z_signal == "path":
-                    z = self.get_path_info(node_info, leaf_ind)
-
-                if self.conditional:
-                    # reconstructions
-                    cond = torch.stack(max_recon)
+                vae_recon, cond, z = self.compute_reconstructions_and_leaf_embeddings(recons, nodes, node_info,
+                                                                                      self.max_leaf,
+                                                                                      self.z_signal,
+                                                                                      self.conditional, x.device)
 
             # Set the conditioning signal based on clf-free guidance rate
             if torch.rand(1)[0] < self.cfd_rate:
@@ -267,23 +234,46 @@ class DDPMWrapper(pl.LightningModule):
         return loss
 
     def get_path_info(self, node_info_list, selected_leaf_indices):
-        def traverse_to_root(path_info, start_node, node_list, sample_index=None):
-            if start_node['parent_id'] is None:
-                return path_info.append((torch.tensor(start_node['node_id'], dtype=torch.float).to(self.device),
-                                         start_node['z_sample'][sample_index]))
-            else:
-                path_info.append((torch.tensor(start_node['node_id'], dtype=torch.float).to(self.device),
-                                  start_node['z_sample'][sample_index]))
-                return traverse_to_root(path_info, node_list[start_node['parent_id']], node_list, sample_index)
+        def traverse_to_root_iterative(start_node, node_list, sample_index=None):
+            path_info = []
+            node_ids = []
+            z_samples = []
+            current_node = start_node
 
-        output = []
-        for l, leaf_index in enumerate(selected_leaf_indices):
-            for node_info in node_info_list:
-                if node_info['leaf_id'] == leaf_index:
-                    path_info = []
-                    traverse_to_root(path_info, node_info, node_info_list, l)
-                    output.append(path_info)
-                    break
+            # Iteratively traverse to the root
+            while current_node['parent_id'] is not None:
+                node_ids.append(current_node['node_id'])  # Keep node_id as integer
+                z_samples.append(current_node['z_sample'][sample_index])
+                current_node = node_list[current_node['parent_id']]
+
+            # Append the root node info
+            node_ids.append(current_node['node_id'])
+            z_samples.append(current_node['z_sample'][sample_index])
+
+            # Convert to tensors in one go and move to device
+            node_ids_tensor = torch.tensor(node_ids, dtype=torch.float).to(self.device)
+            z_samples_tensor = torch.stack(z_samples).to(self.device)  # Stack z_samples into a tensor
+
+            # Combine the tensors into path_info
+            path_info = [(nid, z) for nid, z in zip(node_ids_tensor, z_samples_tensor)]
+
+            return path_info
+
+        def process_leaf(l_leaf):
+            l, leaf_index = l_leaf
+            node_info = node_info_dict.get(leaf_index)
+
+            if node_info:
+                return traverse_to_root_iterative(node_info, node_info_list, l)
+            return None
+
+        # Preprocess node_info_list into a dictionary for fast lookup by leaf_id
+        node_info_dict = {node_info['leaf_id']: node_info for node_info in node_info_list}
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            results = list(executor.map(process_leaf, enumerate(selected_leaf_indices)))
+
+        output = [r for r in results if r is not None]
         return output
 
     def predict_step(self, batch, batch_idx, dataloader_idx=None):
@@ -338,7 +328,7 @@ class DDPMWrapper(pl.LightningModule):
             n_samples = batch[0].size(0)
             # Compute the reconstructions and the leaf embeddings from the TreeVAE
             recons, nodes, _, node_info = self.vae.generate_images_and_embeddings(n_samples, batch[0].device)
-            cond, z = self.compute_reconstructions_and_leaf_embeddings(recons, nodes, node_info, self.max_leaf,
+            vae_recon, cond, z = self.compute_reconstructions_and_leaf_embeddings(recons, nodes, node_info, self.max_leaf,
                                                                        self.z_signal, self.conditional, batch[0].device)
 
             # Sample DDPM latent noise
@@ -428,7 +418,7 @@ class DDPMWrapper(pl.LightningModule):
 
             # Compute the reconstructions and the leaf embeddings from the TreeVAE
             recons, nodes, node_info = self.vae.compute_reconstruction(img)
-            cond, z = self.compute_reconstructions_and_leaf_embeddings(recons, nodes, node_info, self.max_leaf,
+            vae_recon, cond, z = self.compute_reconstructions_and_leaf_embeddings(recons, nodes, node_info, self.max_leaf,
                                                                        self.z_signal, self.conditional, img.device)
 
             # DDPM encoder
@@ -461,8 +451,9 @@ class DDPMWrapper(pl.LightningModule):
             seed_val = np.random.randint(0, 1000)
 
             # now for each leaf node, we use the recons and the conditioning signal to condition the ddpm
-            for l in range(len(recons[0])):
-                recons_leaf_l = recons[0][l]
+            for l in range(len(recons)):
+                recons_leaf_l = recons[l]
+                nodes_leaf_l = nodes[l]
 
                 # all leaves have the same noise --> reset seeds
                 torch.manual_seed(seed_val)
@@ -471,13 +462,13 @@ class DDPMWrapper(pl.LightningModule):
 
                 # leaf index + latent embeddings as conditioning signal
                 if self.z_signal == "both":
-                    z1 = recons[1][l]['z_sample']
+                    z1 = nodes_leaf_l['z_sample']
                     z2 = torch.tensor([l]*img.size(0), dtype=torch.float).unsqueeze(1).to(img.device)
                     z = [z1, z2]
 
                 # latent embeddings as conditioning signal
                 elif self.z_signal == "latent":
-                    z = recons[1][l]['z_sample']
+                    z = nodes_leaf_l['z_sample']
 
                 # leaf index as conditioning signal instead of latent embeddings, z should be (batch, 1)
                 elif self.z_signal == "cluster_id":
@@ -512,7 +503,7 @@ class DDPMWrapper(pl.LightningModule):
                 )
                 # save the samples for each leaf
                 out_all_leaves.append(next(iter(out.values())))
-            return out_all_leaves, recons
+            return out_all_leaves, (recons, nodes)
 
         # For eval_mode in ["sample", "recons"]:
         # Given the reconstructions and the conditioning signal from the TreeVAE,
@@ -526,11 +517,10 @@ class DDPMWrapper(pl.LightningModule):
                 checkpoints=self.pred_checkpoints,
                 ddpm_latents=self.ddpm_latents,
             ),
-            cond,
+            vae_recon,
         )
         return out
 
-    import torch
 
     def compute_reconstructions_and_leaf_embeddings(self, recons, nodes, node_info, max_leaf=False, z_signal="both",
                                                     conditional=False, device='cpu'):
@@ -592,12 +582,13 @@ class DDPMWrapper(pl.LightningModule):
             z = self.get_path_info(node_info, leaf_ind)
 
         # Select the final reconstructions if we condition on them too
+        vae_recon = torch.stack(max_recon)
         if conditional:
-            cond = torch.stack(max_recon)
+            cond = vae_recon
         else:
             cond = None
 
-        return cond, z
+        return vae_recon, cond, z
 
 
     def configure_optimizers(self):
