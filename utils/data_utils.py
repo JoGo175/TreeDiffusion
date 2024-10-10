@@ -386,12 +386,12 @@ def get_gen(dataset, configs, validation=False, shuffle=True, smalltree=False, s
 		batch_size = batch_size // 2
 		if 'celeba' in configs['data']['data_name']:
 			# CelebA only works like
-			data_gen = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=6, pin_memory=True, collate_fn=custom_collate_fn, drop_last=drop_last, persistent_workers=False)
+			data_gen = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=0, pin_memory=True, collate_fn=custom_collate_fn, drop_last=drop_last, persistent_workers=False)
 		else:
 			data_gen = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=1, pin_memory=True, collate_fn=custom_collate_fn, drop_last=drop_last, persistent_workers=True)
 	else:
 		if 'celeba' in configs['data']['data_name']:
-			data_gen = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=6, pin_memory=True, drop_last=drop_last, persistent_workers=False)
+			data_gen = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=0, pin_memory=True, drop_last=drop_last, persistent_workers=False)
 		else:
 			data_gen = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=1, pin_memory=True, drop_last=drop_last, persistent_workers=True)
 

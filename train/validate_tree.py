@@ -239,9 +239,14 @@ def compute_FID_scores(trainset, testset, model, device, configs):
         data_stats_test = get_precomputed_fid_scores_path(testset.dataset.data, configs['data']['data_name'],
                                                       batch_size=50, subset="test", device=device)
     elif configs['data']['data_name'] in ["celeba", "cubicc"]:
-        data_stats_train = get_precomputed_fid_scores_path(trainset.dataset.images, configs['data']['data_name'],
+
+        train_data_set = np.concatenate([batch[0].permute(0, 2, 3, 1).numpy() for batch in
+                                     torch.utils.data.DataLoader(trainset, batch_size=50, shuffle=False)])
+        test_data_set = np.concatenate([batch[0].permute(0, 2, 3, 1).numpy() for batch in
+                                    torch.utils.data.DataLoader(testset, batch_size=50, shuffle=False)])
+        data_stats_train = get_precomputed_fid_scores_path(train_data_set, configs['data']['data_name'],
                                                        batch_size=50, subset="train", device=device)
-        data_stats_test = get_precomputed_fid_scores_path(testset.dataset.images, configs['data']['data_name'],
+        data_stats_test = get_precomputed_fid_scores_path(test_data_set, configs['data']['data_name'],
                                                       batch_size=50, subset="test", device=device)
 
     # Generations FID -----------------------------------------------------------
@@ -298,7 +303,7 @@ def compute_FID_scores(trainset, testset, model, device, configs):
         for inputs, labels in tqdm(data_loader):
             inputs_gpu, labels_gpu = inputs.to(device), labels.to(device)
             with torch.no_grad():
-                reconstructions, node_leaves = model.compute_reconstruction(inputs_gpu)
+                reconstructions, node_leaves, _ = model.compute_reconstruction(inputs_gpu)
             reconstructions = move_to(reconstructions, 'cpu')
             node_leaves = move_to(node_leaves, 'cpu')
             _ = gc.collect()
@@ -390,7 +395,7 @@ def save_images(n_imgs, num_leaves, testset, model, device, configs):
         inputs, labels = next(iter(gen_test))
         inputs_gpu, labels_gpu = inputs.to(device), labels.to(device)
         with torch.no_grad():
-            reconstructions, node_leaves = model.compute_reconstruction(inputs_gpu)
+            reconstructions, node_leaves, _ = model.compute_reconstruction(inputs_gpu)
         reconstructions = move_to(reconstructions, 'cpu')
         node_leaves = move_to(node_leaves, 'cpu')
 
