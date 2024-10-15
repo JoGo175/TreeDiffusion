@@ -34,9 +34,9 @@ ddpm_path_list=($ddpm_path_1)
 
 # loop over seeds and vae_chkpt_path
 for seed in 1; do
-  results_dir="${base_results_dir}cond_on_recons/ddim/new_seed_${seed}/"
+  results_dir="${base_results_dir}cond_on_recons/ddim/ddpm_new_seed_${seed}/"
   # loop over eval_mode = ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
-  for eval_mode in 'sample_all_leaves' 'sample' 'recons'; do
+  for eval_mode in 'sample_all_leaves'; do
     # run the job
     sbatch --time=100:00:00 --mem-per-cpu=20G -p gpu --gres=gpu:rtx4090:1 -A vogtlab --tmp=20G --cpus-per-task=1 -o $O_DIR \
     --wrap="python test_ddpm.py --config_name $dataset --vae_chkpt_path ${vae_path_list[$seed-1]} --chkpt_path ${ddpm_path_list[$seed-1]} --results_dir $results_dir --save_path $results_dir --seed $seed --eval_mode $eval_mode --ddpm_type 'form1' --z_cond False"
