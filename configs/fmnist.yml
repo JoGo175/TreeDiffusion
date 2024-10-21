@@ -1,0 +1,135 @@
+run_name: 'fmnist'
+
+data:
+  data_name: 'fmnist'
+  num_clusters_data: 10   # Number of clusters/classes in the dataset
+
+# TreeVAE specific parameters --------------------------------------------------------------------------------
+training:
+  # Training parameters
+  num_epochs: 150                           # Nb. epochs for training the first small tree, root and 2 leaves
+  num_epochs_smalltree: 150                 # Nb. epochs for training the remaining small trees in each grow step
+  num_epochs_intermediate_fulltrain: 80     # Nb. epochs for the intermediate full tree training, in between the grow steps
+  num_epochs_finetuning: 200                # Nb. epochs for the final full tree training after the grow steps
+  intermediate_fulltrain: True              # Whether to train the intermediate full tree
+  batch_size: 256                           # Effective batch size
+  lr: 0.001                                 # Learning rate
+  decay_lr: 0.1                             # Learning rate decay factor
+  decay_stepsize: 100                       # Learning rate decay step size for StepLR scheduler
+  weight_decay: 0.00001                     # Weight decay factor
+  spectral_norm: False                      # Whether to use spectral normalization, only applied to decoders
+
+  # KL annealing
+  decay_kl: 0.001         # KL annealing weight increase after each epoch until reaching 1
+  kl_start: 0.5           # Initial KL annealing weight
+
+  # Model parameters
+  inp_shape: 28                                     # Image resolution (28 for FashionMNIST)
+  inp_channels: 1                                   # Input channels, 1 for grayscale
+  representation_dim: 2                             # size of the 2-dim latent representation -> (latent_channels, representation_dim, representation_dim)
+  latent_channels: [16, 16, 16, 16, 16, 16, 16]     # channels of the latent representation
+  bottom_up_channels: [32, 32, 32, 32, 32, 32, 32]  # channels of the bottom-up representation, only works for equal channels at the moment
+  initial_depth: 1                                  # Initial depth of the tree (1 for the root + 2 leaves)
+  act_function: "swish"                        # Activation function used between layers in TreeVAE (swish, relu, leaky_relu)
+  activation: "sigmoid"                             # Activation function for final layer of the decoder (sigmoid to get pixel values between 0 and 1)
+  encoder: 'cnn1'                                   # Encoder architecture (smaller cnn1 or larger cnn2)
+  grow: True                                        # Whether to grow the tree
+  prune: True                                       # Whether to prune the tree after each grow steps
+  num_clusters_tree: 10                             # Maximum number of effective clusters to grow the tree to
+  dropout_router: 0.0                               # Dropout rate for the router networks
+  res_connections: False                             # Whether to use residual connections in the bottom-up and transformation networks
+  dim_mod_conv: True                                # Whether to change dimensionality using Conv2d & ConvTranspose2d or Downsample & Upsample
+
+  # Augmentation parameters for contrastive learning
+  augment: False                      # Whether to use augmentation for contrastive learning
+  augmentation_method: 'simple'       # Augmentation method. One of ['simple', 'InfoNCE,instancewise_full']
+  aug_decisions_weight: 1             # Weight for the contrastive loss
+
+  # Evaluation parameters
+  compute_ll: False           # Whether to compute test log-likelihood
+  compute_fid: True           # Whether to compute test FID scores for the generated and reconstructed images
+  save_images: True           # Whether to save images during training for wandb logging
+
+globals:
+  wandb_logging: 'offline'    # Whether to log to wandb. One of ['offline', 'online', 'disabled']
+  eager_mode: True            # Whether to use eager mode
+  seed: 42                    # Random seed for reproducibility
+  save_model: True            # Whether to save the trained model to disk
+  config_name: 'fmnist'       # Name of the config file
+
+
+## DiffuseVAE specific parameters --------------------------------------------------------------------------------
+ddpm:
+  # Parameters for data loading, similar to the TreeVAE configs
+  data:
+    data_name: 'fmnist'     # Dataset name
+    num_clusters_data: 10   # Number of clusters/classes in the dataset
+    image_size: 28          # Image resolution (28 for FashionMNIST)
+    inp_channels: 1         # Num input channels
+    norm: True              # Whether to scale data between [-1, 1]
+    ddpm_latent_path: ""    # If sharing DDPM latents between diffusevae samples, path to .pt tensor containing latent codes
+
+  globals:
+    seed: 42                # Random seed for reproducibility
+
+  # UNet specific params. Check the DDPM implementation for details on these
+  model:
+    dim: 64                   # UNet base dimension for channels
+    attn_resolutions: "16,"   # Attention resolutions for the UNet
+    n_residual: 2             # Number of residual blocks per level in UNet between the resolutions
+    dim_mults: "1,2,2,2"      # Multiplier for Nb of channels for each level in UNet
+    dropout: 0.1              # Dropout rate
+    n_heads: 8                # Number of attention heads
+    beta1: 0.0001
+    beta2: 0.02
+    n_timesteps: 1000         # Number of diffusion timesteps
+
+  # Training parameters for the DDPM part given TreeVAE model
+  training:
+    # paths
+    vae_chkpt_path: ''        # TreeVAE checkpoint path
+    results_dir: ''           # Directory to store the DDPM checkpoint in
+    chkpt_prefix: "vae"       # prefix appended to the checkpoint name
+    restore_path: ""          # Checkpoint restore path
+    chkpt_interval: 1         # Number of epochs between two checkpoints
+
+    # Model-specific training parameters
+    use_ema: True         # Whether to use EMA (Improves sample quality)
+    ema_decay: 0.9999     # EMA decay rate
+    z_cond: True          # Whether to condition UNet on vae latent
+    z_dim: 64             # Dimensionality of the vae latent --> 1 for leaf index
+    z_signal: 'path'      # Conditioning signal for the UNet. One of ['both', 'latent', 'cluster_id']
+    type: 'form1'         # DiffuseVAE formulation type, One of ['form1', 'form2', 'uncond'].
+    cfd_rate: 0.0         # Conditioning signal dropout rate as in Classifier-free guidance
+
+    # General training parameters
+    batch_size: 256       # Batch size
+    epochs: 1000          # Max number of epochs
+    n_anneal_steps: 5000  # number of warmup steps
+    loss: "l2"            # Diffusion loss type. Among ['l2', 'l1']
+    optimizer: "Adam"     # Optimizer
+    lr: 0.0002            # Learning rate
+    grad_clip: 1.0        # gradient clipping threshold
+
+  # Parameters for evaluation of the reconstructions and generations
+  evaluation:
+    # paths and saving
+    chkpt_path: ''                        # DiffuseVAE checkpoint path
+    save_path: ''                         # Path to write samples to
+    save_vae: True                        # Whether to save VAE
+    save_mode: 'image'                    # Whether to save samples as .png or .npy. One of ['image', 'numpy']
+    sample_prefix: ""                     # Prefix used in naming when saving samples to disk
+    eval_mode: 'recons_all_leaves'        # Evaluation mode. One of ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
+
+    # Model-specific evaluation parameters
+    guidance_weight: 0.0  # Guidance weight during sampling if using Classifier free guidance
+
+    # General evaluation parameters for sampling
+    resample_strategy: "spaced"       # Whether to use spaced or truncated sampling. Use 'truncated' if sampling for the entire 1000 steps
+    skip_strategy: "quad"             # Skipping strategy to use if `resample_strategy=spaced`. Can be ['uniform', 'quad'] as in DDIM
+    sample_method: "ddim"             # Sampling backend. Can be ['ddim', 'ddpm']
+    sample_from: "target"             # Whether to sampling from the (non)-EMA model. Can be ['source', 'target']
+    variance: "fixedlarge"            # DDPM variance to use when using DDPM. Can be ['fixedsmall', 'fixedlarge']
+    temp: 1.0                         # Temperature sampling factor in DDPM latents
+    n_samples: 10000                  # Number of samples to generate
+    n_steps: 100                      # Number of reverse process steps to use during sampling. Typically [0-100] for DDIM and T=1000 for DDPM
