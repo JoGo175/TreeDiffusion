@@ -2,7 +2,7 @@
 # Hierarchical Clustering for Conditional Diffusion in Image Generation
 
 
-This repository contains the implementation of **TreeDiffusion**. 
+This repository contains the implementation of **TreeDiffusion**.
 
 ---
 
