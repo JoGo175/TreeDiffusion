@@ -77,11 +77,9 @@ dependencies:
   - lerc=4.0.0=hb486fe8_0
   - libabseil=20220623.0=cxx17_h844d122_6
   - libaec=1.1.2=he965462_1
-  - libblas=3.9.0=20_osx64_openblas
   - libbrotlicommon=1.1.0=h0dc2134_1
   - libbrotlidec=1.1.0=h0dc2134_1
   - libbrotlienc=1.1.0=h0dc2134_1
-  - libcblas=3.9.0=20_osx64_openblas
   - libcurl=8.5.0=h726d00d_0
   - libcxx=16.0.6=hd57cbcb_0
   - libdeflate=1.19=ha4e1b8e_0
@@ -92,7 +90,6 @@ dependencies:
   - libgfortran5=13.2.0=h2873a65_1
   - libgrpc=1.51.1=h1ddfa78_1
   - libjpeg-turbo=2.1.5.1=h0dc2134_1
-  - liblapack=3.9.0=20_osx64_openblas
   - libnghttp2=1.58.0=h64cf6d3_1
   - libopenblas=0.3.25=openmp_hfef2a42_0
   - libpng=1.6.39=ha978bb4_0
@@ -159,7 +156,7 @@ dependencies:
   - python-flatbuffers=23.5.26=pyhd8ed1ab_0
   - python-tzdata=2023.3=pyhd8ed1ab_0
   - python_abi=3.8=4_cp38
-  - pytorch=2.0.0=cpu_generic_py38hf846dde_1
+  - pytorch=2.0.0=generic_py38hf846dde_1
   - pytorch-lightning=2.1.2=pyhd8ed1ab_0
   - pytz=2023.3.post1=pyhd8ed1ab_0
   - pyu2f=0.1.5=pyhd8ed1ab_0
@@ -182,8 +179,8 @@ dependencies:
   - stack_data=0.6.2=pyhd8ed1ab_0
   - sympy=1.12=pypyh9d50eac_103
   - tensorboard-plugin-wit=1.8.1=pyhd8ed1ab_0
-  - tensorflow=2.11.1=cpu_py38he866dac_0
-  - tensorflow-base=2.11.1=cpu_py38h80db001_0
+  - tensorflow=2.11.1=py38he866dac_0
+  - tensorflow-base=2.11.1=py38h80db001_0
   - tensorflow-datasets=4.8.3=pyhd8ed1ab_0
   - tensorflow-metadata=1.13.1=pyhd8ed1ab_0
   - tensorflow-probability=0.14.0=pyhd3eb1b0_0
@@ -193,7 +190,7 @@ dependencies:
   - toml=0.10.2=pyhd8ed1ab_0
   - torch-fidelity=0.3.0=pyhd8ed1ab_0
   - torchmetrics=1.1.2=pyhd8ed1ab_0
-  - torchvision=0.15.2=cpu_py38hf3c27f9_1
+  - torchvision=0.15.2=py38hf3c27f9_1
   - tornado=6.3.3=py38hcafd530_1
   - tqdm=4.66.4=pyhd8ed1ab_0
   - traitlets=5.14.0=pyhd8ed1ab_0

@@ -1,0 +1,30 @@
+# VAE config used for VAE training
+vae:
+  data:
+    root: 'data/'
+    name: "cifar10"
+    image_size: 32
+    n_channels: 3
+    hflip: False
+
+  model:  # VAE specific params. Check the `main/models/vae.py`
+    enc_block_config : "32x1,32d2,32t16,16x1,16d2,16t8,8x1,8d2,8t4,4x1,4d4,4t1,1x1"
+    enc_channel_config: "32:32,16:64,8:128,4:256,1:512"
+    dec_block_config: "1x1,1u4,1t4,4x1,4u2,4t8,8x1,8u2,8t16,16x1,16u2,16t32,32x1"
+    dec_channel_config: "32:32,16:64,8:128,4:256,1:512"
+
+  training:   # Most of these are same as explained above but for VAE training
+    seed: 0
+    fp16: False
+    batch_size: 128
+    epochs: 500
+    log_step: 1
+    device: "gpu:0"
+    chkpt_interval: 1
+    optimizer: "Adam"
+    lr: 0.0001
+    restore_path: ""
+    results_dir: "results/"
+    workers: 1
+    chkpt_prefix: "vae"
+    alpha: 1.0   # The beta value in beta-vae. I know the param name might be misleading :(
