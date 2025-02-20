@@ -50,7 +50,7 @@ from utils.data_utils import get_data, get_gen
 
 ###############################################################################################################
 # SELECT THE DATASET
-dataset_name = "mnist"       # mnist, fmnist, cifar10, celeba, cubicc is supported
+dataset_name = "cifar10"       # mnist, fmnist, cifar10, celeba, cubicc is supported
 ###############################################################################################################
 
 
@@ -76,6 +76,7 @@ def train():
                         choices=['mnist', 'fmnist', 'news20', 'omniglot', 'cifar10', 'cifar100', 'celeba', 'cubicc'],
                         help='the override file name for config.yml')
     parser.add_argument('--seed', type=int, help='random seed')
+    parser.add_argument('--chkpt_prefix', type=str, help='prefix for the checkpoint file')
 
     args = parser.parse_args()
     config = load_config(args, project_dir)
@@ -84,6 +85,8 @@ def train():
     config = config["vae"]
     if args.seed is not None:
          config['globals']['seed'] = args.seed
+    if args.chkpt_prefix is not None:
+        config['training']['chkpt_prefix'] = args.chkpt_prefix
 
     # Reproducibility
     reset_random_seeds(config['globals']['seed'])
@@ -92,12 +95,10 @@ def train():
     trainset, trainset_eval, testset = get_data(config)
     gen_train = get_gen(trainset, config, validation=False, shuffle=False)
 
-    image_size = config["data"]["image_size"]
-    batch_size = config["training"]["batch_size"]
-
     # Model
     vae = VAE(
-        input_res=image_size,
+        input_res=config["data"]["image_size"],
+        input_channels=config["data"]["n_channels"],
         enc_block_str=config["model"]["enc_block_config"],
         dec_block_str=config["model"]["dec_block_config"],
         enc_channel_str=config["model"]["enc_channel_config"],
@@ -114,7 +115,10 @@ def train():
         pass
         # train_kwargs["resume_from_checkpoint"] = restore_path
 
-    results_dir = config["training"]["results_dir"]
+    # Callbacks
+    results_dir = config["training"]["results_dir"] + f"{config['data']['data_name']}/"
+    os.makedirs(results_dir, exist_ok=True)
+
     chkpt_callback = ModelCheckpoint(
         dirpath=os.path.join(results_dir, "checkpoints"),
         filename=f"vae-{config['training']['chkpt_prefix']}"

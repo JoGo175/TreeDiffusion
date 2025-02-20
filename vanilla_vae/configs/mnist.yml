@@ -2,17 +2,17 @@
 vae:
   data:
     root: 'data/'
-    data_name: "cifar10"
+    data_name: "mnist"
     num_clusters_data: 10
-    image_size: 32
-    n_channels: 3
+    image_size: 28
+    n_channels: 1
     hflip: False
 
   model:  # VAE specific params. Check the `main/models/vae.py`
-    enc_block_config : "32x1,32d2,32t16,16x1,16d2,16t8,8x1,8d2,8t4,4x1,4d4,4t1,1x1"
-    enc_channel_config: "32:32,16:64,8:128,4:256,1:512"
-    dec_block_config: "1x1,1u4,1t4,4x1,4u2,4t8,8x1,8u2,8t16,16x1,16u2,16t32,32x1"
-    dec_channel_config: "32:32,16:64,8:128,4:256,1:512"
+    enc_block_config : "32x1,32d4,32t8,8x1,8d4,8t2,2x1"
+    enc_channel_config: "32:32,8:64,2:256"
+    dec_block_config: "2x1,2u4,2t8,8x2,8u4,8t32,32x1"
+    dec_channel_config: "32:32,8:64,2:256"
 
   training:   # Most of these are same as explained above but for VAE training
     seed: 0
@@ -27,7 +27,7 @@ vae:
     restore_path: ""
     results_dir: "vanilla_vae/results/"
     workers: 1
-    chkpt_prefix: "vae"
+    chkpt_prefix: ""
     alpha: 1.0   # The beta value in beta-vae.
     
   globals:

@@ -33,6 +33,7 @@ import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
 
 
 def parse_layer_string(s):
@@ -134,12 +135,24 @@ class ResBlock(nn.Module):
 
 
 class Encoder(nn.Module):
-    def __init__(self, block_config_str, channel_config_str):
+    def __init__(self, input_res, input_channels, block_config_str, channel_config_str):
         super().__init__()
-        self.in_conv = nn.Conv2d(3, 64, 3, stride=1, padding=1, bias=False)
+
+        self.input_res = input_res
+
+        # If image resolution is not a power of two, add padding
+        # Important for the model to work for MNIST, FashionMNIST, etc
+        if not (input_res > 0 and (input_res & (input_res - 1)) == 0):
+            self.new_input_res = 2 ** int(np.ceil(np.log2(input_res)))
+        else:
+            self.new_input_res = input_res
 
         block_config = parse_layer_string(block_config_str)
         channel_config = parse_channel_string(channel_config_str)
+
+        # Initial Convolution
+        self.in_conv = nn.Conv2d(input_channels, channel_config[self.new_input_res], 3, stride=1, padding=1, bias=False)
+
         blocks = []
         for _, (res, down_rate) in enumerate(block_config):
             if isinstance(res, tuple):
@@ -165,18 +178,35 @@ class Encoder(nn.Module):
         self.block_mod = nn.Sequential(*blocks)
 
         # Latents
-        self.mu = nn.Conv2d(channel_config[1], channel_config[1], 1, bias=False)
-        self.logvar = nn.Conv2d(channel_config[1], channel_config[1], 1, bias=False)
+        latent_res = block_config[-1][0]
+        self.mu = nn.Conv2d(channel_config[latent_res], channel_config[latent_res], 1, bias=False)
+        self.logvar = nn.Conv2d(channel_config[latent_res], channel_config[latent_res], 1, bias=False)
 
     def forward(self, input):
+        # If image resolution not in 32, 64, 128 --> Add padding
+        # Important for the model to work for MNIST, FashionMNIST, etc
+        if self.input_res != self.new_input_res:
+            pad = (self.new_input_res - self.input_res) // 2
+            input = F.pad(input, (pad, pad, pad, pad), mode="constant", value=0)
+
         x = self.in_conv(input)
         x = self.block_mod(x)
         return self.mu(x), self.logvar(x)
 
 
 class Decoder(nn.Module):
-    def __init__(self, input_res, block_config_str, channel_config_str):
+    def __init__(self, input_res, input_channels, block_config_str, channel_config_str):
         super().__init__()
+
+        self.input_res = input_res
+
+        # If image resolution is not a power of two, add padding
+        # Important for the model to work for MNIST, FashionMNIST, etc
+        if not (input_res > 0 and (input_res & (input_res - 1)) == 0):
+            self.new_input_res = 2 ** int(np.ceil(np.log2(input_res)))
+        else:
+            self.new_input_res = input_res
+
         block_config = parse_layer_string(block_config_str)
         channel_config = parse_channel_string(channel_config_str)
         blocks = []
@@ -207,11 +237,18 @@ class Decoder(nn.Module):
             )
         # TODO: If the training is unstable try using scaling the weights
         self.block_mod = nn.Sequential(*blocks)
-        self.last_conv = nn.Conv2d(channel_config[input_res], 3, 3, stride=1, padding=1)
+        self.last_conv = nn.Conv2d(channel_config[self.new_input_res ], input_channels, 3, stride=1, padding=1)
 
     def forward(self, input):
         x = self.block_mod(input)
         x = self.last_conv(x)
+
+        # If image resolution not in 32, 64, 128 --> Remove padding
+        # Important for the model to work for MNIST, FashionMNIST, etc
+        if self.input_res != self.new_input_res:
+            pad = (self.new_input_res - self.input_res ) // 2
+            x = x[:, :, pad:-pad, pad:-pad]
+
         return torch.sigmoid(x)
 
 
@@ -221,6 +258,7 @@ class VAE(pl.LightningModule):
     def __init__(
         self,
         input_res,
+        input_channels,
         enc_block_str,
         dec_block_str,
         enc_channel_str,
@@ -231,6 +269,7 @@ class VAE(pl.LightningModule):
         super().__init__()
         self.save_hyperparameters()
         self.input_res = input_res
+        self.input_channels = input_channels
         self.enc_block_str = enc_block_str
         self.dec_block_str = dec_block_str
         self.enc_channel_str = enc_channel_str
@@ -239,10 +278,10 @@ class VAE(pl.LightningModule):
         self.lr = lr
 
         # Encoder architecture
-        self.enc = Encoder(self.enc_block_str, self.enc_channel_str)
+        self.enc = Encoder(self.input_res, self.input_channels, self.enc_block_str, self.enc_channel_str)
 
         # Decoder Architecture
-        self.dec = Decoder(self.input_res, self.dec_block_str, self.dec_channel_str)
+        self.dec = Decoder(self.input_res, self.input_channels, self.dec_block_str, self.dec_channel_str)
 
     def encode(self, x):
         mu, logvar = self.enc(x)

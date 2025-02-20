@@ -472,11 +472,11 @@ class CIFAR100Coarse(torchvision.datasets.CIFAR100):
 
 class CUBICCDataset(torch.utils.data.Dataset):
 	def __init__(self, datadir, split='train', transform=None):
-		self.images = torch.load(os.path.join(datadir, 'images.pt'))
-		self.captions = torch.load(os.path.join(datadir, 'captions.pt'))
-		self.labels = torch.load(os.path.join(datadir, 'labels.pt'))
-		self.labels_traintest = torch.load(os.path.join(datadir, 'train_test_labelling.pt'))  # NOT USED NOR EXPOSED
-		self.labels_original = torch.load(os.path.join(datadir, 'original_labels.pt'))  # NOT USED NOR EXPOSED
+		self.images = torch.load(os.path.join(datadir, 'images.pt'), weights_only=False)
+		self.captions = torch.load(os.path.join(datadir, 'captions.pt'), weights_only=False)
+		self.labels = torch.load(os.path.join(datadir, 'labels.pt'), weights_only=False)
+		self.labels_traintest = torch.load(os.path.join(datadir, 'train_test_labelling.pt'), weights_only=False) # NOT USED NOR EXPOSED
+		self.labels_original = torch.load(os.path.join(datadir, 'original_labels.pt'), weights_only=False) # NOT USED NOR EXPOSED
 
 		# Define splits
 		self.train_split = np.load(os.path.join(datadir, 'train_split.npy'))
