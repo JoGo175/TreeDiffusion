@@ -17,8 +17,8 @@ vae:
   training:   # Most of these are same as explained above but for VAE training
     seed: 0
     fp16: False
-    batch_size: 128
-    epochs: 500
+    batch_size: 256
+    epochs: 1500
     log_step: 1
     device: "gpu:0"
     chkpt_interval: 1
