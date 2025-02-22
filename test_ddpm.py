@@ -1,4 +1,5 @@
 import copy
+import yaml
 import numpy as np
 import torch
 import argparse
@@ -11,22 +12,32 @@ from models.diffusion.ddpm import DDPM
 from models.diffusion.ddpm_form2 import DDPMv2
 from models.diffusion.wrapper import DDPMWrapper
 from models.diffusion.unet_openai import SuperResModel, UNetModel
-from models.model import TreeVAE
+from vanilla_vae.vae import VAE
 from utils.data_utils import get_data, get_gen
 from utils.model_utils import construct_tree_fromnpy
-from utils.utils import reset_random_seeds, prepare_config
+from utils.utils import reset_random_seeds
 import itertools
 from torch.utils.data import Subset
 
 ###############################################################################################################
 # SELECT THE DATASET
-dataset = "cifar10"       # mnist, fmnist, cifar10, celeba, cubicc is supported
+dataset = "mnist"       # mnist, fmnist, cifar10, celeba, cubicc is supported
 ###############################################################################################################
 
 
 def __parse_str(s):
     split = s.split(",")
     return [int(s) for s in split if s != "" and s is not None]
+
+def load_config(args, project_dir):
+	# Load config
+	data_name = args.config_name +'.yml'
+	config_path = project_dir / 'vanilla_vae/configs' / data_name
+
+	with config_path.open(mode='r') as yamlfile:
+		configs = yaml.safe_load(yamlfile)
+	
+	return configs
 
 
 def train():
@@ -47,12 +58,9 @@ def train():
 
     # conditioning arguments
     parser.add_argument('--ddpm_type', type=str, help='type of DDPM to train')
-    parser.add_argument('--z_cond', type=lambda x: bool(distutils.util.strtobool(x)), help='use z as conditioning')
-    parser.add_argument('--z_dim', type=int, help='dimension of latent space')
-    parser.add_argument('--z_signal', type=str, help='type of z signal')
 
     args = parser.parse_args()
-    configs = prepare_config(args, project_dir)
+    configs = load_config(args, project_dir)
     # Configs specific to DDPM
     configs_ddpm = configs['ddpm']
     if args.seed is not None:
@@ -69,23 +77,17 @@ def train():
         configs_ddpm['evaluation']['save_path'] = args.save_path
     if args.ddpm_type is not None:
         configs_ddpm['training']['type'] = args.ddpm_type
-    if args.z_cond is not None:
-        configs_ddpm['training']['z_cond'] = args.z_cond
-    if args.z_dim is not None:
-        configs_ddpm['training']['z_dim'] = args.z_dim
-    if args.z_signal is not None:
-        configs_ddpm['training']['z_signal'] = args.z_signal
 
     # Reproducibility
     reset_random_seeds(configs_ddpm['globals']['seed'])
 
     # Dataset
-    trainset, trainset_eval, testset = get_data(configs_ddpm)
+    _, _, testset = get_data(configs_ddpm)
 
 
     # if we are sampling instead of reconstructing, we do not use the gen_test data itself,
     # only use the sequentiality of the dataloader, but need the appropriate sample length
-    if configs_ddpm["evaluation"]["eval_mode"] in ["sample", "sample_all_leaves"]:
+    if configs_ddpm["evaluation"]["eval_mode"] in ["sample"]:
         # need to "stretch" the dataloader to size of n_samples
         n_samples = configs_ddpm["evaluation"]["n_samples"]
         current_len = len(testset)
@@ -107,12 +109,10 @@ def train():
 
     # Load pretrained TreeVAE model, aka generator
     model_path = configs_ddpm["training"]["vae_chkpt_path"]
-    vae = TreeVAE(**configs['training'])
-    data_tree = np.load(model_path+'/data_tree.npy', allow_pickle=True)
-    vae = construct_tree_fromnpy(vae, data_tree, configs)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    vae.load_state_dict(torch.load(model_path+'/model_weights.pt', map_location=device), strict=True)
-    vae.to(device)
+    vae = VAE.load_from_checkpoint(
+        configs_ddpm["training"]["vae_chkpt_path"],
+        input_res=configs_ddpm["data"]["image_size"],
+    )
     vae.eval()
 
     # UNet Denoising Model for DDPM
@@ -133,7 +133,6 @@ def train():
         z_dim=configs_ddpm["training"]["z_dim"],
         use_scale_shift_norm=configs_ddpm["training"]["z_cond"],
         use_z=configs_ddpm["training"]["z_cond"],
-        z_signal=configs_ddpm["training"]["z_signal"],
     )
 
     ema_decoder = copy.deepcopy(decoder)
@@ -174,7 +173,6 @@ def train():
         temp=configs_ddpm["evaluation"]["temp"],
         guidance_weight=configs_ddpm["evaluation"]["guidance_weight"],
         z_cond=configs_ddpm["training"]["z_cond"],
-        z_signal=configs_ddpm["training"]["z_signal"],
         ddpm_latents=ddpm_latents,
         strict=True,
     )
@@ -190,7 +188,6 @@ def train():
         save_mode=configs_ddpm["evaluation"]["save_mode"],
         save_vae=configs_ddpm["evaluation"]["save_vae"],
         is_norm=configs_ddpm["data"]["norm"],
-        z_cond=configs_ddpm["training"]["z_cond"],
     )
 
     test_kwargs = {}

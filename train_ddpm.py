@@ -30,6 +30,7 @@ SOFTWARE.
 ---------------------------------------------------------------
 """
 import copy
+import yaml
 import os
 import numpy as np
 import torch
@@ -44,20 +45,31 @@ from models.diffusion.ddpm import DDPM
 from models.diffusion.ddpm_form2 import DDPMv2
 from models.diffusion.wrapper import DDPMWrapper
 from models.diffusion.unet_openai import UNetModel, SuperResModel
-from models.model import TreeVAE
+from vanilla_vae.vae import VAE
 from utils.data_utils import get_data, get_gen
 from utils.model_utils import construct_tree_fromnpy
-from utils.utils import reset_random_seeds, prepare_config
+from utils.utils import reset_random_seeds
 
 ###############################################################################################################
 # SELECT THE DATASET
-dataset = "cifar10"       # mnist, fmnist, cifar10, celeba, cubicc is supported
+dataset = "mnist"       # mnist, fmnist, cifar10, celeba, cubicc is supported
 ###############################################################################################################
 
 
 def __parse_str(s):
     split = s.split(",")
     return [int(s) for s in split if s != "" and s is not None]
+
+
+def load_config(args, project_dir):
+	# Load config
+	data_name = args.config_name +'.yml'
+	config_path = project_dir / 'vanilla_vae/configs' / data_name
+
+	with config_path.open(mode='r') as yamlfile:
+		configs = yaml.safe_load(yamlfile)
+	
+	return configs
 
 
 def train():
@@ -76,12 +88,9 @@ def train():
     
     # conditioning arguments
     parser.add_argument('--ddpm_type', type=str, help='type of DDPM to train')
-    parser.add_argument('--z_cond', type=lambda x: bool(distutils.util.strtobool(x)), help='use z as conditioning')
-    parser.add_argument('--z_dim', type=int, help='dimension of latent space')
-    parser.add_argument('--z_signal', type=str, help='type of z signal')
 
     args = parser.parse_args()
-    configs = prepare_config(args, project_dir)
+    configs = load_config(args, project_dir)
 
     # Configs specific to DDPM
     configs_ddpm = configs['ddpm']
@@ -95,18 +104,12 @@ def train():
         configs_ddpm['training']['chkpt_prefix'] = args.chkpt_prefix
     if args.ddpm_type is not None:
         configs_ddpm['training']['type'] = args.ddpm_type
-    if args.z_cond is not None:
-        configs_ddpm['training']['z_cond'] = args.z_cond
-    if args.z_dim is not None:
-        configs_ddpm['training']['z_dim'] = args.z_dim
-    if args.z_signal is not None:
-        configs_ddpm['training']['z_signal'] = args.z_signal
 
     # Reproducibility
     reset_random_seeds(configs_ddpm['globals']['seed'])
 
     # Dataset
-    trainset, trainset_eval, testset = get_data(configs_ddpm)
+    trainset, _, _ = get_data(configs_ddpm)
     gen_train = get_gen(trainset, configs_ddpm, validation=False, shuffle=False)
 
     # UNet Denoising Model for DDPM
@@ -127,7 +130,6 @@ def train():
         z_dim=configs_ddpm["training"]["z_dim"],
         use_scale_shift_norm=configs_ddpm["training"]["z_cond"],
         use_z=configs_ddpm["training"]["z_cond"],
-        z_signal=configs_ddpm["training"]["z_signal"],
     )
 
     # EMA (Exponential Moving Average) parameters are non-trainable
@@ -155,12 +157,10 @@ def train():
 
     # Load pretrained TreeVAE model, aka generator
     model_path = configs_ddpm["training"]["vae_chkpt_path"]
-    vae = TreeVAE(**configs['training'])
-    data_tree = np.load(model_path+'/data_tree.npy', allow_pickle=True)
-    vae = construct_tree_fromnpy(vae, data_tree, configs)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    vae.load_state_dict(torch.load(model_path+'/model_weights.pt', map_location=device), strict=True)
-    vae.to(device)
+    vae = VAE.load_from_checkpoint(
+        configs_ddpm["training"]["vae_chkpt_path"],
+        input_res=configs_ddpm["data"]["image_size"],
+    )
     vae.eval()
 
     # Freeze all parameters of VAE as they are non-trainable
@@ -179,7 +179,6 @@ def train():
         conditional=False if ddpm_type == "uncond" else True,
         grad_clip_val=configs_ddpm["training"]["grad_clip"],
         z_cond=configs_ddpm["training"]["z_cond"],
-        z_signal=configs_ddpm["training"]["z_signal"],
     )
 
     # Trainer settings
