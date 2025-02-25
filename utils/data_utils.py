@@ -384,16 +384,9 @@ def get_gen(dataset, configs, validation=False, shuffle=True, smalltree=False, s
 		# As one datapoint leads to two samples, we have to half the batch size to retain same number of samples per batch
 		assert batch_size % 2 == 0
 		batch_size = batch_size // 2
-		if 'celeba' in configs['data']['data_name']:
-			# CelebA only works like
-			data_gen = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=0, pin_memory=True, collate_fn=custom_collate_fn, drop_last=drop_last, persistent_workers=False)
-		else:
-			data_gen = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=1, pin_memory=True, collate_fn=custom_collate_fn, drop_last=drop_last, persistent_workers=True)
+		data_gen = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=1, pin_memory=True, collate_fn=custom_collate_fn, drop_last=drop_last, persistent_workers=True)
 	else:
-		if 'celeba' in configs['data']['data_name']:
-			data_gen = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=0, pin_memory=True, drop_last=drop_last, persistent_workers=False)
-		else:
-			data_gen = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=1, pin_memory=True, drop_last=drop_last, persistent_workers=True)
+		data_gen = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=1, pin_memory=True, drop_last=drop_last, persistent_workers=True)
 
 	return data_gen
 
