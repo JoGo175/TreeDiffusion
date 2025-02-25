@@ -62,7 +62,7 @@ ddpm:
   # Training parameters for the DDPM part given TreeVAE model
   training:
     # paths
-    vae_chkpt_path: 'vanilla_vae/results/mnist/checkpoints/vae-vae_0-epoch=1499-train_loss=0.0000.ckpt'    # TreeVAE checkpoint path
+    vae_chkpt_path: ''    # TreeVAE checkpoint path
     results_dir: ''       # Directory to store the DDPM checkpoint in
     chkpt_prefix: "vae"   # prefix appended to the checkpoint name
     restore_path: ""      # Checkpoint restore path
@@ -71,8 +71,8 @@ ddpm:
     # Model-specific training parameters
     use_ema: True         # Whether to use EMA (Improves sample quality)
     ema_decay: 0.9999     # EMA decay rate
-    z_cond: False          # Whether to condition UNet on vae latent
-    z_dim: None             # Dimensionality of the vae latent --> 1 for leaf index
+    z_cond: False         # Whether to condition UNet on vae latent
+    z_dim: None           # Dimensionality of the vae latent --> 1 for leaf index
     type: 'form1'         # DiffuseVAE formulation type, One of ['form1', 'form2', 'uncond'].
     cfd_rate: 0.0         # Conditioning signal dropout rate as in Classifier-free guidance
 
@@ -88,12 +88,12 @@ ddpm:
   # Parameters for evaluation of the reconstructions and generations
   evaluation:
     # paths and saving
-    chkpt_path: 'checkpoints/ddpmv2-vae-epoch=86-loss=0.0124.ckpt'                        # DiffuseVAE checkpoint path
-    save_path: 'vanilla_vae/eval_results/'                         # Path to write samples to
+    chkpt_path: ''                        # DiffuseVAE checkpoint path
+    save_path: 'vanilla_vae/results'      # Path to write samples to
     save_vae: True                        # Whether to save VAE
     save_mode: 'image'                    # Whether to save samples as .png or .npy. One of ['image', 'numpy']
     sample_prefix: ""                     # Prefix used in naming when saving samples to disk
-    eval_mode: 'sample'        # Evaluation mode. One of ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
+    eval_mode: 'recons'        # Evaluation mode. One of ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
 
     # Model-specific evaluation parameters
     guidance_weight: 0.0                  # Guidance weight during sampling if using Classifier free guidance

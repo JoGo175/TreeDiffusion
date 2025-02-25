@@ -169,7 +169,6 @@ classifier_pretraining/resnet50_mnist.pth
 classifier_pretraining/resnet50_fmnist.pth
 classifier_pretraining/resnet50.pth
 notebooks
-scripts
 eval_results/
 
 

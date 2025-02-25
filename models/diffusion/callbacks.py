@@ -150,7 +150,8 @@ class ImageWriter(BasePredictionWriter):
 
             if self.save_vae:
                 vae_samples = vae_samples.cpu()
-                vae_save_path = os.path.join(self.output_dir, "vae")
+                base_save_path = os.path.join(self.output_dir, self.eval_mode)
+                vae_save_path = os.path.join(base_save_path, "vae")
                 os.makedirs(vae_save_path, exist_ok=True)
                 self.save_fn(
                     vae_samples,
@@ -169,9 +170,9 @@ class ImageWriter(BasePredictionWriter):
         for k, ddpm_samples in ddpm_samples_dict.items():
             ddpm_samples = ddpm_samples.cpu()
 
-            # Setup dirs
-            base_save_path = os.path.join(self.output_dir, k)
-            img_save_path = os.path.join(base_save_path, "images")
+            # Setup dir
+            base_save_path = os.path.join(self.output_dir, self.eval_mode)
+            img_save_path = os.path.join(base_save_path, "ddpm")
             os.makedirs(img_save_path, exist_ok=True)
 
             # Save
