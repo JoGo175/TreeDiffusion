@@ -131,7 +131,6 @@ ddpm_checkpoints_cubicc=(
 for dataset in "${datasets[@]}"; do
   # Get the corresponding VAE checkpoint array via indirect expansion
   vae_array_name="checkpoints_${dataset}"
-  eval "vae_checkpoints=( \"\${${vae_array_name}[@]}\" )"
   
   # Get the corresponding DDPM checkpoint array via indirect expansion
   ddpm_array_name="ddpm_checkpoints_${dataset}"
@@ -143,8 +142,8 @@ for dataset in "${datasets[@]}"; do
   # Loop over seeds 1 to 10
   for seed in {1..10}; do
     # Array indices start at 0
-    vae_checkpoint="${vae_checkpoints[$((seed-1))]}"
-    ddpm_checkpoint="${ddpm_checkpoints[$((seed-1))]}"
+    vae_checkpoint="${!vae_array_name[$((seed-1))]}"
+    ddpm_checkpoint="${!ddpm_array_name[$((seed-1))]}"
     
     # Build full checkpoint paths
     full_vae_path="${base_model_dir}/${dataset}/checkpoints/${vae_checkpoint}"
