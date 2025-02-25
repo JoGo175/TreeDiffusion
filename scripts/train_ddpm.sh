@@ -97,7 +97,7 @@ for dataset in "${datasets[@]}"; do
   for seed in {1..10}; do
     chkpt_prefix="ddpm_seed${seed}"
     # Array indices start at 0
-    checkpoint="${!checkpoint_array_name[$((seed - 1))]}"
+    eval "checkpoint=\${${checkpoint_array_name}[$((seed - 1))]}"
     full_checkpoint_path="${base_model_dir}/${dataset}/checkpoints/${checkpoint}"
     
     echo "Submitting job for dataset: $dataset, seed: $seed, checkpoint: $full_checkpoint_path"

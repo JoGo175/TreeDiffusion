@@ -142,12 +142,13 @@ for dataset in "${datasets[@]}"; do
   # Loop over seeds 1 to 10
   for seed in {1..10}; do
     # Array indices start at 0
-    vae_checkpoint="${!vae_array_name[$((seed-1))]}"
-    ddpm_checkpoint="${!ddpm_array_name[$((seed-1))]}"
+    eval "vae_checkpoint=\${${vae_array_name}[$((seed-1))]}"
+    eval "ddpm_checkpoint=\${${ddpm_array_name}[$((seed-1))]}"
     
     # Build full checkpoint paths
     full_vae_path="${base_model_dir}/${dataset}/checkpoints/${vae_checkpoint}"
     full_ddpm_path="${base_model_dir}/${dataset}/checkpoints/${ddpm_checkpoint}"
+    
     
     # Loop over evaluation modes: "sample" and "recons"
     for eval_mode in "sample" "recons"; do
