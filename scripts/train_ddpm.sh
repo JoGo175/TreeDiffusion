@@ -94,7 +94,7 @@ for dataset in "${datasets[@]}"; do
   O_DIR="${log_base}/output.%x.%J_${dataset}.out"
   
   # Loop over seeds 1 to 10
-  for seed in {1..10}; do
+  for seed in 1; do # {1..10}; do
     chkpt_prefix="ddpm_seed${seed}"
     # Array indices start at 0
     eval "checkpoint=\${${checkpoint_array_name}[$((seed - 1))]}"
