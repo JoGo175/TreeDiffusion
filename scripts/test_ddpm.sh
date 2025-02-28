@@ -13,7 +13,7 @@ base_results_dir="/cluster/work/vogtlab/Group/jogoncalves/Repos/TreeDiffusion/va
 log_base="/cluster/work/vogtlab/Group/jogoncalves/logs"
 
 # List of datasets to process
-datasets=("mnist" "fmnist" "cifar10" "cubicc")  # "mnist" "fmnist" "cifar10" "celeba" "cubicc"
+datasets=("mnist" "fmnist" "cifar10")  # "mnist" "fmnist" "cifar10" "celeba" "cubicc"
 
 # Define VAE checkpoint names for each dataset
 checkpoints_mnist=(
@@ -79,40 +79,40 @@ checkpoints_cubicc=(
 
 # Define DDPM checkpoint names for each dataset
 ddpm_checkpoints_mnist=(
-  'model1'
-  'model2'
-  'model3'
-  'model4'
-  'model5'
-  'model6'
-  'model7'
-  'model8'
-  'model9'
-  'model10'
+  'ddpmv2-ddpm_seed1-epoch=999-loss=0.0129.ckpt'
+  'ddpmv2-ddpm_seed2-epoch=999-loss=0.0120.ckpt'
+  'ddpmv2-ddpm_seed3-epoch=999-loss=0.0113.ckpt'
+  'ddpmv2-ddpm_seed4-epoch=999-loss=0.0137.ckpt'
+  'ddpmv2-ddpm_seed5-epoch=999-loss=0.0137.ckpt'
+  'ddpmv2-ddpm_seed6-epoch=999-loss=0.0136.ckpt'
+  'ddpmv2-ddpm_seed7-epoch=999-loss=0.0140.ckpt'
+  'ddpmv2-ddpm_seed8-epoch=999-loss=0.0125.ckpt'
+  'ddpmv2-ddpm_seed9-epoch=999-loss=0.0140.ckpt'
+  'ddpmv2-ddpm_seed10-epoch=999-loss=0.0136.ckpt'
 )
 ddpm_checkpoints_fmnist=(
-  'model1'
-  'model2'
-  'model3'
-  'model4'
-  'model5'
-  'model6'
-  'model7'
-  'model8'
-  'model9'
-  'model10'
+  'ddpmv2-ddpm_seed1-epoch=999-loss=0.0168.ckpt'
+  'ddpmv2-ddpm_seed2-epoch=999-loss=0.0129.ckpt'
+  'ddpmv2-ddpm_seed3-epoch=999-loss=0.0164.ckpt'
+  'ddpmv2-ddpm_seed4-epoch=999-loss=0.0161.ckpt'
+  'ddpmv2-ddpm_seed5-epoch=999-loss=0.0184.ckpt'
+  'ddpmv2-ddpm_seed6-epoch=999-loss=0.0176.ckpt'
+  'ddpmv2-ddpm_seed7-epoch=999-loss=0.0169.ckpt'
+  'ddpmv2-ddpm_seed8-epoch=999-loss=0.0184.ckpt'
+  'ddpmv2-ddpm_seed9-epoch=999-loss=0.0217.ckpt'
+  'ddpmv2-ddpm_seed10-epoch=999-loss=0.0197.ckpt'
 )
 ddpm_checkpoints_cifar10=(
-  'model1'
-  'model2'
-  'model3'
-  'model4'
-  'model5'
-  'model6'
-  'model7'
-  'model8'
-  'model9'
-  'model10'
+  'ddpmv2-ddpm_seed1-epoch=999-loss=0.0212.ckpt'
+  'ddpmv2-ddpm_seed2-epoch=999-loss=0.0114.ckpt'
+  'ddpmv2-ddpm_seed3-epoch=999-loss=0.0171.ckpt'
+  'ddpmv2-ddpm_seed4-epoch=999-loss=0.0188.ckpt'
+  'ddpmv2-ddpm_seed5-epoch=999-loss=0.0150.ckpt'
+  'ddpmv2-ddpm_seed6-epoch=999-loss=0.0175.ckpt'
+  'ddpmv2-ddpm_seed7-epoch=999-loss=0.0095.ckpt'
+  'ddpmv2-ddpm_seed8-epoch=999-loss=.0299.ckpt'
+  'ddpmv2-ddpm_seed9-epoch=999-loss=0.0080.ckpt'
+  'ddpmv2-ddpm_seed10-epoch=999-loss=.0122.ckpt'
 )
 ddpm_checkpoints_cubicc=(
   'model1'
@@ -136,7 +136,7 @@ for dataset in "${datasets[@]}"; do
   ddpm_array_name="ddpm_checkpoints_${dataset}"
   
   # Define the results directory and log output path
-  results_dir="${base_results_dir}/${dataset}/"
+  results_dir="${base_results_dir}/${dataset}"
   O_DIR="${log_base}/output.%x.%J_${dataset}.out"
   
   # Loop over seeds 1 to 10
@@ -148,7 +148,9 @@ for dataset in "${datasets[@]}"; do
     # Build full checkpoint paths
     full_vae_path="${base_model_dir}/${dataset}/checkpoints/${vae_checkpoint}"
     full_ddpm_path="${base_model_dir}/${dataset}/checkpoints/${ddpm_checkpoint}"
-    
+
+    # Add seed to results directory
+    full_results_dir="${results_dir}/seed${seed}/"
     
     # Loop over evaluation modes: "sample" and "recons"
     for eval_mode in "sample" "recons"; do
@@ -161,7 +163,7 @@ for dataset in "${datasets[@]}"; do
              --tmp=20G \
              --cpus-per-task=1 \
              -o "$O_DIR" \
-             --wrap="python test_ddpm.py --config_name $dataset --vae_chkpt_path $full_vae_path --chkpt_path $full_ddpm_path --results_dir $results_dir --save_path $results_dir --seed $seed --eval_mode $eval_mode"
+             --wrap="python test_ddpm.py --config_name $dataset --vae_chkpt_path $full_vae_path --chkpt_path $full_ddpm_path --results_dir $full_results_dir --save_path $results_dir --seed $seed --eval_mode $eval_mode"
     done
   done
 done

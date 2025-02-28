@@ -13,7 +13,7 @@ base_results_dir="/cluster/work/vogtlab/Group/jogoncalves/Repos/TreeDiffusion/va
 log_base="/cluster/work/vogtlab/Group/jogoncalves/logs"
 
 # List of datasets to process
-datasets=("mnist" "fmnist" "cifar10" "cubicc")  # "mnist" "fmnist" "cifar10" "celeba" "cubicc"
+datasets=("celeba" "cubicc")  # "mnist" "fmnist" "cifar10" "celeba" "cubicc"
 
 # Define checkpoint names for each dataset.
 checkpoints_mnist=(
@@ -53,16 +53,16 @@ checkpoints_cifar10=(
   'vae-vae_10-epoch=1499-train_loss=0.0000.ckpt'
 )
 checkpoints_celeba=(
-  'model1'
-  'model2'
-  'model3'
-  'model4'
-  'model5'
-  'model6'
-  'model7'
-  'model8'
-  'model9'
-  'model10'
+  'vae-vae_1-epoch=349-train_loss=0.0000.ckpt'
+  'vae-vae_2-epoch=349-train_loss=0.0000.ckpt'
+  'vae-vae_3-epoch=349-train_loss=0.0000.ckpt'
+  'vae-vae_4-epoch=349-train_loss=0.0000.ckpt'
+  'vae-vae_5-epoch=349-train_loss=0.0000.ckpt'
+  'vae-vae_6-epoch=349-train_loss=0.0000.ckpt'
+  'vae-vae_7-epoch=349-train_loss=0.0000.ckpt'
+  'vae-vae_8-epoch=349-train_loss=0.0000.ckpt'
+  'vae-vae_9-epoch=349-train_loss=0.0000.ckpt'
+  'vae-vae_10-epoch=349-train_loss=0.0000.ckpt'
 )
 checkpoints_cubicc=(
   'vae-vae_1-epoch=1499-train_loss=0.0000.ckpt'

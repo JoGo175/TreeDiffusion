@@ -39,7 +39,7 @@ ddpm:
   data:
     data_name: 'cubicc'    # Dataset name
     num_clusters_data: 10   # Number of clusters/classes in the dataset
-    image_size: 32          # Image resolution (32 for CIFAR10)
+    image_size: 64          # Image resolution (32 for CIFAR10)
     inp_channels: 3         # Num input channels
     norm: True              # Whether to scale data between [-1, 1]
     ddpm_latent_path: ""    # If sharing DDPM latents between diffusevae samples, path to .pt tensor containing latent codes
@@ -93,7 +93,7 @@ ddpm:
     save_vae: True                        # Whether to save VAE
     save_mode: 'image'                    # Whether to save samples as .png or .npy. One of ['image', 'numpy']
     sample_prefix: ""                     # Prefix used in naming when saving samples to disk
-    eval_mode: 'sample'                   # Evaluation mode. One of ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
+    eval_mode: ''                   # Evaluation mode. One of ['sample', 'sample_all_leaves', 'recons', 'recons_all_leaves']
 
     # Model-specific evaluation parameters
     guidance_weight: 0.0  # Guidance weight during sampling if using Classifier free guidance

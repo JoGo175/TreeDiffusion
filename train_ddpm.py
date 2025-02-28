@@ -52,7 +52,7 @@ from utils.utils import reset_random_seeds
 
 ###############################################################################################################
 # SELECT THE DATASET
-dataset = "mnist"       # mnist, fmnist, cifar10, celeba, cubicc is supported
+dataset = "cubicc"       # mnist, fmnist, cifar10, celeba, cubicc is supported
 ###############################################################################################################
 
 
