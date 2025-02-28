@@ -110,9 +110,9 @@ ddpm_checkpoints_cifar10=(
   'ddpmv2-ddpm_seed5-epoch=999-loss=0.0150.ckpt'
   'ddpmv2-ddpm_seed6-epoch=999-loss=0.0175.ckpt'
   'ddpmv2-ddpm_seed7-epoch=999-loss=0.0095.ckpt'
-  'ddpmv2-ddpm_seed8-epoch=999-loss=.0299.ckpt'
+  'ddpmv2-ddpm_seed8-epoch=999-loss=0.0299.ckpt'
   'ddpmv2-ddpm_seed9-epoch=999-loss=0.0080.ckpt'
-  'ddpmv2-ddpm_seed10-epoch=999-loss=.0122.ckpt'
+  'ddpmv2-ddpm_seed10-epoch=999-loss=0.0122.ckpt'
 )
 ddpm_checkpoints_cubicc=(
   'model1'
@@ -163,7 +163,7 @@ for dataset in "${datasets[@]}"; do
              --tmp=20G \
              --cpus-per-task=1 \
              -o "$O_DIR" \
-             --wrap="python test_ddpm.py --config_name $dataset --vae_chkpt_path $full_vae_path --chkpt_path $full_ddpm_path --results_dir $full_results_dir --save_path $results_dir --seed $seed --eval_mode $eval_mode"
+             --wrap="python test_ddpm.py --config_name $dataset --vae_chkpt_path $full_vae_path --chkpt_path $full_ddpm_path --results_dir $full_results_dir --save_path $full_results_dir --seed $seed --eval_mode $eval_mode"
     done
   done
 done
