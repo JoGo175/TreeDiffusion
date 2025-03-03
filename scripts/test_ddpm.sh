@@ -53,16 +53,16 @@ checkpoints_cifar10=(
   'vae-vae_10-epoch=1499-train_loss=0.0000.ckpt'
 )
 checkpoints_celeba=(
-  'ddpmv2-ddpm_seed1-epoch=199-loss=0.0092.ckpt'
-  'ddpmv2-ddpm_seed2-epoch=199-loss=0.0065.ckpt'
-  'ddpmv2-ddpm_seed3-epoch=199-loss=0.0034.ckpt'
-  'ddpmv2-ddpm_seed4-epoch=199-loss=0.0056.ckpt'
-  'ddpmv2-ddpm_seed5-epoch=199-loss=0.0098.ckpt'
-  'ddpmv2-ddpm_seed6-epoch=199-loss=0.00.ckpt'
-  'ddpmv2-ddpm_seed7-epoch=199-loss=0.0068.ckpt'
-  'ddpmv2-ddpm_seed8-epoch=199-loss=0.0091.ckpt'
-  'ddpmv2-ddpm_seed9-epoch=199-loss=0.0158.ckpt'
-  'ddpmv2-ddpm_seed10-epoch=199-loss=0.0080.ckpt'
+  'vae-vae_1-epoch=349-train_loss=0.0000.ckpt'
+  'vae-vae_2-epoch=349-train_loss=0.0000.ckpt'
+  'vae-vae_3-epoch=349-train_loss=0.0000.ckpt'
+  'vae-vae_4-epoch=349-train_loss=0.0000.ckpt'
+  'vae-vae_5-epoch=349-train_loss=0.0000.ckpt'
+  'vae-vae_6-epoch=349-train_loss=0.0000.ckpt'
+  'vae-vae_7-epoch=349-train_loss=0.0000.ckpt'
+  'vae-vae_8-epoch=349-train_loss=0.0000.ckpt'
+  'vae-vae_9-epoch=349-train_loss=0.0000.ckpt'
+  'vae-vae_10-epoch=349-train_loss=0.0000.ckpt'
 )
 checkpoints_cubicc=(
   'vae-vae_1-epoch=1499-train_loss=0.0000.ckpt'
@@ -114,17 +114,29 @@ ddpm_checkpoints_cifar10=(
   'ddpmv2-ddpm_seed9-epoch=999-loss=0.0080.ckpt'
   'ddpmv2-ddpm_seed10-epoch=999-loss=0.0122.ckpt'
 )
+ddpm_checkpoints_celeba=(
+  'ddpmv2-ddpm_seed1-epoch=199-loss=0.0092.ckpt'
+  'ddpmv2-ddpm_seed2-epoch=199-loss=0.0065.ckpt'
+  'ddpmv2-ddpm_seed3-epoch=199-loss=0.0034.ckpt'
+  'ddpmv2-ddpm_seed4-epoch=199-loss=0.0056.ckpt'
+  'ddpmv2-ddpm_seed5-epoch=199-loss=0.0098.ckpt'
+  'ddpmv2-ddpm_seed6-epoch=199-loss=0.00.ckpt'
+  'ddpmv2-ddpm_seed7-epoch=199-loss=0.0068.ckpt'
+  'ddpmv2-ddpm_seed8-epoch=199-loss=0.0091.ckpt'
+  'ddpmv2-ddpm_seed9-epoch=199-loss=0.0158.ckpt'
+  'ddpmv2-ddpm_seed10-epoch=199-loss=0.0080.ckpt'
+)
 ddpm_checkpoints_cubicc=(
-  'ddpmv2-ddpm_seed1-epoch=199-loss=0.0033.ckpt'
-  'ddpmv2-ddpm_seed2-epoch=199-loss=0.0037.ckpt'
-  'ddpmv2-ddpm_seed3-epoch=199-loss=0.0019.ckpt'
-  'ddpmv2-ddpm_seed4-epoch=199-loss=0.0021.ckpt'
-  'ddpmv2-ddpm_seed5-epoch=199-loss=0.0020.ckpt'
-  'ddpmv2-ddpm_seed6-epoch=199-loss=0.0009.ckpt'
-  'ddpmv2-ddpm_seed7-epoch=199-loss=0.0165.ckpt'
-  'ddpmv2-ddpm_seed8-epoch=199-loss=0.0012.ckpt'
-  'ddpmv2-ddpm_seed9-epoch=199-loss=0.0045.ckpt'
-  'ddpmv2-ddpm_seed10-epoch=199-loss=0.0014.ckpt'
+  'ddpmv2-ddpm_seed1-epoch=499-loss=0.0033.ckpt'
+  'ddpmv2-ddpm_seed2-epoch=499-loss=0.0037.ckpt'
+  'ddpmv2-ddpm_seed3-epoch=499-loss=0.0019.ckpt'
+  'ddpmv2-ddpm_seed4-epoch=499-loss=0.0021.ckpt'
+  'ddpmv2-ddpm_seed5-epoch=499-loss=0.0020.ckpt'
+  'ddpmv2-ddpm_seed6-epoch=499-loss=0.0009.ckpt'
+  'ddpmv2-ddpm_seed7-epoch=499-loss=0.0165.ckpt'
+  'ddpmv2-ddpm_seed8-epoch=499-loss=0.0012.ckpt'
+  'ddpmv2-ddpm_seed9-epoch=499-loss=0.0045.ckpt'
+  'ddpmv2-ddpm_seed10-epoch=499-loss=0.0014.ckpt'
 )
 
 # Loop over each dataset
