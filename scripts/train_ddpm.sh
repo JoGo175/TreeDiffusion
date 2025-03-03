@@ -13,7 +13,7 @@ base_results_dir="/cluster/work/vogtlab/Group/jogoncalves/Repos/TreeDiffusion/va
 log_base="/cluster/work/vogtlab/Group/jogoncalves/logs"
 
 # List of datasets to process
-datasets=("cubicc")  # "mnist" "fmnist" "cifar10" "celeba" "cubicc"
+datasets=("celeba")  # "mnist" "fmnist" "cifar10" "celeba" "cubicc"
 
 # Define checkpoint names for each dataset.
 checkpoints_mnist=(
@@ -94,7 +94,7 @@ for dataset in "${datasets[@]}"; do
   O_DIR="${log_base}/output.%x.%J_${dataset}.out"
   
   # Loop over seeds 1 to 10
-  for seed in 9; do # {1..10}; do
+  for seed in 6; do # {1..10}; do
     chkpt_prefix="ddpm_seed${seed}"
     # Array indices start at 0
     eval "checkpoint=\${${checkpoint_array_name}[$((seed - 1))]}"
