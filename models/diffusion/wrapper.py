@@ -235,7 +235,7 @@ class DDPMWrapper(pl.LightningModule):
 
         if self.eval_mode == "sample":
             x_t = batch[0]
-            mu, logvar = self.vae.encode(x_t)
+            mu, logvar = self.vae.encode(x_t * 0.5 + 0.5)
             z_t = self.vae.reparameterize(mu, logvar)
             # Sample z with shape z from normal distribution
             z = torch.randn_like(z_t)
