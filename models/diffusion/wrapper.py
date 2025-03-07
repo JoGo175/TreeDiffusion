@@ -239,7 +239,7 @@ class DDPMWrapper(pl.LightningModule):
             z_t = self.vae.reparameterize(mu, logvar)
             # Sample z with shape z from normal distribution
             z = torch.randn_like(z_t)
-            recons = self.vae(z)
+            recons = self.vae.decode(z)
             recons = 2 * recons - 1
 
             # Initial temperature scaling
