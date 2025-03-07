@@ -13,7 +13,7 @@ base_results_dir="/cluster/work/vogtlab/Group/jogoncalves/Repos/TreeDiffusion/va
 log_base="/cluster/work/vogtlab/Group/jogoncalves/logs"
 
 # List of datasets to process
-datasets=("cubicc" "celeba")  # "mnist" "fmnist" "cifar10" "celeba" "cubicc"
+datasets=("mnist" "fmnist" "cifar10" "celeba" "cubicc")  # "mnist" "fmnist" "cifar10" "celeba" "cubicc"
 
 # Define VAE checkpoint names for each dataset
 checkpoints_mnist=(
@@ -162,10 +162,10 @@ for dataset in "${datasets[@]}"; do
     full_ddpm_path="${base_model_dir}/${dataset}/checkpoints/${ddpm_checkpoint}"
 
     # Add seed to results directory
-    full_results_dir="${results_dir}/seed${seed}/"
+    full_results_dir="${results_dir}/new_seed${seed}/"                 # change new_seed to seed later
     
     # Loop over evaluation modes: "sample" and "recons"
-    for eval_mode in "sample" "recons"; do
+    for eval_mode in "sample"; do
       echo "Submitting test job for dataset: $dataset, seed: $seed, eval_mode: $eval_mode"
       sbatch --time=100:00:00 \
              --mem-per-cpu=20G \
