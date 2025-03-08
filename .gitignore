@@ -171,5 +171,10 @@ classifier_pretraining/resnet50.pth
 notebooks
 scripts
 
+# files
+*.ipynb
+*.sh
+
+
 
 
