@@ -27,8 +27,8 @@ training:
   inp_shape: 64                                     # Image resolution (64 for CUBICC)
   inp_channels: 3                                   # Input channels, 3 for RGB
   representation_dim: 4                             # size of the 2-dim latent representation -> should be a power of 2, (2, 4, 8, 16 ...)
-  latent_channels: [1, 1]     # channels of the latent representation -> (latent_channels, representation_dim, representation_dim)
-  bottom_up_channels: [1, 1]  # channels of the bottom-up representation, only works for equal channels at the moment
+  latent_channels: [64, 64, 64, 64, 64, 64, 64]     # channels of the latent representation -> (latent_channels, representation_dim, representation_dim)
+  bottom_up_channels: [128, 128, 128, 128, 128, 128, 128]  # channels of the bottom-up representation, only works for equal channels at the moment
   initial_depth: 1                                  # Initial depth of the tree (1 for the root + 2 leaves)
   act_function: "swish"                             # Activation function used between layers in TreeVAE (swish, relu, leaky_relu)
   activation: 'mse'                                 # Activation function for final layer of the decoder (mse does not scale the pixel values between 0 and 1, as in the case of sigmoid activation)
