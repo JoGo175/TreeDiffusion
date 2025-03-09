@@ -242,8 +242,11 @@ class DDPMWrapper(pl.LightningModule):
             recons = self.vae.decode(z)
             recons = 2 * recons - 1
 
+            # Sample DDPM latent noise
+            x_t = torch.randn_like(x_t)
+
             # Initial temperature scaling
-            x_t = x_t * self.temp
+            # x_t = x_t * self.temp
 
             # Formulation-2 initial latent
             if isinstance(self.online_network, DDPMv2):
