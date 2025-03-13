@@ -120,7 +120,7 @@ ddpm_checkpoints_celeba=(
   'ddpmv2-ddpm_seed3-epoch=199-loss=0.0034.ckpt'
   'ddpmv2-ddpm_seed4-epoch=199-loss=0.0056.ckpt'
   'ddpmv2-ddpm_seed5-epoch=199-loss=0.0098.ckpt'
-  'ddpmv2-ddpm_seed6-epoch=199-loss=0.00.ckpt'
+  'ddpmv2-ddpm_seed6-epoch=159-loss=0.0096.ckpt'
   'ddpmv2-ddpm_seed7-epoch=199-loss=0.0068.ckpt'
   'ddpmv2-ddpm_seed8-epoch=199-loss=0.0091.ckpt'
   'ddpmv2-ddpm_seed9-epoch=199-loss=0.0158.ckpt'
