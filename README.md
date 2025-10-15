@@ -1,11 +1,12 @@
 
 # Hierarchical Clustering for Conditional Diffusion in Image Generation
 
+This repository contains the implementation of **TreeDiffusion**, from the paper **[TreeDiffusion: Hierarchical Generative Clustering for Conditional Diffusion](https://doi.org/10.1007/978-3-032-05962-8_26)** by [Jorge da Silva Gonçalves](https://www.linkedin.com/in/jorge-da-silva-gon%C3%A7alves-282b42179/), [Laura Manduchi](https://lauramanduchi.github.io/), [Moritz Vandenhirtz](https://mvandenhi.github.io/), and [Julia E. Vogt](https://mds.inf.ethz.ch/team/detail/julia-vogt/).  
 
-This repository contains the implementation of **TreeDiffusion**.
+📄 Published at **[ECML PKDD 2025](https://link.springer.com/book/10.1007/978-3-662-72243-5)** (*Lecture Notes in Computer Science*, vol. 16013, Springer, Cham, 2026).  
+The **arXiv version** is available at [arxiv.org/abs/2410.16910](https://arxiv.org/abs/2410.16910).
 
 ---
-
 
 ### TreeDiffusion
 
@@ -111,6 +112,21 @@ python classifier_pretraining/clf_training.py --data_name "cifar10"
 The following image compares the TreeVAE with TreeDiffusion. The picture shows the image generations from each leaf of the TreeVAE and the cluster-conditional TreeDiffusion, all trained on CUBICC. Each row displays the generated images from all leaves of the specified model, starting with the same sample from the root. The corresponding leaf probabilities are shown at the top of the image and are by design the same for all models by design. The results show that the cluster-conditional TreeDiffusion model produces higher quality and more diverse images, better adapting to each cluster.
 
 <img src="images/readme/leaf_samples.png" width="100%">
+
+# Citation 
+```
+@inproceedings{daSilvaGoncalves2026TreeDiffusion,
+  author    = {Jorge da Silva Gonçalves and Laura Manduchi and Moritz Vandenhirtz and Julia E. Vogt},
+  title     = {TreeDiffusion: Hierarchical Generative Clustering for Conditional Diffusion},
+  booktitle = {Machine Learning and Knowledge Discovery in Databases. Research Track (ECML PKDD 2025)},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {16013},
+  year      = {2026},
+  publisher = {Springer, Cham},
+  doi       = {10.1007/978-3-032-05962-8_26},
+  url       = {https://doi.org/10.1007/978-3-032-05962-8_26}
+}
+```
 
 
 # References
